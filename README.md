@@ -18,7 +18,7 @@ Scripts were created for the latest Portainer API, which at the time of writing 
 
 ## How to use
 
-Two scripts are included: `deploy.sh` and `undeploy.sh`. Both scripts use the following environment variables to connect to the portainer instance:
+Two scripts are included: `deploy` and `undeploy`. Both scripts use the following environment variables to connect to the portainer instance:
 
 - `PORTAINER_USER` (string): Username
 - `PORTAINER_PASSWORD` (string): Password
@@ -27,20 +27,20 @@ Two scripts are included: `deploy.sh` and `undeploy.sh`. Both scripts use the fo
 - `PORTAINER_ENDPOINT` (int): Which endpoint to use. Defaults to `1`.
 - `HTTPIE_VERIFY_SSL` ("yes" or "no"): Whether to verify SSL certificate or not. Defaults to `"yes"`.
 
-### deploy.sh
+### deploy
 
 This script deploys a stack. The stack is created if it does not exist, otherwise it is updated. You must pass the stack name and the path to the docker-compose file as arguments:
 
 ```bash
-./deploy.sh mystack docker-compose.yml
+./deploy mystack docker-compose.yml
 ```
 
-### undeploy.sh
+### undeploy
 
 This script removes a stack. You must pass the stack name as argument:
 
 ```bash
-./undeploy.sh mystack
+./undeploy mystack
 ```
 
 ## License
