@@ -38,3 +38,7 @@ This script removes a stack. You must pass the stack name as argument:
 ```bash
 ./undeploy.sh mystack
 ```
+
+## License
+
+Source code contained by this project is licensed under the [GNU General Public License version 3](https://www.gnu.org/licenses/gpl-3.0.en.html). See [LICENSE](LICENSE) file for reference.
