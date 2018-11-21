@@ -6,6 +6,10 @@
 
 Bash scripts to deploy/undeploy stacks in a [Portainer](https://portainer.io/) instance from a [docker-compose](https://docs.docker.com/compose) [yaml file](https://docs.docker.com/compose/compose-file). Based on previous work by [@vladbabii](https://github.com/vladbabii) on [docker-how-to/portainer-bash-scripts](https://github.com/docker-how-to/portainer-bash-scripts).
 
+## Supported Portainer API
+
+Scripts were created for the latest Portainer API, which at the time of writing is [1.9.2](https://app.swaggerhub.com/apis/deviantony/Portainer/1.19.2).
+
 ## Requirements
 
 - [bash](https://www.gnu.org/software/bash/)
