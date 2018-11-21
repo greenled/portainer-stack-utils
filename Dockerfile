@@ -20,6 +20,6 @@ RUN apk --update add \
   rm -rf /tmp/src && \
   rm -rf /var/cache/apk/*
 
-RUN chmod +x *.sh
+COPY *.sh /usr/local/bin/
 
-COPY *.sh /usr/local/bin
+RUN chmod +x /usr/local/bin/*
