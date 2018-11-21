@@ -5,6 +5,7 @@ PORTAINER_PASSWORD=${PORTAINER_PASSWORD:-"password"}
 PORTAINER_URL=${PORTAINER_URL:-"https://portainer.example.com"}
 PORTAINER_PRUNE=${PORTAINER_PRUNE:-"false"}
 PORTAINER_ENDPOINT=${PORTAINER_ENDPOINT:-"1"}
+HTTPIE_VERIFY_SSL=${HTTPIE_VERIFY_SSL:-"yes"}
 
 if [ -z ${1+x} ]; then
   echo "Error: Parameter #1 missing (stack name)"
@@ -32,7 +33,7 @@ STACK_YAML_CONTENT="${STACK_YAML_CONTENT//$'\n'/'\n'}"
 echo "Getting auth token..."
 AUTH_TOKEN=$(http \
   --ignore-stdin \
-  --verify=no \
+  --verify=$HTTPIE_VERIFY_SSL \
   $PORTAINER_URL/api/auth \
   username=$PORTAINER_USER \
   password=$PORTAINER_PASSWORD \
@@ -47,7 +48,7 @@ echo "Done"
 echo "Getting stack $STACK_NAME..."
 STACKS=$(http \
   --ignore-stdin \
-  --verify=no \
+  --verify=$HTTPIE_VERIFY_SSL \
   "$PORTAINER_URL/api/stacks" \
   "Authorization: Bearer $AUTH_TOKEN")
 
@@ -60,7 +61,7 @@ if [ -z "$STACK" ]; then
   echo "Getting swarm cluster (if any)..."
   SWARM_ID=$(http \
     --ignore-stdin \
-    --verify=no \
+    --verify=$HTTPIE_VERIFY_SSL \
     "$PORTAINER_URL/api/endpoints/$PORTAINER_ENDPOINT/docker/info" \
     "Authorization: Bearer $AUTH_TOKEN" \
     | jq -r ".Swarm.Cluster.ID // empty")
@@ -73,7 +74,7 @@ if [ -z "$STACK" ]; then
 
     CREATE=$(http \
       --ignore-stdin \
-      --verify=no \
+      --verify=$HTTPIE_VERIFY_SSL \
       --timeout=300 \
       "$PORTAINER_URL/api/stacks" \
       "Authorization: Bearer $AUTH_TOKEN" \
@@ -88,7 +89,7 @@ if [ -z "$STACK" ]; then
 
     CREATE=$(http \
       --ignore-stdin \
-      --verify=no \
+      --verify=$HTTPIE_VERIFY_SSL \
       --timeout=300 \
       "$PORTAINER_URL/api/stacks" \
       "Authorization: Bearer $AUTH_TOKEN" \
@@ -116,7 +117,7 @@ else
   echo "Updating stack $STACK_NAME..."
   UPDATE=$(http \
     --ignore-stdin \
-    --verify=no \
+    --verify=$HTTPIE_VERIFY_SSL \
     --timeout=300 \
     PUT "$PORTAINER_URL/api/stacks/$STACK_ID" \
     "Authorization: Bearer $AUTH_TOKEN" \

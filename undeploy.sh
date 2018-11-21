@@ -5,6 +5,7 @@ PORTAINER_PASSWORD=${PORTAINER_PASSWORD:-"password"}
 PORTAINER_URL=${PORTAINER_URL:-"https://portainer.example.com"}
 PORTAINER_PRUNE=${PORTAINER_PRUNE:-"false"}
 PORTAINER_ENDPOINT=${PORTAINER_ENDPOINT:-"1"}
+HTTPIE_VERIFY_SSL=${HTTPIE_VERIFY_SSL:-"yes"}
 
 if [ -z ${1+x} ]; then
   echo "Error: Parameter #1 missing (stack name)"
@@ -15,7 +16,7 @@ STACK_NAME="$1"
 echo "Getting auth token..."
 AUTH_TOKEN=$(http \
   --ignore-stdin \
-  --verify=no \
+  --verify=$HTTPIE_VERIFY_SSL \
   $PORTAINER_URL/api/auth \
   username=$PORTAINER_USER \
   password=$PORTAINER_PASSWORD \
@@ -30,7 +31,7 @@ echo "Done"
 echo "Getting stack $STACK_NAME..."
 STACKS=$(http \
   --ignore-stdin \
-  --verify=no \
+  --verify=$HTTPIE_VERIFY_SSL \
   "$PORTAINER_URL/api/stacks" \
   "Authorization: Bearer $AUTH_TOKEN")
 
@@ -48,7 +49,7 @@ STACK_ID="$(echo "$STACK" | jq -j ".Id")"
 echo "Deleting stack $STACK_NAME..."
 DELETE=$(http \
   --ignore-stdin \
-  --verify=no \
+  --verify=$HTTPIE_VERIFY_SSL \
   DELETE "$PORTAINER_URL/api/stacks/$STACK_ID" \
   "Authorization: Bearer $AUTH_TOKEN")
 
