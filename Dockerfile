@@ -15,6 +15,7 @@ RUN apk --update add \
   ca-certificates \
   httpie \
   jq \
+  gettext \
   && \
   rm -rf /tmp/src && \
   rm -rf /var/cache/apk/*
