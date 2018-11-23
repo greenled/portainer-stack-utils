@@ -1,5 +1,27 @@
 #!/usr/bin/env bash
 
+###########################################
+# Checks for error exit codes from httpie #
+# Arguments:                              #
+#   $1 Httpie exit code                   #
+#   $2 Response returned by Portainer API #
+###########################################
+check_for_errors () {
+  local exit_code=$1
+  local response=$2
+  if [ $exit_code -ne 0 ]; then
+    case $exit_code in
+        2) echo 'Request timed out!' ;;
+        3) echo 'Unexpected HTTP 3xx Redirection!' ;;
+        4) echo 'HTTP 4xx Client Error!' && echo $response ;;
+        5) echo 'HTTP 5xx Server Error!' && echo $response ;;
+        6) echo 'Exceeded --max-redirects=<n> redirects!' ;;
+        *) echo 'Unholy Error!' ;;
+    esac
+    exit 1
+  fi
+}
+
 PORTAINER_USER=${PORTAINER_USER:-"user"}
 PORTAINER_PASSWORD=${PORTAINER_PASSWORD:-"password"}
 PORTAINER_URL=${PORTAINER_URL:-"https://portainer.example.com"}
@@ -32,25 +54,24 @@ STACK_YAML_CONTENT="${STACK_YAML_CONTENT//$'\n'/'\n'}"
 
 echo "Getting auth token..."
 AUTH_TOKEN=$(http \
+  --check-status \
   --ignore-stdin \
   --verify=$HTTPIE_VERIFY_SSL \
   $PORTAINER_URL/api/auth \
   username=$PORTAINER_USER \
-  password=$PORTAINER_PASSWORD \
-  | jq -r .jwt)
-
-if [ -z "$AUTH_TOKEN" ]; then
-  echo "Error: Authentication error."
-  exit 1
-fi
+  password=$PORTAINER_PASSWORD)
+check_for_errors $? "$AUTH_TOKEN"
+AUTH_TOKEN=$(echo $AUTH_TOKEN | jq -r .jwt)
 echo "Done"
 
 echo "Getting stack $STACK_NAME..."
 STACKS=$(http \
+  --check-status \
   --ignore-stdin \
   --verify=$HTTPIE_VERIFY_SSL \
   "$PORTAINER_URL/api/stacks" \
   "Authorization: Bearer $AUTH_TOKEN")
+check_for_errors $? "$STACKS"
 
 STACK=$(echo "$STACKS" \
   | jq --arg STACK_NAME "$STACK_NAME" -jc '.[] | select(.Name == $STACK_NAME)')
@@ -60,11 +81,13 @@ if [ -z "$STACK" ]; then
 
   echo "Getting swarm cluster (if any)..."
   SWARM_ID=$(http \
+    --check-status \
     --ignore-stdin \
     --verify=$HTTPIE_VERIFY_SSL \
     "$PORTAINER_URL/api/endpoints/$PORTAINER_ENDPOINT/docker/info" \
-    "Authorization: Bearer $AUTH_TOKEN" \
-    | jq -r ".Swarm.Cluster.ID // empty")
+    "Authorization: Bearer $AUTH_TOKEN")
+  check_for_errors $? "$SWARM_ID"
+  SWARM_ID=$(echo $SWARM_ID | jq -r ".Swarm.Cluster.ID // empty")
   
   echo "Creating stack $STACK_NAME..."
   if [ -z "$SWARM_ID" ];then
@@ -73,6 +96,7 @@ if [ -z "$STACK" ]; then
     echo "$DATA_PREFIX$STACK_YAML_CONTENT$DATA_SUFFIX" > json.tmp
 
     CREATE=$(http \
+      --check-status \
       --ignore-stdin \
       --verify=$HTTPIE_VERIFY_SSL \
       --timeout=300 \
@@ -88,6 +112,7 @@ if [ -z "$STACK" ]; then
     echo "$DATA_PREFIX$STACK_YAML_CONTENT$DATA_SUFFIX" > json.tmp
 
     CREATE=$(http \
+      --check-status \
       --ignore-stdin \
       --verify=$HTTPIE_VERIFY_SSL \
       --timeout=300 \
@@ -98,13 +123,9 @@ if [ -z "$STACK" ]; then
       endpointId==$PORTAINER_ENDPOINT \
       @json.tmp)
   fi
+  check_for_errors $? "$CREATE"
 
   rm json.tmp
-
-  if [ -z ${CREATE+x} ]; then
-    echo "Error: stack $STACK_NAME not created"
-    exit 1
-  fi
 else
   echo "Result: Stack $STACK_NAME found."
 
@@ -116,6 +137,7 @@ else
   
   echo "Updating stack $STACK_NAME..."
   UPDATE=$(http \
+    --check-status \
     --ignore-stdin \
     --verify=$HTTPIE_VERIFY_SSL \
     --timeout=300 \
@@ -123,12 +145,8 @@ else
     "Authorization: Bearer $AUTH_TOKEN" \
     endpointId==$PORTAINER_ENDPOINT \
     @json.tmp)
+  check_for_errors $? "$UPDATE"
   
   rm json.tmp
-  
-  if [ -z ${UPDATE+x} ]; then
-    echo "Error: stack $STACK_NAME not updated"
-    exit 1
-  fi
 fi
 echo "Done"
