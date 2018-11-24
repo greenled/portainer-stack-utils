@@ -4,11 +4,11 @@
 [![Docker Pulls](https://img.shields.io/docker/pulls/greenled/portainer-stack-utils.svg)](https://hub.docker.com/r/greenled/portainer-stack-utils/)
 [![Microbadger](https://images.microbadger.com/badges/image/greenled/portainer-stack-utils.svg)](http://microbadger.com/images/greenled/portainer-stack-utils "Image size")
 
-Bash scripts to deploy/undeploy stacks in a [Portainer](https://portainer.io/) instance from a [docker-compose](https://docs.docker.com/compose) [yaml file](https://docs.docker.com/compose/compose-file). Based on previous work by [@vladbabii](https://github.com/vladbabii) on [docker-how-to/portainer-bash-scripts](https://github.com/docker-how-to/portainer-bash-scripts).
+Bash script to deploy/undeploy stacks in a [Portainer](https://portainer.io/) instance from a [docker-compose](https://docs.docker.com/compose) [yaml file](https://docs.docker.com/compose/compose-file). Based on previous work by [@vladbabii](https://github.com/vladbabii) on [docker-how-to/portainer-bash-scripts](https://github.com/docker-how-to/portainer-bash-scripts).
 
 ## Supported Portainer API
 
-Scripts were created for the latest Portainer API, which at the time of writing is [1.9.2](https://app.swaggerhub.com/apis/deviantony/Portainer/1.19.2).
+Script was created for the latest Portainer API, which at the time of writing is [1.9.2](https://app.swaggerhub.com/apis/deviantony/Portainer/1.19.2).
 
 ## Requirements
 
@@ -18,29 +18,67 @@ Scripts were created for the latest Portainer API, which at the time of writing 
 
 ## How to use
 
-Two scripts are included: `deploy` and `undeploy`. Both scripts use the following environment variables to connect to the portainer instance:
+The provided `psu` script allows to deploy/update/undeploy portainer stacks. Settings can be passed through envvars and/or flags. Both envars and flags can be mixed but flags will always overwrite envvar values. When deploying a stack, if it doesn't exist a new one is created, otherwise it's updated.
 
-- `PORTAINER_USER` (string): Username
-- `PORTAINER_PASSWORD` (string): Password
-- `PORTAINER_URL` (string): URL to Portainer
-- `PORTAINER_PRUNE` ("true" or "false"): Whether to prune unused containers or not. Defaults to `"false"`.
-- `PORTAINER_ENDPOINT` (int): Which endpoint to use. Defaults to `1`.
-- `HTTPIE_VERIFY_SSL` ("yes" or "no"): Whether to verify SSL certificate or not. Defaults to `"yes"`.
+### With envvars
 
-### deploy
+This is particularly useful for CI/CD pipelines.
 
-This script deploys a stack. The stack is created if it does not exist, otherwise it is updated. You must pass the stack name and the path to the docker-compose file as arguments:
+- `ACTION` (string, required): deploy/undeploy
+- `PORTAINER_USER` (string, required): Username
+- `PORTAINER_PASSWORD` (string, required): Password
+- `PORTAINER_URL` (string, required): URL to Portainer
+- `PORTAINER_STACK_NAME` (string, required): Stack name
+- `DOCKER_COMPOSE_FILE` (string, required if action=deploy): Path to doker-compose file
+- `PORTAINER_PRUNE` ("true" or "false", optional): Whether to prune unused containers or not. Defaults to `"false"`.
+- `PORTAINER_ENDPOINT` (int, optional): Which endpoint to use. Defaults to `1`.
+- `HTTPIE_VERIFY_SSL` ("yes" or "no", optional): Whether to verify SSL certificate or not. Defaults to `"yes"`.
+
+#### Examples
 
 ```bash
-./deploy mystack docker-compose.yml
+export ACTION="deploy"
+export PORTAINER_USER="admin"
+export PORTAINER_PASSWORD="password"
+export PORTAINER_URL="http://portainer.local"
+export PORTAINER_STACK_NAME="mystack"
+export DOCKER_COMPOSE_FILE="/path/to/docker-compose.yml"
+
+./psu
 ```
 
-### undeploy
+```bash
+export ACTION="undeploy"
+export PORTAINER_USER="admin"
+export PORTAINER_PASSWORD="password"
+export PORTAINER_URL="http://portainer.local"
+export PORTAINER_STACK_NAME="mystack"
 
-This script removes a stack. You must pass the stack name as argument:
+./psu
+```
+
+### With flags
+
+This is more suitable for standalone script usage.
+
+- `-a` (string, required): deploy/undeploy
+- `-u` (string, required): Username
+- `-p` (string, required): Password
+- `-l` (string, required): URL to Portainer
+- `-n` (string, required): Stack name
+- `-c` (string, required if action=deploy): Path to doker-compose file
+- `-r` ("true" or "false", optional): Whether to prune unused containers or not. Defaults to `"false"`.
+- `-e` (int, optional): Which endpoint to use. Defaults to `1`.
+- `-s` ("yes" or "no", optional): Whether to verify SSL certificate or not. Defaults to `"yes"`.
+
+#### Examples
 
 ```bash
-./undeploy mystack
+./psu -a deploy -u admin -p password -l http://portainer.local -n mystack -c /path/to/docker-compose.yml
+```
+
+```bash
+./psu -a undeploy -u admin -p password -l http://portainer.local -n mystack
 ```
 
 ## License
