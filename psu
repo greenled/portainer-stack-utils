@@ -171,9 +171,9 @@ while getopts a:u:p:l:n:c:e:rs option; do
     l) PORTAINER_URL=${OPTARG} ;;
     n) PORTAINER_STACK_NAME=${OPTARG} ;;
     c) DOCKER_COMPOSE_FILE=${OPTARG} ;;
-    e) PORTAINER_ENDPOINT=${OPTARG:-$PORTAINER_ENDPOINT} ;;
-    r) PORTAINER_PRUNE=${"true":-$PORTAINER_PRUNE} ;;
-    s) HTTPIE_VERIFY_SSL=${"no":-$HTTPIE_VERIFY_SSL} ;;
+    e) PORTAINER_ENDPOINT=${OPTARG} ;;
+    r) PORTAINER_PRUNE="true" ;;
+    s) HTTPIE_VERIFY_SSL="no" ;;
   esac
 done
 
