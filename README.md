@@ -18,7 +18,7 @@ Script was created for the latest Portainer API, which at the time of writing is
 
 ## How to use
 
-The provided `psu` script allows to deploy/update/undeploy portainer stacks. Settings can be passed through envvars and/or flags. Both envars and flags can be mixed but flags will always overwrite envvar values. When deploying a stack, if it doesn't exist a new one is created, otherwise it's updated.
+The provided `psu` script allows to deploy/update/undeploy portainer stacks. Settings can be passed through envvars and/or flags. Both envvars and flags can be mixed but flags will always overwrite envvar values. When deploying a stack, if it doesn't exist a new one is created, otherwise it's updated.
 
 ### With envvars
 
