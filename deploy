@@ -1,5 +1,25 @@
 #!/usr/bin/env bash
 
+#######################################
+# Check a parameter has been provided #
+# Arguments:                          #
+#   $1 Argument value                #
+#   $2 Argument name                 #
+#   $3 Argument envvar               #
+#   $4 Argument flag                 #
+#######################################
+check_argument () {
+  local argument_value=$1
+  local argument_name=$2
+  local argument_envvar=$3
+  local argument_flag=$4
+  if [ -z "$argument_value" ]; then
+    echo "Error: Missing argument \"$argument_name\"."
+    echo "Try setting \"$argument_envvar\" environment variable or using the \"-$argument_flag\" flag."
+    exit 1
+  fi
+}
+
 ###########################################
 # Checks for error exit codes from httpie #
 # Arguments:                              #
@@ -22,24 +42,39 @@ check_for_errors () {
   fi
 }
 
-PORTAINER_USER=${PORTAINER_USER:-"user"}
-PORTAINER_PASSWORD=${PORTAINER_PASSWORD:-"password"}
-PORTAINER_URL=${PORTAINER_URL:-"https://portainer.example.com"}
-PORTAINER_PRUNE=${PORTAINER_PRUNE:-"false"}
+# Set arguments through envvars
+PORTAINER_USER=${PORTAINER_USER}
+PORTAINER_PASSWORD=${PORTAINER_PASSWORD}
+PORTAINER_URL=${PORTAINER_URL}
+PORTAINER_STACK_NAME=${PORTAINER_STACK_NAME}
+DOCKER_COMPOSE_FILE=${DOCKER_COMPOSE_FILE}
 PORTAINER_ENDPOINT=${PORTAINER_ENDPOINT:-"1"}
+PORTAINER_PRUNE=${PORTAINER_PRUNE:-"false"}
 HTTPIE_VERIFY_SSL=${HTTPIE_VERIFY_SSL:-"yes"}
 
-if [ -z ${1+x} ]; then
-  echo "Error: Parameter #1 missing (stack name)"
-  exit 1
-fi
-STACK_NAME="$1"
+# Set arguments through flags
+while getopts u:p:l:n:c:e:rs option; do
+  case "${option}" in
+    u) PORTAINER_USER=${OPTARG} ;;
+    p) PORTAINER_PASSWORD=${OPTARG} ;;
+    l) PORTAINER_URL=${OPTARG} ;;
+    n) PORTAINER_STACK_NAME=${OPTARG} ;;
+    c) DOCKER_COMPOSE_FILE=${OPTARG} ;;
+    e) PORTAINER_ENDPOINT=${OPTARG:-$PORTAINER_ENDPOINT} ;;
+    r) PORTAINER_PRUNE=${"true":-$PORTAINER_PRUNE} ;;
+    s) HTTPIE_VERIFY_SSL=${"no":-$HTTPIE_VERIFY_SSL} ;;
+  esac
+done
 
-if [ -z ${2+x} ]; then
-  echo "Error: Parameter #2 missing (path to yaml)"
-  exit 1
-fi
-STACK_YAML_PATH="$2"
+# Check required arguments have been provided
+check_argument "$PORTAINER_USER" "portainer user" "PORTAINER_USER" "u"
+check_argument "$PORTAINER_PASSWORD" "portainer password" "PORTAINER_PASSWORD" "p"
+check_argument "$PORTAINER_URL" "portainer url" "PORTAINER_URL" "l"
+check_argument "$PORTAINER_STACK_NAME" "portainer stack name" "PORTAINER_STACK_NAME" "n"
+check_argument "$DOCKER_COMPOSE_FILE" "docker compose file" "DOCKER_COMPOSE_FILE" "c"
+
+STACK_NAME=$PORTAINER_STACK_NAME
+STACK_YAML_PATH=$DOCKER_COMPOSE_FILE
 
 STACK_YAML_CONTENT=$(cat "$STACK_YAML_PATH")
 
