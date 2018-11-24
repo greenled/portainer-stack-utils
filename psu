@@ -54,6 +54,18 @@ echo_verbose () {
   fi
 }
 
+#########################################
+# Print message if debug mode is active #
+# Arguments:                            #
+#   $1 Message                          #
+#########################################
+echo_debug () {
+  local message=$1
+  if [ $DEBUG_MODE == "true" ]; then
+    echo $message
+  fi
+}
+
 deploy () {
   STACK_YAML_PATH=$DOCKER_COMPOSE_FILE
 
@@ -72,20 +84,23 @@ deploy () {
     echo_verbose "Result: Stack $STACK_NAME not found."
 
     echo_verbose "Getting swarm cluster (if any)..."
-    SWARM_ID=$(http \
+    DOCKER_INFO=$(http \
       --check-status \
       --ignore-stdin \
       --verify=$HTTPIE_VERIFY_SSL \
       "$PORTAINER_URL/api/endpoints/$PORTAINER_ENDPOINT/docker/info" \
       "Authorization: Bearer $AUTH_TOKEN")
-    check_for_errors $? "$SWARM_ID"
-    SWARM_ID=$(echo $SWARM_ID | jq -r ".Swarm.Cluster.ID // empty")
+    check_for_errors $? "$DOCKER_INFO"
+    echo_debug "Docker info -> $DOCKER_INFO"
+    SWARM_ID=$(echo $DOCKER_INFO | jq -r ".Swarm.Cluster.ID // empty")
+    echo_debug "Swarm ID -> $SWARM_ID"
     
     echo_verbose "Creating stack $STACK_NAME..."
     if [ -z "$SWARM_ID" ];then
       DATA_PREFIX="{\"Name\":\"$STACK_NAME\",\"StackFileContent\":\""
       DATA_SUFFIX="\"}"
       echo "$DATA_PREFIX$STACK_YAML_CONTENT$DATA_SUFFIX" > json.tmp
+      echo_debug "Stack JSON -> $DATA_PREFIX$STACK_YAML_CONTENT$DATA_SUFFIX"
 
       CREATE=$(http \
         --check-status \
@@ -98,10 +113,12 @@ deploy () {
         method==string \
         endpointId==$PORTAINER_ENDPOINT \
         @json.tmp)
+      echo_debug "Create action response -> $CREATE"
     else
       DATA_PREFIX="{\"Name\":\"$STACK_NAME\",\"SwarmID\":\"$SWARM_ID\",\"StackFileContent\":\""
       DATA_SUFFIX="\"}"
       echo "$DATA_PREFIX$STACK_YAML_CONTENT$DATA_SUFFIX" > json.tmp
+      echo_debug "Stack JSON -> $DATA_PREFIX$STACK_YAML_CONTENT$DATA_SUFFIX"
 
       CREATE=$(http \
         --check-status \
@@ -114,6 +131,7 @@ deploy () {
         method==string \
         endpointId==$PORTAINER_ENDPOINT \
         @json.tmp)
+      echo_debug "Create action response -> $CREATE"
     fi
     check_for_errors $? "$CREATE"
 
@@ -126,6 +144,7 @@ deploy () {
     DATA_PREFIX="{\"Id\":\"$STACK_ID\",\"StackFileContent\":\""
     DATA_SUFFIX="\",\"Env\":"$STACK_ENV_VARS",\"Prune\":$PORTAINER_PRUNE}"
     echo "$DATA_PREFIX$STACK_YAML_CONTENT$DATA_SUFFIX" > json.tmp
+    echo_debug "Stack JSON -> $DATA_PREFIX$STACK_YAML_CONTENT$DATA_SUFFIX"
     
     echo_verbose "Updating stack $STACK_NAME..."
     UPDATE=$(http \
@@ -137,6 +156,7 @@ deploy () {
       "Authorization: Bearer $AUTH_TOKEN" \
       endpointId==$PORTAINER_ENDPOINT \
       @json.tmp)
+    echo_debug "Update action response -> $UPDATE"
     check_for_errors $? "$UPDATE"
     
     rm json.tmp
@@ -152,6 +172,7 @@ undeploy () {
   echo_verbose "Result: Stack $STACK_NAME found."
 
   STACK_ID="$(echo "$STACK" | jq -j ".Id")"
+  echo_debug "Stack ID -> $STACK_ID"
 
   echo_verbose "Deleting stack $STACK_NAME..."
   DELETE=$(http \
@@ -159,6 +180,7 @@ undeploy () {
     --verify=$HTTPIE_VERIFY_SSL \
     DELETE "$PORTAINER_URL/api/stacks/$STACK_ID" \
     "Authorization: Bearer $AUTH_TOKEN")
+  echo_debug "Delete action response -> $UPDATE"
   check_for_errors $? "$DELETE"
   echo_verbose "Done"
 }
@@ -174,9 +196,10 @@ PORTAINER_ENDPOINT=${PORTAINER_ENDPOINT:-"1"}
 PORTAINER_PRUNE=${PORTAINER_PRUNE:-"false"}
 HTTPIE_VERIFY_SSL=${HTTPIE_VERIFY_SSL:-"yes"}
 VERBOSE_MODE=${VERBOSE_MODE:-"false"}
+DEBUG_MODE=${DEBUG_MODE:-"false"}
 
 # Set arguments through flags
-while getopts a:u:p:l:n:c:e:rsv option; do
+while getopts a:u:p:l:n:c:e:rsvd option; do
   case "${option}" in
     a) ACTION=${OPTARG} ;;
     u) PORTAINER_USER=${OPTARG} ;;
@@ -188,8 +211,22 @@ while getopts a:u:p:l:n:c:e:rsv option; do
     r) PORTAINER_PRUNE="true" ;;
     s) HTTPIE_VERIFY_SSL="no" ;;
     v) VERBOSE_MODE="true" ;;
+    d) DEBUG_MODE="true" ;;
   esac
 done
+
+# Print config
+echo_debug "ACTION -> $ACTION"
+echo_debug "PORTAINER_USER -> $PORTAINER_USER"
+echo_debug "PORTAINER_PASSWORD -> $PORTAINER_PASSWORD"
+echo_debug "PORTAINER_URL -> $PORTAINER_URL"
+echo_debug "PORTAINER_STACK_NAME -> $PORTAINER_STACK_NAME"
+echo_debug "DOCKER_COMPOSE_FILE -> $DOCKER_COMPOSE_FILE"
+echo_debug "PORTAINER_ENDPOINT -> $PORTAINER_ENDPOINT"
+echo_debug "PORTAINER_PRUNE -> $PORTAINER_PRUNE"
+echo_debug "HTTPIE_VERIFY_SSL -> $HTTPIE_VERIFY_SSL"
+echo_debug "VERBOSE_MODE -> $VERBOSE_MODE"
+echo_debug "DEBUG_MODE -> $DEBUG_MODE"
 
 # Check required arguments have been provided
 check_argument "$ACTION" "action" "ACTION" "a"
@@ -208,8 +245,10 @@ AUTH_TOKEN=$(http \
   $PORTAINER_URL/api/auth \
   username=$PORTAINER_USER \
   password=$PORTAINER_PASSWORD)
+echo_debug "Get auth token response -> $AUTH_TOKEN"
 check_for_errors $? "$AUTH_TOKEN"
 AUTH_TOKEN=$(echo $AUTH_TOKEN | jq -r .jwt)
+echo_debug "Auth token -> $AUTH_TOKEN"
 echo_verbose "Done"
 
 echo_verbose "Getting stack $STACK_NAME..."
@@ -219,10 +258,12 @@ STACKS=$(http \
   --verify=$HTTPIE_VERIFY_SSL \
   "$PORTAINER_URL/api/stacks" \
   "Authorization: Bearer $AUTH_TOKEN")
+echo_debug "Get stacks response -> $STACKS"
 check_for_errors $? "$STACKS"
 
 STACK=$(echo "$STACKS" \
   | jq --arg STACK_NAME "$STACK_NAME" -jc '.[] | select(.Name == $STACK_NAME)')
+echo_debug "Stack -> $STACK"
 
 if [ $ACTION == "deploy" ]; then
   check_argument "$DOCKER_COMPOSE_FILE" "docker compose file" "DOCKER_COMPOSE_FILE" "c"

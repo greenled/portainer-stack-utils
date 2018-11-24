@@ -34,6 +34,7 @@ This is particularly useful for CI/CD pipelines.
 - `PORTAINER_ENDPOINT` (int, optional): Which endpoint to use. Defaults to `1`.
 - `HTTPIE_VERIFY_SSL` ("yes" or "no", optional): Whether to verify SSL certificate or not. Defaults to `"yes"`.
 - `VERBOSE_MODE` ("true" or "false", optional): Whether to activate verbose output mode or not. Defaults to `"false"`.
+- `DEBUG_MODE` ("true" or "false", optional): Whether to activate debug output mode or not. Defaults to `"false"`. See [debug mode warning](#debug-mode) below.
 
 #### Examples
 
@@ -72,6 +73,7 @@ This is more suitable for standalone script usage.
 - `-e` (int, optional): Which endpoint to use. Defaults to `1`.
 - `-s` ("yes" or "no", optional): Whether to verify SSL certificate or not. Defaults to `"yes"`.
 - `-v` ("true" or "false", optional): Whether to activate verbose output mode or not. Defaults to `"false"`.
+- `-d` ("true" or "false", optional): Whether to activate debug output mode or not. Defaults to `"false"`. See [debug mode warning](#debug-mode) below.
 
 #### Examples
 
@@ -82,6 +84,10 @@ This is more suitable for standalone script usage.
 ```bash
 ./psu -a undeploy -u admin -p password -l http://portainer.local -n mystack
 ```
+
+### Debug mode
+
+**WARNING**: In debug mode the script prints as much information as possible, including configuration values (with portainer credentials) and Portainer API responses (with sensitive information like authentication token and stacks environment variables). Avoid using debug mode in CI/CD pipelines, as pipeline logs are usually recorded.
 
 ## License
 
