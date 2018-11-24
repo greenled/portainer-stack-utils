@@ -42,6 +42,18 @@ check_for_errors () {
   fi
 }
 
+###########################################
+# Print message if verbose mode is active #
+# Arguments:                              #
+#   $1 Message                            #
+###########################################
+echo_verbose () {
+  local message=$1
+  if [ $VERBOSE_MODE == "true" ]; then
+    echo $message
+  fi
+}
+
 deploy () {
   STACK_YAML_PATH=$DOCKER_COMPOSE_FILE
 
@@ -57,9 +69,9 @@ deploy () {
   STACK_YAML_CONTENT="${STACK_YAML_CONTENT//$'\n'/'\n'}"
 
   if [ -z "$STACK" ]; then
-    echo "Result: Stack $STACK_NAME not found."
+    echo_verbose "Result: Stack $STACK_NAME not found."
 
-    echo "Getting swarm cluster (if any)..."
+    echo_verbose "Getting swarm cluster (if any)..."
     SWARM_ID=$(http \
       --check-status \
       --ignore-stdin \
@@ -69,7 +81,7 @@ deploy () {
     check_for_errors $? "$SWARM_ID"
     SWARM_ID=$(echo $SWARM_ID | jq -r ".Swarm.Cluster.ID // empty")
     
-    echo "Creating stack $STACK_NAME..."
+    echo_verbose "Creating stack $STACK_NAME..."
     if [ -z "$SWARM_ID" ];then
       DATA_PREFIX="{\"Name\":\"$STACK_NAME\",\"StackFileContent\":\""
       DATA_SUFFIX="\"}"
@@ -107,7 +119,7 @@ deploy () {
 
     rm json.tmp
   else
-    echo "Result: Stack $STACK_NAME found."
+    echo_verbose "Result: Stack $STACK_NAME found."
 
     STACK_ID="$(echo "$STACK" | jq -j ".Id")"
     STACK_ENV_VARS="$(echo -n "$STACK"| jq ".Env" -jc)"
@@ -115,7 +127,7 @@ deploy () {
     DATA_SUFFIX="\",\"Env\":"$STACK_ENV_VARS",\"Prune\":$PORTAINER_PRUNE}"
     echo "$DATA_PREFIX$STACK_YAML_CONTENT$DATA_SUFFIX" > json.tmp
     
-    echo "Updating stack $STACK_NAME..."
+    echo_verbose "Updating stack $STACK_NAME..."
     UPDATE=$(http \
       --check-status \
       --ignore-stdin \
@@ -129,7 +141,7 @@ deploy () {
     
     rm json.tmp
   fi
-  echo "Done"
+  echo_verbose "Done"
 }
 
 undeploy () {
@@ -137,18 +149,18 @@ undeploy () {
     echo "Result: Stack $STACK_NAME not found."
     exit 1
   fi
-  echo "Result: Stack $STACK_NAME found."
+  echo_verbose "Result: Stack $STACK_NAME found."
 
   STACK_ID="$(echo "$STACK" | jq -j ".Id")"
 
-  echo "Deleting stack $STACK_NAME..."
+  echo_verbose "Deleting stack $STACK_NAME..."
   DELETE=$(http \
     --ignore-stdin \
     --verify=$HTTPIE_VERIFY_SSL \
     DELETE "$PORTAINER_URL/api/stacks/$STACK_ID" \
     "Authorization: Bearer $AUTH_TOKEN")
   check_for_errors $? "$DELETE"
-  echo "Done"
+  echo_verbose "Done"
 }
 
 # Set arguments through envvars
@@ -161,9 +173,10 @@ DOCKER_COMPOSE_FILE=${DOCKER_COMPOSE_FILE}
 PORTAINER_ENDPOINT=${PORTAINER_ENDPOINT:-"1"}
 PORTAINER_PRUNE=${PORTAINER_PRUNE:-"false"}
 HTTPIE_VERIFY_SSL=${HTTPIE_VERIFY_SSL:-"yes"}
+VERBOSE_MODE=${VERBOSE_MODE:-"false"}
 
 # Set arguments through flags
-while getopts a:u:p:l:n:c:e:rs option; do
+while getopts a:u:p:l:n:c:e:rsv option; do
   case "${option}" in
     a) ACTION=${OPTARG} ;;
     u) PORTAINER_USER=${OPTARG} ;;
@@ -174,6 +187,7 @@ while getopts a:u:p:l:n:c:e:rs option; do
     e) PORTAINER_ENDPOINT=${OPTARG} ;;
     r) PORTAINER_PRUNE="true" ;;
     s) HTTPIE_VERIFY_SSL="no" ;;
+    v) VERBOSE_MODE="true" ;;
   esac
 done
 
@@ -186,7 +200,7 @@ check_argument "$PORTAINER_STACK_NAME" "portainer stack name" "PORTAINER_STACK_N
 
 STACK_NAME=$PORTAINER_STACK_NAME
 
-echo "Getting auth token..."
+echo_verbose "Getting auth token..."
 AUTH_TOKEN=$(http \
   --check-status \
   --ignore-stdin \
@@ -196,9 +210,9 @@ AUTH_TOKEN=$(http \
   password=$PORTAINER_PASSWORD)
 check_for_errors $? "$AUTH_TOKEN"
 AUTH_TOKEN=$(echo $AUTH_TOKEN | jq -r .jwt)
-echo "Done"
+echo_verbose "Done"
 
-echo "Getting stack $STACK_NAME..."
+echo_verbose "Getting stack $STACK_NAME..."
 STACKS=$(http \
   --check-status \
   --ignore-stdin \
