@@ -1,5 +1,15 @@
 #!/usr/bin/env bash
 
+############################
+# Print an error to stderr #
+# Arguments:               #
+#   $1 Error message       #
+############################
+err() {
+  local error_message=$@
+  echo "[$(date +'%Y-%m-%dT%H:%M:%S%z')]: $error_message" >&2
+}
+
 #######################################
 # Check a parameter has been provided #
 # Arguments:                          #
@@ -14,8 +24,8 @@ check_argument () {
   local argument_envvar=$3
   local argument_flag=$4
   if [ -z "$argument_value" ]; then
-    >&2 echo "Error: Missing argument \"$argument_name\"."
-    >&2 echo "Try setting \"$argument_envvar\" environment variable or using the \"-$argument_flag\" flag."
+    err "Error: Missing argument \"$argument_name\"."
+    err "Try setting \"$argument_envvar\" environment variable or using the \"-$argument_flag\" flag."
     exit 1
   fi
 }
@@ -31,12 +41,12 @@ check_for_errors () {
   local response=$2
   if [ $exit_code -ne 0 ]; then
     case $exit_code in
-        2) >&2 echo 'Request timed out!' ;;
-        3) >&2 echo 'Unexpected HTTP 3xx Redirection!' ;;
-        4) >&2 echo 'HTTP 4xx Client Error!' && echo $response ;;
-        5) >&2 echo 'HTTP 5xx Server Error!' && echo $response ;;
-        6) >&2 echo 'Exceeded --max-redirects=<n> redirects!' ;;
-        *) >&2 echo 'Unholy Error!' ;;
+        2) err 'Request timed out!' ;;
+        3) err 'Unexpected HTTP 3xx Redirection!' ;;
+        4) err 'HTTP 4xx Client Error!' && err $response ;;
+        5) err 'HTTP 5xx Server Error!' && err $response ;;
+        6) err 'Exceeded --max-redirects=<n> redirects!' ;;
+        *) err 'Unholy Error!' ;;
     esac
     exit 1
   fi
@@ -155,7 +165,7 @@ deploy () {
     rm json.tmp
   else
     if [ $STRICT_MODE == "true" ]; then
-      >&2 echo "Error: Stack $PORTAINER_STACK_NAME already exists."
+      err "Error: Stack $PORTAINER_STACK_NAME already exists."
       exit 1
     fi
     echo_verbose "Stack $PORTAINER_STACK_NAME exists."
@@ -192,7 +202,7 @@ deploy () {
 undeploy () {
   if [ -z "$STACK" ]; then
     if [ $STRICT_MODE == "true" ]; then
-      >&2 echo "Error: Stack $PORTAINER_STACK_NAME does not exist."
+      err "Error: Stack $PORTAINER_STACK_NAME does not exist."
       exit 1
     else
       echo_verbose "Stack $PORTAINER_STACK_NAME does not exist. No need to undeploy it."
@@ -309,5 +319,5 @@ if [ $ACTION == "undeploy" ]; then
   exit 0
 fi
 
->&2 echo "Error: Unknown action \"$ACTION\"."
+err "Error: Unknown action \"$ACTION\"."
 exit 1
