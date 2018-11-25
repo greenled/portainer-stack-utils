@@ -1,9 +1,15 @@
 #!/usr/bin/env bash
+#
+# Deploy/update/undeploy Docker stacks in a Portainer instance.
 
 ############################
 # Print an error to stderr #
+# Globals:                 #
+#   None                   #
 # Arguments:               #
 #   $1 Error message       #
+# Returns:                 #
+#   None                   #
 ############################
 err() {
   local error_message=$@
@@ -12,11 +18,15 @@ err() {
 
 #######################################
 # Check a parameter has been provided #
+# Globals:                            #
+#   None                              #
 # Arguments:                          #
-#   $1 Argument value                #
-#   $2 Argument name                 #
-#   $3 Argument envvar               #
-#   $4 Argument flag                 #
+#   $1 Argument value                 #
+#   $2 Argument name                  #
+#   $3 Argument envvar                #
+#   $4 Argument flag                  #
+# Returns:                            #
+#   None                              #
 #######################################
 check_argument () {
   local argument_value=$1
@@ -32,9 +42,13 @@ check_argument () {
 
 ###########################################
 # Checks for error exit codes from httpie #
+# Globals:                                #
+#   None                                  #
 # Arguments:                              #
 #   $1 Httpie exit code                   #
 #   $2 Response returned by Portainer API #
+# Returns:                                #
+#   None                                  #
 ###########################################
 check_for_errors () {
   local exit_code=$1
@@ -54,8 +68,12 @@ check_for_errors () {
 
 ###########################################
 # Print message if verbose mode is active #
+# Globals:                                #
+#   VERBOSE_MODE                          #
 # Arguments:                              #
 #   $1 Message                            #
+# Returns:                                #
+#   None                                  #
 ###########################################
 echo_verbose () {
   local message=$1
@@ -66,8 +84,12 @@ echo_verbose () {
 
 #########################################
 # Print message if debug mode is active #
+# Globals:                              #
+#   DEBUG_MODE                          #
 # Arguments:                            #
 #   $1 Message                          #
+# Returns:                              #
+#   None                                #
 #########################################
 echo_debug () {
   local message=$1
@@ -76,9 +98,20 @@ echo_debug () {
   fi
 }
 
-#########################
-# Create/update a stack #
-#########################
+##########################
+# Create/update a stack  #
+# Globals:               #
+#   DOCKER_COMPOSE_FILE  #
+#   PORTAINER_STACK_NAME #
+#   PORTAINER_URL        #
+#   HTTPIE_VERIFY_SSL    #
+#   PORTAINER_ENDPOINT   #
+#   AUTH_TOKEN           #
+# Arguments:             #
+#   None                 #
+# Returns:               #
+#   None                 #
+##########################
 deploy () {
   # Read docker-compose file content
   STACK_YAML_CONTENT=$(cat "$DOCKER_COMPOSE_FILE")
@@ -196,9 +229,18 @@ deploy () {
   fi
 }
 
-##################
-# Remove a stack #
-##################
+##########################
+# Remove a stack         #
+# Globals:               #
+#   PORTAINER_STACK_NAME #
+#   PORTAINER_URL        #
+#   HTTPIE_VERIFY_SSL    #
+#   AUTH_TOKEN           #
+# Arguments:             #
+#   None                 #
+# Returns:               #
+#   None                 #
+##########################
 undeploy () {
   if [ -z "$STACK" ]; then
     if [ $STRICT_MODE == "true" ]; then
