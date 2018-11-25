@@ -84,7 +84,7 @@ deploy () {
 
   # If the stack does not exist
   if [ -z "$STACK" ]; then
-    echo_verbose "Stack $PORTAINER_STACK_NAME not found."
+    echo_verbose "Stack $PORTAINER_STACK_NAME does not exist."
 
     # Get Docker info
     echo_verbose "Getting Docker info..."
@@ -154,7 +154,11 @@ deploy () {
 
     rm json.tmp
   else
-    echo_verbose "Stack $PORTAINER_STACK_NAME found."
+    if [ $STRICT_MODE == "true" ]; then
+      echo "Error: Stack $PORTAINER_STACK_NAME already exists."
+      exit 1
+    fi
+    echo_verbose "Stack $PORTAINER_STACK_NAME exists."
 
     echo_verbose "Preparing stack JSON..."
     STACK_ID="$(echo "$STACK" | jq -j ".Id")"
@@ -187,10 +191,15 @@ deploy () {
 ##################
 undeploy () {
   if [ -z "$STACK" ]; then
-    echo_verbose "Stack $PORTAINER_STACK_NAME not found."
-    exit 0
+    if [ $STRICT_MODE == "true" ]; then
+      echo "Error: Stack $PORTAINER_STACK_NAME does not exist."
+      exit 1
+    else
+      echo_verbose "Stack $PORTAINER_STACK_NAME does not exist. No need to undeploy it."
+      exit 0
+    fi
   fi
-  echo_verbose "Stack $PORTAINER_STACK_NAME found."
+  echo_verbose "Stack $PORTAINER_STACK_NAME exists."
 
   STACK_ID="$(echo "$STACK" | jq -j ".Id")"
   echo_debug "Stack ID -> $STACK_ID"
@@ -217,9 +226,10 @@ PORTAINER_PRUNE=${PORTAINER_PRUNE:-"false"}
 HTTPIE_VERIFY_SSL=${HTTPIE_VERIFY_SSL:-"yes"}
 VERBOSE_MODE=${VERBOSE_MODE:-"false"}
 DEBUG_MODE=${DEBUG_MODE:-"false"}
+STRICT_MODE=${STRICT_MODE:-"false"}
 
 # Set arguments through flags (overwrite envvars)
-while getopts a:u:p:l:n:c:e:rsvd option; do
+while getopts a:u:p:l:n:c:e:rsvdt option; do
   case "${option}" in
     a) ACTION=${OPTARG} ;;
     u) PORTAINER_USER=${OPTARG} ;;
@@ -232,6 +242,7 @@ while getopts a:u:p:l:n:c:e:rsvd option; do
     s) HTTPIE_VERIFY_SSL="no" ;;
     v) VERBOSE_MODE="true" ;;
     d) DEBUG_MODE="true" ;;
+    t) STRICT_MODE="true" ;;
   esac
 done
 

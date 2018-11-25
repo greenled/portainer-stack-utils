@@ -18,7 +18,7 @@ Script was created for the latest Portainer API, which at the time of writing is
 
 ## How to use
 
-The provided `psu` script allows to deploy/update/undeploy Portainer stacks. Settings can be passed through envvars and/or flags. Both envvars and flags can be mixed but flags will always overwrite envvar values. When deploying a stack, if it doesn't exist a new one is created, otherwise it's updated.
+The provided `psu` script allows to deploy/update/undeploy Portainer stacks. Settings can be passed through envvars and/or flags. Both envvars and flags can be mixed but flags will always overwrite envvar values. When deploying a stack, if it doesn't exist a new one is created, otherwise it's updated (unless strict mode is active).
 
 ### With envvars
 
@@ -35,6 +35,7 @@ This is particularly useful for CI/CD pipelines.
 - `HTTPIE_VERIFY_SSL` ("yes" or "no", optional): Whether to verify SSL certificate or not. Defaults to `"yes"`.
 - `VERBOSE_MODE` ("true" or "false", optional): Whether to activate verbose output mode or not. Defaults to `"false"`.
 - `DEBUG_MODE` ("true" or "false", optional): Whether to activate debug output mode or not. Defaults to `"false"`. See [debug mode warning](#debug-mode) below.
+- `STRICT_MODE` ("true" or "false", optional): Whether to activate strict mode or not. Defaults to `"false"`. See [strict mode](#strict-mode) below.
 
 #### Examples
 
@@ -73,7 +74,9 @@ This is more suitable for standalone script usage.
 - `-e` (int, optional): Which endpoint to use. Defaults to `1`.
 - `-s` ("yes" or "no", optional): Whether to verify SSL certificate or not. Defaults to `"yes"`.
 - `-v` ("true" or "false", optional): Whether to activate verbose output mode or not. Defaults to `"false"`.
-- `-d` ("true" or "false", optional): Whether to activate debug output mode or not. Defaults to `"false"`. See [debug mode warning](#debug-mode) below.
+- `-d` ("true" or "false", optional): Whether to activate debug output mode or not. Defaults to `"false"`. See [debug mode warning](
+#debug-mode) below.
+- `-t` ("true" or "false", optional): Whether to activate strict mode or not. Defaults to `"false"`. See [strict mode](#strict-mode) below.
 
 #### Examples
 
@@ -90,6 +93,12 @@ This is more suitable for standalone script usage.
 **WARNING**: In debug mode the script prints as much information as possible, including configuration values (with Portainer credentials) and Portainer API responses (with sensitive information like authentication token and stacks environment variables). Avoid using debug mode in CI/CD pipelines, as pipeline logs are usually recorded.
 
 Debug mode can be enabled through [DEBUG_MODE envvar](#with-envvars) or [-d flag](with-flags).
+
+### Strict mode
+
+In strict mode the script never updates an existent stack, and instead exits with an error. Following the same principle, it never removes an unexistent stack.
+
+Strict mode can be enabled through [STRICT_MODE envvar](#with-envvars) or [-t flag](with-flags).
 
 ## License
 

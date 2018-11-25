@@ -14,7 +14,8 @@ ENV LANG="en_US.UTF-8" \
   PORTAINER_ENDPOINT="1"
   HTTPIE_VERIFY_SSL="yes" \
   VERBOSE_MODE="false" \
-  DEBUG_MODE="false"
+  DEBUG_MODE="false" \
+  STRICT_MODE="false"
 
 RUN apk --update add \
   bash \
