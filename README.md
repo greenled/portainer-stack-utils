@@ -33,7 +33,7 @@ This is particularly useful for CI/CD pipelines.
 - `PORTAINER_PRUNE` ("true" or "false", optional): Whether to prune unused containers or not. Defaults to `"false"`.
 - `PORTAINER_ENDPOINT` (int, optional): Which endpoint to use. Defaults to `1`.
 - `HTTPIE_VERIFY_SSL` ("yes" or "no", optional): Whether to verify SSL certificate or not. Defaults to `"yes"`.
-- `VERBOSE_MODE` ("true" or "false", optional): Whether to activate verbose output mode or not. Defaults to `"false"`.
+- `VERBOSE_MODE` ("true" or "false", optional): Whether to activate verbose output mode or not. Defaults to `"false"`. See [verbose mode](#verbose-mode) below.
 - `DEBUG_MODE` ("true" or "false", optional): Whether to activate debug output mode or not. Defaults to `"false"`. See [debug mode](#debug-mode) below.
 - `STRICT_MODE` ("true" or "false", optional): Whether to activate strict mode or not. Defaults to `"false"`. See [strict mode](#strict-mode) below.
 
@@ -73,7 +73,7 @@ This is more suitable for standalone script usage.
 - `-r` ("true" or "false", optional): Whether to prune unused containers or not. Defaults to `"false"`.
 - `-e` (int, optional): Which endpoint to use. Defaults to `1`.
 - `-s` ("yes" or "no", optional): Whether to verify SSL certificate or not. Defaults to `"yes"`.
-- `-v` ("true" or "false", optional): Whether to activate verbose output mode or not. Defaults to `"false"`.
+- `-v` ("true" or "false", optional): Whether to activate verbose output mode or not. Defaults to `"false"`. See [verbose mode](#verbose-mode) below.
 - `-d` ("true" or "false", optional): Whether to activate debug output mode or not. Defaults to `"false"`. See [debug mode](
 #debug-mode) below.
 - `-t` ("true" or "false", optional): Whether to activate strict mode or not. Defaults to `"false"`. See [strict mode](#strict-mode) below.
@@ -87,6 +87,23 @@ This is more suitable for standalone script usage.
 ```bash
 ./psu -a undeploy -u admin -p password -l http://portainer.local -n mystack
 ```
+
+### Verbose mode
+
+In verbose mode the script prints execution steps.
+
+```text
+Getting auth token...
+Getting stack mystack...
+Stack mystack not found.
+Getting Docker info...
+Getting swarm cluster (if any)...
+Swarm cluster found.
+Preparing stack JSON...
+Creating stack mystack...
+```
+
+Verbose mode can be enabled through [VERBOSE_MODE envvar](#with-envvars) or [-v flag](with-flags).
 
 ### Debug mode
 
