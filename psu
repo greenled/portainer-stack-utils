@@ -84,7 +84,7 @@ deploy () {
   STACK_YAML_CONTENT="${STACK_YAML_CONTENT//$'\n'/'\n'}"
 
   if [ -z "$STACK" ]; then
-    echo_verbose "Result: Stack $STACK_NAME not found."
+    echo_verbose "Result: Stack $PORTAINER_STACK_NAME not found."
 
     echo_verbose "Getting swarm cluster (if any)..."
     DOCKER_INFO=$(http \
@@ -98,9 +98,9 @@ deploy () {
     SWARM_ID=$(echo $DOCKER_INFO | jq -r ".Swarm.Cluster.ID // empty")
     echo_debug "Swarm ID -> $SWARM_ID"
     
-    echo_verbose "Creating stack $STACK_NAME..."
+    echo_verbose "Creating stack $PORTAINER_STACK_NAME..."
     if [ -z "$SWARM_ID" ];then
-      DATA_PREFIX="{\"Name\":\"$STACK_NAME\",\"StackFileContent\":\""
+      DATA_PREFIX="{\"Name\":\"$PORTAINER_STACK_NAME\",\"StackFileContent\":\""
       DATA_SUFFIX="\"}"
       echo "$DATA_PREFIX$STACK_YAML_CONTENT$DATA_SUFFIX" > json.tmp
       echo_debug "Stack JSON -> $DATA_PREFIX$STACK_YAML_CONTENT$DATA_SUFFIX"
@@ -118,7 +118,7 @@ deploy () {
         @json.tmp)
       echo_debug "Create action response -> $CREATE"
     else
-      DATA_PREFIX="{\"Name\":\"$STACK_NAME\",\"SwarmID\":\"$SWARM_ID\",\"StackFileContent\":\""
+      DATA_PREFIX="{\"Name\":\"$PORTAINER_STACK_NAME\",\"SwarmID\":\"$SWARM_ID\",\"StackFileContent\":\""
       DATA_SUFFIX="\"}"
       echo "$DATA_PREFIX$STACK_YAML_CONTENT$DATA_SUFFIX" > json.tmp
       echo_debug "Stack JSON -> $DATA_PREFIX$STACK_YAML_CONTENT$DATA_SUFFIX"
@@ -140,7 +140,7 @@ deploy () {
 
     rm json.tmp
   else
-    echo_verbose "Result: Stack $STACK_NAME found."
+    echo_verbose "Result: Stack $PORTAINER_STACK_NAME found."
 
     STACK_ID="$(echo "$STACK" | jq -j ".Id")"
     STACK_ENV_VARS="$(echo -n "$STACK"| jq ".Env" -jc)"
@@ -149,7 +149,7 @@ deploy () {
     echo "$DATA_PREFIX$STACK_YAML_CONTENT$DATA_SUFFIX" > json.tmp
     echo_debug "Stack JSON -> $DATA_PREFIX$STACK_YAML_CONTENT$DATA_SUFFIX"
     
-    echo_verbose "Updating stack $STACK_NAME..."
+    echo_verbose "Updating stack $PORTAINER_STACK_NAME..."
     UPDATE=$(http \
       --check-status \
       --ignore-stdin \
@@ -172,15 +172,15 @@ deploy () {
 ##################
 undeploy () {
   if [ -z "$STACK" ]; then
-    echo "Result: Stack $STACK_NAME not found."
+    echo "Result: Stack $PORTAINER_STACK_NAME not found."
     exit 1
   fi
-  echo_verbose "Result: Stack $STACK_NAME found."
+  echo_verbose "Result: Stack $PORTAINER_STACK_NAME found."
 
   STACK_ID="$(echo "$STACK" | jq -j ".Id")"
   echo_debug "Stack ID -> $STACK_ID"
 
-  echo_verbose "Deleting stack $STACK_NAME..."
+  echo_verbose "Deleting stack $PORTAINER_STACK_NAME..."
   DELETE=$(http \
     --ignore-stdin \
     --verify=$HTTPIE_VERIFY_SSL \
@@ -244,8 +244,6 @@ if [ $ACTION == "deploy" ]; then
   check_argument "$DOCKER_COMPOSE_FILE" "docker compose file" "DOCKER_COMPOSE_FILE" "c"
 fi
 
-STACK_NAME=$PORTAINER_STACK_NAME
-
 echo_verbose "Getting auth token..."
 AUTH_TOKEN=$(http \
   --check-status \
@@ -260,7 +258,7 @@ AUTH_TOKEN=$(echo $AUTH_TOKEN | jq -r .jwt)
 echo_debug "Auth token -> $AUTH_TOKEN"
 echo_verbose "Done"
 
-echo_verbose "Getting stack $STACK_NAME..."
+echo_verbose "Getting stack $PORTAINER_STACK_NAME..."
 STACKS=$(http \
   --check-status \
   --ignore-stdin \
@@ -271,7 +269,7 @@ echo_debug "Get stacks response -> $STACKS"
 check_for_errors $? "$STACKS"
 
 STACK=$(echo "$STACKS" \
-  | jq --arg STACK_NAME "$STACK_NAME" -jc '.[] | select(.Name == $STACK_NAME)')
+  | jq --arg PORTAINER_STACK_NAME "$PORTAINER_STACK_NAME" -jc '.[] | select(.Name == $PORTAINER_STACK_NAME)')
 echo_debug "Stack -> $STACK"
 
 if [ $ACTION == "deploy" ]; then
