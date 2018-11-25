@@ -295,6 +295,10 @@ while getopts a:u:p:l:n:c:e:rsvdt option; do
     v) VERBOSE_MODE="true" ;;
     d) DEBUG_MODE="true" ;;
     t) STRICT_MODE="true" ;;
+    *)
+      err "Unexpected option ${option}"
+      exit 1
+      ;;
   esac
 done
 
