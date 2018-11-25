@@ -70,9 +70,7 @@ echo_debug () {
 # Create/update a stack #
 #########################
 deploy () {
-  STACK_YAML_PATH=$DOCKER_COMPOSE_FILE
-
-  STACK_YAML_CONTENT=$(cat "$STACK_YAML_PATH")
+  STACK_YAML_CONTENT=$(cat "$DOCKER_COMPOSE_FILE")
 
   # Escape carriage returns
   STACK_YAML_CONTENT="${STACK_YAML_CONTENT//$'\r'/''}"
