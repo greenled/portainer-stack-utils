@@ -70,9 +70,10 @@ echo_debug () {
 # Create/update a stack #
 #########################
 deploy () {
+  # Read docker-compose file content
   STACK_YAML_CONTENT=$(cat "$DOCKER_COMPOSE_FILE")
 
-  # Escape carriage returns
+  # Remove carriage returns
   STACK_YAML_CONTENT="${STACK_YAML_CONTENT//$'\r'/''}"
 
   # Escape double quotes
@@ -81,10 +82,12 @@ deploy () {
   # Escape newlines
   STACK_YAML_CONTENT="${STACK_YAML_CONTENT//$'\n'/'\n'}"
 
+  # If the stack does not exist
   if [ -z "$STACK" ]; then
-    echo_verbose "Result: Stack $PORTAINER_STACK_NAME not found."
+    echo_verbose "Stack $PORTAINER_STACK_NAME not found."
 
-    echo_verbose "Getting swarm cluster (if any)..."
+    # Get Docker info
+    echo_verbose "Getting Docker info..."
     DOCKER_INFO=$(http \
       --check-status \
       --ignore-stdin \
@@ -93,16 +96,24 @@ deploy () {
       "Authorization: Bearer $AUTH_TOKEN")
     check_for_errors $? "$DOCKER_INFO"
     echo_debug "Docker info -> $DOCKER_INFO"
+
+    # Get Docker swarm ID
+    echo_verbose "Getting swarm cluster (if any)..."
     SWARM_ID=$(echo $DOCKER_INFO | jq -r ".Swarm.Cluster.ID // empty")
     echo_debug "Swarm ID -> $SWARM_ID"
     
-    echo_verbose "Creating stack $PORTAINER_STACK_NAME..."
+    # If there is no swarm ID
     if [ -z "$SWARM_ID" ];then
+      echo_verbose "Swarm cluster not found."
+
+      echo_verbose "Preparing stack JSON..."
       DATA_PREFIX="{\"Name\":\"$PORTAINER_STACK_NAME\",\"StackFileContent\":\""
       DATA_SUFFIX="\"}"
       echo "$DATA_PREFIX$STACK_YAML_CONTENT$DATA_SUFFIX" > json.tmp
       echo_debug "Stack JSON -> $DATA_PREFIX$STACK_YAML_CONTENT$DATA_SUFFIX"
 
+      # Create stack for single Docker instance
+      echo_verbose "Creating stack $PORTAINER_STACK_NAME..."
       CREATE=$(http \
         --check-status \
         --ignore-stdin \
@@ -116,11 +127,16 @@ deploy () {
         @json.tmp)
       echo_debug "Create action response -> $CREATE"
     else
+      echo_verbose "Swarm cluster found."
+
+      echo_verbose "Preparing stack JSON..."
       DATA_PREFIX="{\"Name\":\"$PORTAINER_STACK_NAME\",\"SwarmID\":\"$SWARM_ID\",\"StackFileContent\":\""
       DATA_SUFFIX="\"}"
       echo "$DATA_PREFIX$STACK_YAML_CONTENT$DATA_SUFFIX" > json.tmp
       echo_debug "Stack JSON -> $DATA_PREFIX$STACK_YAML_CONTENT$DATA_SUFFIX"
 
+      # Create stack for Docker swarm
+      echo_verbose "Creating stack $PORTAINER_STACK_NAME..."
       CREATE=$(http \
         --check-status \
         --ignore-stdin \
@@ -138,8 +154,9 @@ deploy () {
 
     rm json.tmp
   else
-    echo_verbose "Result: Stack $PORTAINER_STACK_NAME found."
+    echo_verbose "Stack $PORTAINER_STACK_NAME found."
 
+    echo_verbose "Preparing stack JSON..."
     STACK_ID="$(echo "$STACK" | jq -j ".Id")"
     STACK_ENV_VARS="$(echo -n "$STACK"| jq ".Env" -jc)"
     DATA_PREFIX="{\"Id\":\"$STACK_ID\",\"StackFileContent\":\""
@@ -147,6 +164,7 @@ deploy () {
     echo "$DATA_PREFIX$STACK_YAML_CONTENT$DATA_SUFFIX" > json.tmp
     echo_debug "Stack JSON -> $DATA_PREFIX$STACK_YAML_CONTENT$DATA_SUFFIX"
     
+    # Update stack
     echo_verbose "Updating stack $PORTAINER_STACK_NAME..."
     UPDATE=$(http \
       --check-status \
@@ -170,10 +188,10 @@ deploy () {
 ##################
 undeploy () {
   if [ -z "$STACK" ]; then
-    echo "Result: Stack $PORTAINER_STACK_NAME not found."
+    echo "Error: Stack $PORTAINER_STACK_NAME not found."
     exit 1
   fi
-  echo_verbose "Result: Stack $PORTAINER_STACK_NAME found."
+  echo_verbose "Stack $PORTAINER_STACK_NAME found."
 
   STACK_ID="$(echo "$STACK" | jq -j ".Id")"
   echo_debug "Stack ID -> $STACK_ID"
@@ -242,6 +260,7 @@ if [ $ACTION == "deploy" ]; then
   check_argument "$DOCKER_COMPOSE_FILE" "docker compose file" "DOCKER_COMPOSE_FILE" "c"
 fi
 
+# Get Portainer auth token. Will be used on every API request.
 echo_verbose "Getting auth token..."
 AUTH_TOKEN=$(http \
   --check-status \
@@ -256,6 +275,7 @@ AUTH_TOKEN=$(echo $AUTH_TOKEN | jq -r .jwt)
 echo_debug "Auth token -> $AUTH_TOKEN"
 echo_verbose "Done"
 
+# Get list of all stacks
 echo_verbose "Getting stack $PORTAINER_STACK_NAME..."
 STACKS=$(http \
   --check-status \
@@ -266,6 +286,7 @@ STACKS=$(http \
 echo_debug "Get stacks response -> $STACKS"
 check_for_errors $? "$STACKS"
 
+# Get desired stack from stacks list by it's name
 STACK=$(echo "$STACKS" \
   | jq --arg PORTAINER_STACK_NAME "$PORTAINER_STACK_NAME" -jc '.[] | select(.Name == $PORTAINER_STACK_NAME)')
 echo_debug "Stack -> $STACK"
