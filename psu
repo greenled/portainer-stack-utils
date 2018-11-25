@@ -240,6 +240,9 @@ check_argument "$PORTAINER_USER" "portainer user" "PORTAINER_USER" "u"
 check_argument "$PORTAINER_PASSWORD" "portainer password" "PORTAINER_PASSWORD" "p"
 check_argument "$PORTAINER_URL" "portainer url" "PORTAINER_URL" "l"
 check_argument "$PORTAINER_STACK_NAME" "portainer stack name" "PORTAINER_STACK_NAME" "n"
+if [ $ACTION == "deploy" ]; then
+  check_argument "$DOCKER_COMPOSE_FILE" "docker compose file" "DOCKER_COMPOSE_FILE" "c"
+fi
 
 STACK_NAME=$PORTAINER_STACK_NAME
 
@@ -272,7 +275,6 @@ STACK=$(echo "$STACKS" \
 echo_debug "Stack -> $STACK"
 
 if [ $ACTION == "deploy" ]; then
-  check_argument "$DOCKER_COMPOSE_FILE" "docker compose file" "DOCKER_COMPOSE_FILE" "c"
   deploy
   exit 0
 fi
