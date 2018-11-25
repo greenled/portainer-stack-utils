@@ -187,8 +187,8 @@ deploy () {
 ##################
 undeploy () {
   if [ -z "$STACK" ]; then
-    echo "Error: Stack $PORTAINER_STACK_NAME not found."
-    exit 1
+    echo_verbose "Stack $PORTAINER_STACK_NAME not found."
+    exit 0
   fi
   echo_verbose "Stack $PORTAINER_STACK_NAME found."
 
