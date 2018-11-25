@@ -4,7 +4,7 @@
 [![Docker Pulls](https://img.shields.io/docker/pulls/greenled/portainer-stack-utils.svg)](https://hub.docker.com/r/greenled/portainer-stack-utils/)
 [![Microbadger](https://images.microbadger.com/badges/image/greenled/portainer-stack-utils.svg)](http://microbadger.com/images/greenled/portainer-stack-utils "Image size")
 
-Bash script to deploy/undeploy stacks in a [Portainer](https://portainer.io/) instance from a [docker-compose](https://docs.docker.com/compose) [yaml file](https://docs.docker.com/compose/compose-file). Based on previous work by [@vladbabii](https://github.com/vladbabii) on [docker-how-to/portainer-bash-scripts](https://github.com/docker-how-to/portainer-bash-scripts).
+Bash script to deploy/update/undeploy stacks in a [Portainer](https://portainer.io/) instance from a [docker-compose](https://docs.docker.com/compose) [yaml file](https://docs.docker.com/compose/compose-file). Based on previous work by [@vladbabii](https://github.com/vladbabii) on [docker-how-to/portainer-bash-scripts](https://github.com/docker-how-to/portainer-bash-scripts).
 
 ## Supported Portainer API
 
@@ -18,7 +18,7 @@ Script was created for the latest Portainer API, which at the time of writing is
 
 ## How to use
 
-The provided `psu` script allows to deploy/update/undeploy portainer stacks. Settings can be passed through envvars and/or flags. Both envvars and flags can be mixed but flags will always overwrite envvar values. When deploying a stack, if it doesn't exist a new one is created, otherwise it's updated.
+The provided `psu` script allows to deploy/update/undeploy Portainer stacks. Settings can be passed through envvars and/or flags. Both envvars and flags can be mixed but flags will always overwrite envvar values. When deploying a stack, if it doesn't exist a new one is created, otherwise it's updated.
 
 ### With envvars
 
@@ -87,7 +87,9 @@ This is more suitable for standalone script usage.
 
 ### Debug mode
 
-**WARNING**: In debug mode the script prints as much information as possible, including configuration values (with portainer credentials) and Portainer API responses (with sensitive information like authentication token and stacks environment variables). Avoid using debug mode in CI/CD pipelines, as pipeline logs are usually recorded.
+**WARNING**: In debug mode the script prints as much information as possible, including configuration values (with Portainer credentials) and Portainer API responses (with sensitive information like authentication token and stacks environment variables). Avoid using debug mode in CI/CD pipelines, as pipeline logs are usually recorded.
+
+Debug mode can be enabled through [DEBUG_MODE envvar](#with-envvars) or [-d flag](with-flags).
 
 ## License
 
