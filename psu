@@ -66,6 +66,9 @@ echo_debug () {
   fi
 }
 
+#########################
+# Create/update a stack #
+#########################
 deploy () {
   STACK_YAML_PATH=$DOCKER_COMPOSE_FILE
 
@@ -164,6 +167,9 @@ deploy () {
   echo_verbose "Done"
 }
 
+##################
+# Remove a stack #
+##################
 undeploy () {
   if [ -z "$STACK" ]; then
     echo "Result: Stack $STACK_NAME not found."
@@ -198,7 +204,7 @@ HTTPIE_VERIFY_SSL=${HTTPIE_VERIFY_SSL:-"yes"}
 VERBOSE_MODE=${VERBOSE_MODE:-"false"}
 DEBUG_MODE=${DEBUG_MODE:-"false"}
 
-# Set arguments through flags
+# Set arguments through flags (overwrite envvars)
 while getopts a:u:p:l:n:c:e:rsvd option; do
   case "${option}" in
     a) ACTION=${OPTARG} ;;
@@ -215,7 +221,7 @@ while getopts a:u:p:l:n:c:e:rsvd option; do
   esac
 done
 
-# Print config
+# Print config (only if debug mode is active)
 echo_debug "ACTION -> $ACTION"
 echo_debug "PORTAINER_USER -> $PORTAINER_USER"
 echo_debug "PORTAINER_PASSWORD -> $PORTAINER_PASSWORD"
