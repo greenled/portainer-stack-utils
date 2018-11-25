@@ -5,7 +5,7 @@
 ###################
 # Main entrypoint #
 ###################
-main () {
+main() {
   # Set arguments through envvars
   ACTION=${ACTION}
   PORTAINER_USER=${PORTAINER_USER}
@@ -135,7 +135,7 @@ err() {
 # Returns:                            #
 #   None                              #
 #######################################
-check_argument () {
+check_argument() {
   local argument_value=$1
   local argument_name=$2
   local argument_envvar=$3
@@ -157,7 +157,7 @@ check_argument () {
 # Returns:                                #
 #   None                                  #
 ###########################################
-check_for_errors () {
+check_for_errors() {
   local exit_code=$1
   local response=$2
   if [ $exit_code -ne 0 ]; then
@@ -182,7 +182,7 @@ check_for_errors () {
 # Returns:                                #
 #   None                                  #
 ###########################################
-echo_verbose () {
+echo_verbose() {
   local message=$1
   if [ $VERBOSE_MODE == "true" ]; then
     echo $message
@@ -198,7 +198,7 @@ echo_verbose () {
 # Returns:                              #
 #   None                                #
 #########################################
-echo_debug () {
+echo_debug() {
   local message=$1
   if [ $DEBUG_MODE == "true" ]; then
     echo $message
@@ -219,7 +219,7 @@ echo_debug () {
 # Returns:               #
 #   None                 #
 ##########################
-deploy () {
+deploy() {
   # Read docker-compose file content
   STACK_YAML_CONTENT=$(cat "$DOCKER_COMPOSE_FILE")
 
@@ -348,7 +348,7 @@ deploy () {
 # Returns:               #
 #   None                 #
 ##########################
-undeploy () {
+undeploy() {
   if [ -z "$STACK" ]; then
     if [ $STRICT_MODE == "true" ]; then
       err "Error: Stack $PORTAINER_STACK_NAME does not exist."
