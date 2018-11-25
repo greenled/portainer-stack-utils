@@ -24,7 +24,7 @@ The provided `psu` script allows to deploy/update/undeploy portainer stacks. Set
 
 This is particularly useful for CI/CD pipelines.
 
-- `ACTION` (string, required): deploy/undeploy
+- `ACTION` ("deploy" or "undeploy", required): Whether to deploy or undeploy the stack
 - `PORTAINER_USER` (string, required): Username
 - `PORTAINER_PASSWORD` (string, required): Password
 - `PORTAINER_URL` (string, required): URL to Portainer
@@ -63,7 +63,7 @@ export PORTAINER_STACK_NAME="mystack"
 
 This is more suitable for standalone script usage.
 
-- `-a` (string, required): deploy/undeploy
+- `-a` ("deploy" or "undeploy", required): Whether to deploy or undeploy the stack
 - `-u` (string, required): Username
 - `-p` (string, required): Password
 - `-l` (string, required): URL to Portainer
