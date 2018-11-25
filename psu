@@ -180,7 +180,6 @@ deploy () {
     
     rm json.tmp
   fi
-  echo_verbose "Done"
 }
 
 ##################
@@ -204,7 +203,6 @@ undeploy () {
     "Authorization: Bearer $AUTH_TOKEN")
   echo_debug "Delete action response -> $UPDATE"
   check_for_errors $? "$DELETE"
-  echo_verbose "Done"
 }
 
 # Set arguments through envvars
@@ -273,7 +271,6 @@ echo_debug "Get auth token response -> $AUTH_TOKEN"
 check_for_errors $? "$AUTH_TOKEN"
 AUTH_TOKEN=$(echo $AUTH_TOKEN | jq -r .jwt)
 echo_debug "Auth token -> $AUTH_TOKEN"
-echo_verbose "Done"
 
 # Get list of all stacks
 echo_verbose "Getting stack $PORTAINER_STACK_NAME..."
