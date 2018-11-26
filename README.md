@@ -10,11 +10,25 @@ Bash script to deploy/update/undeploy stacks in a [Portainer](https://portainer.
 
 Script was created for the latest Portainer API, which at the time of writing is [1.9.2](https://app.swaggerhub.com/apis/deviantony/Portainer/1.19.2).
 
-## Requirements
+## How to install
+
+Just clone the repo and use the script
+
+```bash
+git clone https://github.com/greenled/portainer-stack-utils.git
+cd portainer-stack-utils
+./psu ...
+```
+
+### Requirements
+
+You will need these dependecies installed:
 
 - [bash](https://www.gnu.org/software/bash/)
 - [httpie](https://httpie.org/)
 - [jq](https://stedolan.github.io/jq/)
+
+For Debian and similar apt-powered systems: `apt install bash httpie jq`.
 
 ## How to use
 
