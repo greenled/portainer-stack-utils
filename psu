@@ -37,7 +37,8 @@ main() {
 
   # Get list of all stacks
   echo_verbose "Getting stack $PORTAINER_STACK_NAME..."
-  local stacks=$(http \
+  local stacks
+  stacks=$(http \
     --check-status \
     --ignore-stdin \
     --verify=$HTTPIE_VERIFY_SSL \
@@ -270,7 +271,8 @@ echo_debug() {
 ##########################
 deploy() {
   # Read docker-compose file content
-  local docker_compose_file_content=$(cat "$DOCKER_COMPOSE_FILE")
+  local docker_compose_file_content
+  docker_compose_file_content=$(cat "$DOCKER_COMPOSE_FILE")
 
   # Remove carriage returns
   docker_compose_file_content="${docker_compose_file_content//$'\r'/''}"
@@ -287,7 +289,8 @@ deploy() {
 
     # Get Docker info
     echo_verbose "Getting Docker info..."
-    local docker_info=$(http \
+    local docker_info
+    docker_info=$(http \
       --check-status \
       --ignore-stdin \
       --verify=$HTTPIE_VERIFY_SSL \
@@ -298,7 +301,8 @@ deploy() {
 
     # Get Docker swarm ID
     echo_verbose "Getting swarm cluster (if any)..."
-    local swarm_id=$(echo $docker_info | jq -r ".Swarm.Cluster.ID // empty")
+    local swarm_id
+    swarm_id=$(echo $docker_info | jq -r ".Swarm.Cluster.ID // empty")
     echo_debug "Swarm ID -> $swarm_id"
     
     # If there is no swarm ID
@@ -313,7 +317,8 @@ deploy() {
 
       # Create stack for single Docker instance
       echo_verbose "Creating stack $PORTAINER_STACK_NAME..."
-      local create=$(http \
+      local create
+      create=$(http \
         --check-status \
         --ignore-stdin \
         --verify=$HTTPIE_VERIFY_SSL \
@@ -336,7 +341,8 @@ deploy() {
 
       # Create stack for Docker swarm
       echo_verbose "Creating stack $PORTAINER_STACK_NAME..."
-      local create=$(http \
+      local create
+      create=$(http \
         --check-status \
         --ignore-stdin \
         --verify=$HTTPIE_VERIFY_SSL \
@@ -360,8 +366,10 @@ deploy() {
     echo_verbose "Stack $PORTAINER_STACK_NAME exists."
 
     echo_verbose "Preparing stack JSON..."
-    local stack_id="$(echo "$STACK" | jq -j ".Id")"
-    local stack_envvars="$(echo -n "$STACK"| jq ".Env" -jc)"
+    local stack_id
+    stack_id="$(echo "$STACK" | jq -j ".Id")"
+    local stack_envvars
+    stack_envvars="$(echo -n "$STACK"| jq ".Env" -jc)"
     local data_prefix="{\"Id\":\"$stack_id\",\"StackFileContent\":\""
     local data_suffix="\",\"Env\":"$stack_envvars",\"Prune\":$PORTAINER_PRUNE}"
     echo "$data_prefix$docker_compose_file_content$data_suffix" > json.tmp
@@ -369,7 +377,8 @@ deploy() {
     
     # Update stack
     echo_verbose "Updating stack $PORTAINER_STACK_NAME..."
-    local update=$(http \
+    local update
+    update=$(http \
       --check-status \
       --ignore-stdin \
       --verify=$HTTPIE_VERIFY_SSL \
@@ -410,11 +419,14 @@ undeploy() {
   fi
   echo_verbose "Stack $PORTAINER_STACK_NAME exists."
 
-  local stack_id="$(echo "$STACK" | jq -j ".Id")"
+  local stack_id
+  stack_id="$(echo "$STACK" | jq -j ".Id")"
   echo_debug "Stack ID -> $stack_id"
 
   echo_verbose "Deleting stack $PORTAINER_STACK_NAME..."
-  local delete=$(http \
+  local delete
+  delete=$(http \
+    --check-status \
     --ignore-stdin \
     --verify=$HTTPIE_VERIFY_SSL \
     DELETE "$PORTAINER_URL/api/stacks/$stack_id" \
