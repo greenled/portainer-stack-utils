@@ -54,6 +54,7 @@ main() {
   echo_debug "HTTPIE_VERIFY_SSL -> $HTTPIE_VERIFY_SSL"
   echo_debug "VERBOSE_MODE -> $VERBOSE_MODE"
   echo_debug "DEBUG_MODE -> $DEBUG_MODE"
+  echo_debug "STRICT_MODE -> $STRICT_MODE"
 
   # Check required arguments have been provided
   check_argument "$ACTION" "action" "ACTION" "a"
