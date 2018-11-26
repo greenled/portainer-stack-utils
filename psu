@@ -6,6 +6,73 @@
 # Main entrypoint #
 ###################
 main() {
+  set_globals $@
+
+  # Get Portainer auth token. Will be used on every API request.
+  echo_verbose "Getting auth token..."
+  AUTH_TOKEN=$(http \
+    --check-status \
+    --ignore-stdin \
+    --verify=$HTTPIE_VERIFY_SSL \
+    $PORTAINER_URL/api/auth \
+    username=$PORTAINER_USER \
+    password=$PORTAINER_PASSWORD)
+  echo_debug "Get auth token response -> $AUTH_TOKEN"
+  check_for_errors $? "$AUTH_TOKEN"
+  AUTH_TOKEN=$(echo $AUTH_TOKEN | jq -r .jwt)
+  echo_debug "Auth token -> $AUTH_TOKEN"
+
+  # Get list of all stacks
+  echo_verbose "Getting stack $PORTAINER_STACK_NAME..."
+  local stacks=$(http \
+    --check-status \
+    --ignore-stdin \
+    --verify=$HTTPIE_VERIFY_SSL \
+    "$PORTAINER_URL/api/stacks" \
+    "Authorization: Bearer $AUTH_TOKEN")
+  echo_debug "Get stacks response -> $stacks"
+  check_for_errors $? "$stacks"
+
+  # Get desired stack from stacks list by it's name
+  STACK=$(echo "$stacks" \
+    | jq --arg PORTAINER_STACK_NAME "$PORTAINER_STACK_NAME" -jc '.[] | select(.Name == $PORTAINER_STACK_NAME)')
+  echo_debug "Stack -> $STACK"
+
+  if [ $ACTION == "deploy" ]; then
+    deploy
+    exit 0
+  fi
+
+  if [ $ACTION == "undeploy" ]; then
+    undeploy
+    exit 0
+  fi
+
+  echo_error "Error: Unknown action \"$ACTION\"."
+  exit 1
+}
+
+##########################
+# Set globals            #
+# Globals:               #
+#   ACTION               #
+#   PORTAINER_USER       #
+#   PORTAINER_PASSWORD   #
+#   PORTAINER_URL        #
+#   PORTAINER_STACK_NAME #
+#   DOCKER_COMPOSE_FILE  #
+#   PORTAINER_ENDPOINT   #
+#   PORTAINER_PRUNE      #
+#   HTTPIE_VERIFY_SSL    #
+#   VERBOSE_MODE         #
+#   DEBUG_MODE           #
+#   STRICT_MODE          #
+# Arguments:             #
+#   None                 #
+# Returns:               #
+#   None                 #
+##########################
+set_globals() {
   # Set arguments through envvars
   ACTION=${ACTION}
   PORTAINER_USER=${PORTAINER_USER}
@@ -65,49 +132,6 @@ main() {
   if [ $ACTION == "deploy" ]; then
     check_argument "$DOCKER_COMPOSE_FILE" "docker compose file" "DOCKER_COMPOSE_FILE" "c"
   fi
-
-  # Get Portainer auth token. Will be used on every API request.
-  echo_verbose "Getting auth token..."
-  AUTH_TOKEN=$(http \
-    --check-status \
-    --ignore-stdin \
-    --verify=$HTTPIE_VERIFY_SSL \
-    $PORTAINER_URL/api/auth \
-    username=$PORTAINER_USER \
-    password=$PORTAINER_PASSWORD)
-  echo_debug "Get auth token response -> $AUTH_TOKEN"
-  check_for_errors $? "$AUTH_TOKEN"
-  AUTH_TOKEN=$(echo $AUTH_TOKEN | jq -r .jwt)
-  echo_debug "Auth token -> $AUTH_TOKEN"
-
-  # Get list of all stacks
-  echo_verbose "Getting stack $PORTAINER_STACK_NAME..."
-  local stacks=$(http \
-    --check-status \
-    --ignore-stdin \
-    --verify=$HTTPIE_VERIFY_SSL \
-    "$PORTAINER_URL/api/stacks" \
-    "Authorization: Bearer $AUTH_TOKEN")
-  echo_debug "Get stacks response -> $stacks"
-  check_for_errors $? "$stacks"
-
-  # Get desired stack from stacks list by it's name
-  STACK=$(echo "$stacks" \
-    | jq --arg PORTAINER_STACK_NAME "$PORTAINER_STACK_NAME" -jc '.[] | select(.Name == $PORTAINER_STACK_NAME)')
-  echo_debug "Stack -> $STACK"
-
-  if [ $ACTION == "deploy" ]; then
-    deploy
-    exit 0
-  fi
-
-  if [ $ACTION == "undeploy" ]; then
-    undeploy
-    exit 0
-  fi
-
-  echo_error "Error: Unknown action \"$ACTION\"."
-  exit 1
 }
 
 ############################
