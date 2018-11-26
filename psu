@@ -221,16 +221,16 @@ echo_debug() {
 ##########################
 deploy() {
   # Read docker-compose file content
-  STACK_YAML_CONTENT=$(cat "$DOCKER_COMPOSE_FILE")
+  local docker_compose_file_content=$(cat "$DOCKER_COMPOSE_FILE")
 
   # Remove carriage returns
-  STACK_YAML_CONTENT="${STACK_YAML_CONTENT//$'\r'/''}"
+  docker_compose_file_content="${docker_compose_file_content//$'\r'/''}"
 
   # Escape double quotes
-  STACK_YAML_CONTENT="${STACK_YAML_CONTENT//$'"'/'\"'}"
+  docker_compose_file_content="${docker_compose_file_content//$'"'/'\"'}"
 
   # Escape newlines
-  STACK_YAML_CONTENT="${STACK_YAML_CONTENT//$'\n'/'\n'}"
+  docker_compose_file_content="${docker_compose_file_content//$'\n'/'\n'}"
 
   # If the stack does not exist
   if [ -z "$STACK" ]; then
@@ -238,33 +238,33 @@ deploy() {
 
     # Get Docker info
     echo_verbose "Getting Docker info..."
-    DOCKER_INFO=$(http \
+    local docker_info=$(http \
       --check-status \
       --ignore-stdin \
       --verify=$HTTPIE_VERIFY_SSL \
       "$PORTAINER_URL/api/endpoints/$PORTAINER_ENDPOINT/docker/info" \
       "Authorization: Bearer $AUTH_TOKEN")
-    check_for_errors $? "$DOCKER_INFO"
-    echo_debug "Docker info -> $DOCKER_INFO"
+    check_for_errors $? "$docker_info"
+    echo_debug "Docker info -> $docker_info"
 
     # Get Docker swarm ID
     echo_verbose "Getting swarm cluster (if any)..."
-    SWARM_ID=$(echo $DOCKER_INFO | jq -r ".Swarm.Cluster.ID // empty")
-    echo_debug "Swarm ID -> $SWARM_ID"
+    local swarm_id=$(echo $docker_info | jq -r ".Swarm.Cluster.ID // empty")
+    echo_debug "Swarm ID -> $swarm_id"
     
     # If there is no swarm ID
-    if [ -z "$SWARM_ID" ];then
+    if [ -z "$swarm_id" ];then
       echo_verbose "Swarm cluster not found."
 
       echo_verbose "Preparing stack JSON..."
-      DATA_PREFIX="{\"Name\":\"$PORTAINER_STACK_NAME\",\"StackFileContent\":\""
-      DATA_SUFFIX="\"}"
-      echo "$DATA_PREFIX$STACK_YAML_CONTENT$DATA_SUFFIX" > json.tmp
-      echo_debug "Stack JSON -> $DATA_PREFIX$STACK_YAML_CONTENT$DATA_SUFFIX"
+      local data_prefix="{\"Name\":\"$PORTAINER_STACK_NAME\",\"StackFileContent\":\""
+      local data_suffix="\"}"
+      echo "$data_prefix$docker_compose_file_content$data_suffix" > json.tmp
+      echo_debug "Stack JSON -> $data_prefix$docker_compose_file_content$data_suffix"
 
       # Create stack for single Docker instance
       echo_verbose "Creating stack $PORTAINER_STACK_NAME..."
-      CREATE=$(http \
+      local create=$(http \
         --check-status \
         --ignore-stdin \
         --verify=$HTTPIE_VERIFY_SSL \
@@ -275,19 +275,19 @@ deploy() {
         method==string \
         endpointId==$PORTAINER_ENDPOINT \
         @json.tmp)
-      echo_debug "Create action response -> $CREATE"
+      echo_debug "Create action response -> $create"
     else
       echo_verbose "Swarm cluster found."
 
       echo_verbose "Preparing stack JSON..."
-      DATA_PREFIX="{\"Name\":\"$PORTAINER_STACK_NAME\",\"SwarmID\":\"$SWARM_ID\",\"StackFileContent\":\""
-      DATA_SUFFIX="\"}"
-      echo "$DATA_PREFIX$STACK_YAML_CONTENT$DATA_SUFFIX" > json.tmp
-      echo_debug "Stack JSON -> $DATA_PREFIX$STACK_YAML_CONTENT$DATA_SUFFIX"
+      local data_prefix="{\"Name\":\"$PORTAINER_STACK_NAME\",\"SwarmID\":\"$swarm_id\",\"StackFileContent\":\""
+      local data_suffix="\"}"
+      echo "$data_prefix$docker_compose_file_content$data_suffix" > json.tmp
+      echo_debug "Stack JSON -> $data_prefix$docker_compose_file_content$data_suffix"
 
       # Create stack for Docker swarm
       echo_verbose "Creating stack $PORTAINER_STACK_NAME..."
-      CREATE=$(http \
+      local create=$(http \
         --check-status \
         --ignore-stdin \
         --verify=$HTTPIE_VERIFY_SSL \
@@ -298,9 +298,9 @@ deploy() {
         method==string \
         endpointId==$PORTAINER_ENDPOINT \
         @json.tmp)
-      echo_debug "Create action response -> $CREATE"
+      echo_debug "Create action response -> $create"
     fi
-    check_for_errors $? "$CREATE"
+    check_for_errors $? "$create"
 
     rm json.tmp
   else
@@ -311,26 +311,26 @@ deploy() {
     echo_verbose "Stack $PORTAINER_STACK_NAME exists."
 
     echo_verbose "Preparing stack JSON..."
-    STACK_ID="$(echo "$STACK" | jq -j ".Id")"
-    STACK_ENV_VARS="$(echo -n "$STACK"| jq ".Env" -jc)"
-    DATA_PREFIX="{\"Id\":\"$STACK_ID\",\"StackFileContent\":\""
-    DATA_SUFFIX="\",\"Env\":"$STACK_ENV_VARS",\"Prune\":$PORTAINER_PRUNE}"
-    echo "$DATA_PREFIX$STACK_YAML_CONTENT$DATA_SUFFIX" > json.tmp
-    echo_debug "Stack JSON -> $DATA_PREFIX$STACK_YAML_CONTENT$DATA_SUFFIX"
+    local stack_id="$(echo "$STACK" | jq -j ".Id")"
+    local stack_envvars="$(echo -n "$STACK"| jq ".Env" -jc)"
+    local data_prefix="{\"Id\":\"$stack_id\",\"StackFileContent\":\""
+    local data_suffix="\",\"Env\":"$stack_envvars",\"Prune\":$PORTAINER_PRUNE}"
+    echo "$data_prefix$docker_compose_file_content$data_suffix" > json.tmp
+    echo_debug "Stack JSON -> $data_prefix$docker_compose_file_content$data_suffix"
     
     # Update stack
     echo_verbose "Updating stack $PORTAINER_STACK_NAME..."
-    UPDATE=$(http \
+    local update=$(http \
       --check-status \
       --ignore-stdin \
       --verify=$HTTPIE_VERIFY_SSL \
       --timeout=300 \
-      PUT "$PORTAINER_URL/api/stacks/$STACK_ID" \
+      PUT "$PORTAINER_URL/api/stacks/$stack_id" \
       "Authorization: Bearer $AUTH_TOKEN" \
       endpointId==$PORTAINER_ENDPOINT \
       @json.tmp)
-    echo_debug "Update action response -> $UPDATE"
-    check_for_errors $? "$UPDATE"
+    echo_debug "Update action response -> $update"
+    check_for_errors $? "$update"
     
     rm json.tmp
   fi
@@ -360,17 +360,17 @@ undeploy() {
   fi
   echo_verbose "Stack $PORTAINER_STACK_NAME exists."
 
-  STACK_ID="$(echo "$STACK" | jq -j ".Id")"
-  echo_debug "Stack ID -> $STACK_ID"
+  local stack_id="$(echo "$STACK" | jq -j ".Id")"
+  echo_debug "Stack ID -> $stack_id"
 
   echo_verbose "Deleting stack $PORTAINER_STACK_NAME..."
-  DELETE=$(http \
+  local delete=$(http \
     --ignore-stdin \
     --verify=$HTTPIE_VERIFY_SSL \
-    DELETE "$PORTAINER_URL/api/stacks/$STACK_ID" \
+    DELETE "$PORTAINER_URL/api/stacks/$stack_id" \
     "Authorization: Bearer $AUTH_TOKEN")
-  echo_debug "Delete action response -> $UPDATE"
-  check_for_errors $? "$DELETE"
+  echo_debug "Delete action response -> $delete"
+  check_for_errors $? "$delete"
 }
 
 main "$@"
