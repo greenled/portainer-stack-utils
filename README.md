@@ -74,8 +74,7 @@ This is more suitable for standalone script usage.
 - `-e` (int, optional): Which endpoint to use. Defaults to `1`.
 - `-s` ("yes" or "no", optional): Whether to verify SSL certificate or not. Defaults to `"yes"`.
 - `-v` ("true" or "false", optional): Whether to activate verbose output mode or not. Defaults to `"false"`. See [verbose mode](#verbose-mode) below.
-- `-d` ("true" or "false", optional): Whether to activate debug output mode or not. Defaults to `"false"`. See [debug mode](
-#debug-mode) below.
+- `-d` ("true" or "false", optional): Whether to activate debug output mode or not. Defaults to `"false"`. See [debug mode](#debug-mode) below.
 - `-t` ("true" or "false", optional): Whether to activate strict mode or not. Defaults to `"false"`. See [strict mode](#strict-mode) below.
 
 #### Examples
