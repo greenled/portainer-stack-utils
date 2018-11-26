@@ -114,7 +114,7 @@ Debug mode can be enabled through [DEBUG_MODE envvar](#with-envvars) or [-d flag
 
 ### Strict mode
 
-In strict mode the script never updates an existent stack, and instead exits with an error. Following the same principle, it never removes an unexistent stack.
+In strict mode the script never updates an existent stack nor removes an unexistent one, and instead exits with an error.
 
 Strict mode can be enabled through [STRICT_MODE envvar](#with-envvars) or [-t flag](with-flags).
 
