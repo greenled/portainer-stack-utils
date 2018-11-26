@@ -2,9 +2,22 @@
 #
 # Deploy/update/undeploy Docker stacks in a Portainer instance.
 
-###################
-# Main entrypoint #
-###################
+##########################
+# Main entrypoint        #
+# Globals:               #
+#   AUTH_TOKEN           #
+#   HTTPIE_VERIFY_SSL    #
+#   PORTAINER_URL        #
+#   PORTAINER_USER       #
+#   PORTAINER_PASSWORD   #
+#   PORTAINER_STACK_NAME #
+#   STACK                #
+#   ACTION               #
+# Arguments:             #
+#   None                 #
+# Returns:               #
+#   None                 #
+##########################
 main() {
   set_globals $@
 
