@@ -30,7 +30,7 @@ main() {
     $PORTAINER_URL/api/auth \
     username=$PORTAINER_USER \
     password=$PORTAINER_PASSWORD)
-  echo_debug "Get auth token response -> $AUTH_TOKEN"
+  echo_debug "Get auth token response -> $(echo $AUTH_TOKEN | jq -C .)"
   check_for_errors $? "$AUTH_TOKEN"
   AUTH_TOKEN=$(echo $AUTH_TOKEN | jq -r .jwt)
   echo_debug "Auth token -> $AUTH_TOKEN"
@@ -43,13 +43,13 @@ main() {
     --verify=$HTTPIE_VERIFY_SSL \
     "$PORTAINER_URL/api/stacks" \
     "Authorization: Bearer $AUTH_TOKEN")
-  echo_debug "Get stacks response -> $stacks"
+  echo_debug "Get stacks response -> $(echo $stacks | jq -C .)"
   check_for_errors $? "$stacks"
 
   # Get desired stack from stacks list by it's name
   STACK=$(echo "$stacks" \
     | jq --arg PORTAINER_STACK_NAME "$PORTAINER_STACK_NAME" -jc '.[] | select(.Name == $PORTAINER_STACK_NAME)')
-  echo_debug "Stack -> $STACK"
+  echo_debug "Stack ${PORTAINER_STACK_NAME} -> $(echo $STACK | jq -C .)"
 
   if [ $ACTION == "deploy" ]; then
     deploy
@@ -158,7 +158,9 @@ set_globals() {
 ############################
 echo_error() {
   local error_message=$@
-  echo "[$(date +'%Y-%m-%dT%H:%M:%S%z')]: $error_message" >&2
+  local red='\033[0;31m'
+  local nc='\033[0m'
+  echo -e "${red}[$(date +'%Y-%m-%dT%H:%M:%S%z')]: ${error_message}${nc}" >&2
 }
 
 #######################################
@@ -228,8 +230,10 @@ check_for_errors() {
 ###########################################
 echo_verbose() {
   local message=$1
+  local yellow='\033[1;33m'
+  local nc='\033[0m'
   if [ $VERBOSE_MODE == "true" ]; then
-    echo $message
+    echo -e "${yellow}${message}${nc}"
   fi
 }
 
@@ -245,7 +249,7 @@ echo_verbose() {
 echo_debug() {
   local message=$1
   if [ $DEBUG_MODE == "true" ]; then
-    echo $message
+    echo -e "${message}"
   fi
 }
 
@@ -290,7 +294,7 @@ deploy() {
       "$PORTAINER_URL/api/endpoints/$PORTAINER_ENDPOINT/docker/info" \
       "Authorization: Bearer $AUTH_TOKEN")
     check_for_errors $? "$docker_info"
-    echo_debug "Docker info -> $docker_info"
+    echo_debug "Docker info -> $(echo $docker_info | jq -C .)"
 
     # Get Docker swarm ID
     echo_verbose "Getting swarm cluster (if any)..."
@@ -305,7 +309,7 @@ deploy() {
       local data_prefix="{\"Name\":\"$PORTAINER_STACK_NAME\",\"StackFileContent\":\""
       local data_suffix="\"}"
       echo "$data_prefix$docker_compose_file_content$data_suffix" > json.tmp
-      echo_debug "Stack JSON -> $data_prefix$docker_compose_file_content$data_suffix"
+      echo_debug "Stack JSON -> $(echo $data_prefix$docker_compose_file_content$data_suffix | jq -C .)"
 
       # Create stack for single Docker instance
       echo_verbose "Creating stack $PORTAINER_STACK_NAME..."
@@ -320,7 +324,7 @@ deploy() {
         method==string \
         endpointId==$PORTAINER_ENDPOINT \
         @json.tmp)
-      echo_debug "Create action response -> $create"
+      echo_debug "Create action response -> $(echo $create | jq -C .)"
     else
       echo_verbose "Swarm cluster found."
 
@@ -328,7 +332,7 @@ deploy() {
       local data_prefix="{\"Name\":\"$PORTAINER_STACK_NAME\",\"SwarmID\":\"$swarm_id\",\"StackFileContent\":\""
       local data_suffix="\"}"
       echo "$data_prefix$docker_compose_file_content$data_suffix" > json.tmp
-      echo_debug "Stack JSON -> $data_prefix$docker_compose_file_content$data_suffix"
+      echo_debug "Stack JSON -> $(echo $data_prefix$docker_compose_file_content$data_suffix | jq -C .)"
 
       # Create stack for Docker swarm
       echo_verbose "Creating stack $PORTAINER_STACK_NAME..."
@@ -343,7 +347,7 @@ deploy() {
         method==string \
         endpointId==$PORTAINER_ENDPOINT \
         @json.tmp)
-      echo_debug "Create action response -> $create"
+      echo_debug "Create action response -> $(echo $create | jq -C .)"
     fi
     check_for_errors $? "$create"
 
@@ -361,7 +365,7 @@ deploy() {
     local data_prefix="{\"Id\":\"$stack_id\",\"StackFileContent\":\""
     local data_suffix="\",\"Env\":"$stack_envvars",\"Prune\":$PORTAINER_PRUNE}"
     echo "$data_prefix$docker_compose_file_content$data_suffix" > json.tmp
-    echo_debug "Stack JSON -> $data_prefix$docker_compose_file_content$data_suffix"
+    echo_debug "Stack JSON -> $(echo $data_prefix$docker_compose_file_content$data_suffix | jq -C .)"
     
     # Update stack
     echo_verbose "Updating stack $PORTAINER_STACK_NAME..."
@@ -374,7 +378,7 @@ deploy() {
       "Authorization: Bearer $AUTH_TOKEN" \
       endpointId==$PORTAINER_ENDPOINT \
       @json.tmp)
-    echo_debug "Update action response -> $update"
+    echo_debug "Update action response -> $(echo $update | jq -C .)"
     check_for_errors $? "$update"
     
     rm json.tmp
@@ -415,7 +419,7 @@ undeploy() {
     --verify=$HTTPIE_VERIFY_SSL \
     DELETE "$PORTAINER_URL/api/stacks/$stack_id" \
     "Authorization: Bearer $AUTH_TOKEN")
-  echo_debug "Delete action response -> $delete"
+  echo_debug "Delete action response -> $(echo $delete | jq -C .)"
   check_for_errors $? "$delete"
 }
 
