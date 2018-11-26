@@ -19,7 +19,7 @@
 #   None                 #
 ##########################
 main() {
-  set_globals $@
+  set_globals "$@"
 
   # Get Portainer auth token. Will be used on every API request.
   echo_verbose "Getting auth token..."
@@ -158,7 +158,7 @@ set_globals() {
 #   None                   #
 ############################
 echo_error() {
-  local error_message=$@
+  local error_message="$@"
   local red='\033[0;31m'
   local nc='\033[0m'
   echo -e "${red}[$(date +'%Y-%m-%dT%H:%M:%S%z')]: ${error_message}${nc}" >&2
