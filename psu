@@ -209,6 +209,7 @@ echo_debug() {
 ##########################
 # Create/update a stack  #
 # Globals:               #
+#   STACK                #
 #   DOCKER_COMPOSE_FILE  #
 #   PORTAINER_STACK_NAME #
 #   PORTAINER_URL        #
@@ -340,6 +341,7 @@ deploy() {
 ##########################
 # Remove a stack         #
 # Globals:               #
+#   STACK                #
 #   PORTAINER_STACK_NAME #
 #   PORTAINER_URL        #
 #   HTTPIE_VERIFY_SSL    #
