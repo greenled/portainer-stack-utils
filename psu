@@ -30,8 +30,8 @@ main() {
     $PORTAINER_URL/api/auth \
     username=$PORTAINER_USER \
     password=$PORTAINER_PASSWORD)
-  echo_debug "Get auth token response -> $(echo $AUTH_TOKEN | jq -C .)"
   check_for_errors $? "$AUTH_TOKEN"
+  echo_debug "Get auth token response -> $(echo $AUTH_TOKEN | jq -C .)"
   AUTH_TOKEN=$(echo $AUTH_TOKEN | jq -r .jwt)
   echo_debug "Auth token -> $AUTH_TOKEN"
 
@@ -44,8 +44,8 @@ main() {
     --verify=$HTTPIE_VERIFY_SSL \
     "$PORTAINER_URL/api/stacks" \
     "Authorization: Bearer $AUTH_TOKEN")
-  echo_debug "Get stacks response -> $(echo $stacks | jq -C .)"
   check_for_errors $? "$stacks"
+  echo_debug "Get stacks response -> $(echo $stacks | jq -C .)"
 
   # Get desired stack from stacks list by it's name
   STACK=$(echo "$stacks" \
@@ -329,6 +329,7 @@ deploy() {
         method==string \
         endpointId==$PORTAINER_ENDPOINT \
         @json.tmp)
+      check_for_errors $? "$create"
       echo_debug "Create action response -> $(echo $create | jq -C .)"
     else
       echo_verbose "Swarm cluster found."
@@ -353,9 +354,9 @@ deploy() {
         method==string \
         endpointId==$PORTAINER_ENDPOINT \
         @json.tmp)
+      check_for_errors $? "$create"
       echo_debug "Create action response -> $(echo $create | jq -C .)"
     fi
-    check_for_errors $? "$create"
 
     rm json.tmp
   else
@@ -387,8 +388,8 @@ deploy() {
       "Authorization: Bearer $AUTH_TOKEN" \
       endpointId==$PORTAINER_ENDPOINT \
       @json.tmp)
-    echo_debug "Update action response -> $(echo $update | jq -C .)"
     check_for_errors $? "$update"
+    echo_debug "Update action response -> $(echo $update | jq -C .)"
     
     rm json.tmp
   fi
@@ -431,8 +432,8 @@ undeploy() {
     --verify=$HTTPIE_VERIFY_SSL \
     DELETE "$PORTAINER_URL/api/stacks/$stack_id" \
     "Authorization: Bearer $AUTH_TOKEN")
-  echo_debug "Delete action response -> $(echo $delete | jq -C .)"
   check_for_errors $? "$delete"
+  echo_debug "Delete action response -> $(echo $delete | jq -C .)"
 }
 
 main "$@"
