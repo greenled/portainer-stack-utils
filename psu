@@ -202,8 +202,14 @@ check_for_errors() {
     case $exit_code in
         2) echo_error 'Request timed out!' ;;
         3) echo_error 'Unexpected HTTP 3xx Redirection!' ;;
-        4) echo_error 'HTTP 4xx Client Error!' && echo_error $response ;;
-        5) echo_error 'HTTP 5xx Server Error!' && echo_error $response ;;
+        4)
+          echo_error 'HTTP 4xx Client Error!'
+          echo_error $response
+          ;;
+        5)
+          echo_error 'HTTP 5xx Server Error!'
+          echo_error $response
+          ;;
         6) echo_error 'Exceeded --max-redirects=<n> redirects!' ;;
         *) echo_error 'Unholy Error!' ;;
     esac
