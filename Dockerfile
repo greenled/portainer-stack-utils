@@ -30,3 +30,5 @@ RUN apk --update add \
 COPY psu /usr/local/bin/
 
 RUN chmod +x /usr/local/bin/*
+
+ENTRYPOINT ["/usr/local/bin/psu"]
