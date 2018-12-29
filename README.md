@@ -116,7 +116,7 @@ Preparing stack JSON...
 Creating stack mystack...
 ```
 
-Verbose mode can be enabled through [VERBOSE_MODE envvar](#with-envvars) or [-v flag](with-flags).
+Verbose mode can be enabled through [VERBOSE_MODE envvar](#with-envvars) or [-v flag](#with-flags).
 
 ### Debug mode
 
@@ -124,13 +124,13 @@ In debug mode the script prints as much information as possible to help diagnosi
 
 **WARNING**: Debug mode will print configuration values (with Portainer credentials) and Portainer API responses (with sensitive information like authentication token and stacks environment variables). Avoid using debug mode in CI/CD pipelines, as pipeline logs are usually recorded.
 
-Debug mode can be enabled through [DEBUG_MODE envvar](#with-envvars) or [-d flag](with-flags).
+Debug mode can be enabled through [DEBUG_MODE envvar](#with-envvars) or [-d flag](#with-flags).
 
 ### Strict mode
 
 In strict mode the script never updates an existent stack nor removes an unexistent one, and instead exits with an error.
 
-Strict mode can be enabled through [STRICT_MODE envvar](#with-envvars) or [-t flag](with-flags).
+Strict mode can be enabled through [STRICT_MODE envvar](#with-envvars) or [-t flag](#with-flags).
 
 ## License
 
