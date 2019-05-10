@@ -66,26 +66,27 @@ main() {
   exit 1
 }
 
-##########################
-# Set globals            #
-# Globals:               #
-#   ACTION               #
-#   PORTAINER_USER       #
-#   PORTAINER_PASSWORD   #
-#   PORTAINER_URL        #
-#   PORTAINER_STACK_NAME #
-#   DOCKER_COMPOSE_FILE  #
-#   PORTAINER_ENDPOINT   #
-#   PORTAINER_PRUNE      #
-#   HTTPIE_VERIFY_SSL    #
-#   VERBOSE_MODE         #
-#   DEBUG_MODE           #
-#   STRICT_MODE          #
-# Arguments:             #
-#   None                 #
-# Returns:               #
-#   None                 #
-##########################
+################################
+# Set globals                  #
+# Globals:                     #
+#   ACTION                     #
+#   PORTAINER_USER             #
+#   PORTAINER_PASSWORD         #
+#   PORTAINER_URL              #
+#   PORTAINER_STACK_NAME       #
+#   DOCKER_COMPOSE_FILE        #
+#   ENVIRONMENT_VARIABLES_FILE #
+#   PORTAINER_ENDPOINT         #
+#   PORTAINER_PRUNE            #
+#   HTTPIE_VERIFY_SSL          #
+#   VERBOSE_MODE               #
+#   DEBUG_MODE                 #
+#   STRICT_MODE                #
+# Arguments:                   #
+#   None                       #
+# Returns:                     #
+#   None                       #
+################################
 set_globals() {
   # Set arguments through envvars
   ACTION=${ACTION}
@@ -94,6 +95,7 @@ set_globals() {
   PORTAINER_URL=${PORTAINER_URL}
   PORTAINER_STACK_NAME=${PORTAINER_STACK_NAME}
   DOCKER_COMPOSE_FILE=${DOCKER_COMPOSE_FILE}
+  ENVIRONMENT_VARIABLES_FILE=${ENVIRONMENT_VARIABLES_FILE}
   PORTAINER_ENDPOINT=${PORTAINER_ENDPOINT:-"1"}
   PORTAINER_PRUNE=${PORTAINER_PRUNE:-"false"}
   HTTPIE_VERIFY_SSL=${HTTPIE_VERIFY_SSL:-"yes"}
@@ -102,7 +104,7 @@ set_globals() {
   STRICT_MODE=${STRICT_MODE:-"false"}
 
   # Set arguments through flags (overwrite envvars)
-  while getopts a:u:p:l:n:c:e:rsvdt option; do
+  while getopts a:u:p:l:n:c:e:g:rsvdt option; do
     case "${option}" in
       a) ACTION=${OPTARG} ;;
       u) PORTAINER_USER=${OPTARG} ;;
@@ -111,6 +113,7 @@ set_globals() {
       n) PORTAINER_STACK_NAME=${OPTARG} ;;
       c) DOCKER_COMPOSE_FILE=${OPTARG} ;;
       e) PORTAINER_ENDPOINT=${OPTARG} ;;
+      g) ENVIRONMENT_VARIABLES_FILE=${OPTARG} ;;
       r) PORTAINER_PRUNE="true" ;;
       s) HTTPIE_VERIFY_SSL="no" ;;
       v) VERBOSE_MODE="true" ;;
@@ -130,6 +133,7 @@ set_globals() {
   echo_debug "PORTAINER_URL -> $PORTAINER_URL"
   echo_debug "PORTAINER_STACK_NAME -> $PORTAINER_STACK_NAME"
   echo_debug "DOCKER_COMPOSE_FILE -> $DOCKER_COMPOSE_FILE"
+  echo_debug "ENVIRONMENT_VARIABLES_FILE -> $ENVIRONMENT_VARIABLES_FILE"
   echo_debug "PORTAINER_ENDPOINT -> $PORTAINER_ENDPOINT"
   echo_debug "PORTAINER_PRUNE -> $PORTAINER_PRUNE"
   echo_debug "HTTPIE_VERIFY_SSL -> $HTTPIE_VERIFY_SSL"
@@ -145,6 +149,10 @@ set_globals() {
   check_argument "$PORTAINER_STACK_NAME" "portainer stack name" "PORTAINER_STACK_NAME" "n"
   if [ $ACTION == "deploy" ]; then
     check_argument "$DOCKER_COMPOSE_FILE" "docker compose file" "DOCKER_COMPOSE_FILE" "c"
+    if [ -n "$ENVIRONMENT_VARIABLES_FILE" ] && [[ ! -f "$ENVIRONMENT_VARIABLES_FILE" ]]; then
+      echo_error "Error: File path \"$ENVIRONMENT_VARIABLES_FILE\" not found for \"ENVIRONMENT_VARIABLES_FILE\" environment variable or the \"-g\" flag."
+      exit 1
+    fi
   fi
 }
 
@@ -254,21 +262,22 @@ echo_debug() {
   fi
 }
 
-##########################
-# Create/update a stack  #
-# Globals:               #
-#   STACK                #
-#   DOCKER_COMPOSE_FILE  #
-#   PORTAINER_STACK_NAME #
-#   PORTAINER_URL        #
-#   HTTPIE_VERIFY_SSL    #
-#   PORTAINER_ENDPOINT   #
-#   AUTH_TOKEN           #
-# Arguments:             #
-#   None                 #
-# Returns:               #
-#   None                 #
-##########################
+################################
+# Create/update a stack        #
+# Globals:                     #
+#   STACK                      #
+#   DOCKER_COMPOSE_FILE        #
+#   PORTAINER_STACK_NAME       #
+#   PORTAINER_URL              #
+#   ENVIRONMENT_VARIABLES_FILE #
+#   HTTPIE_VERIFY_SSL          #
+#   PORTAINER_ENDPOINT         #
+#   AUTH_TOKEN                 #
+# Arguments:                   #
+#   None                       #
+# Returns:                     #
+#   None                       #
+################################
 deploy() {
   # Read docker-compose file content
   local docker_compose_file_content
@@ -304,14 +313,19 @@ deploy() {
     local swarm_id
     swarm_id=$(echo $docker_info | jq -r ".Swarm.Cluster.ID // empty")
     echo_debug "Swarm ID -> $swarm_id"
-    
+
     # If there is no swarm ID
     if [ -z "$swarm_id" ];then
       echo_verbose "Swarm cluster not found."
 
       echo_verbose "Preparing stack JSON..."
+      local stack_envvars
+      stack_envvars="[]"
+      if [ -n "$ENVIRONMENT_VARIABLES_FILE" ]; then
+        stack_envvars=$(env_file_to_json)
+      fi
       local data_prefix="{\"Name\":\"$PORTAINER_STACK_NAME\",\"StackFileContent\":\""
-      local data_suffix="\"}"
+      local data_suffix="\",\"Env\":"$stack_envvars"}"
       echo "$data_prefix$docker_compose_file_content$data_suffix" > json.tmp
       echo_debug "Stack JSON -> $(echo $data_prefix$docker_compose_file_content$data_suffix | jq -C .)"
 
@@ -335,8 +349,13 @@ deploy() {
       echo_verbose "Swarm cluster found."
 
       echo_verbose "Preparing stack JSON..."
+      local stack_envvars
+      stack_envvars="[]"
+      if [ -n "$ENVIRONMENT_VARIABLES_FILE" ]; then
+        stack_envvars=$(env_file_to_json)
+      fi
       local data_prefix="{\"Name\":\"$PORTAINER_STACK_NAME\",\"SwarmID\":\"$swarm_id\",\"StackFileContent\":\""
-      local data_suffix="\"}"
+      local data_suffix="\",\"Env\":"$stack_envvars"}"
       echo "$data_prefix$docker_compose_file_content$data_suffix" > json.tmp
       echo_debug "Stack JSON -> $(echo $data_prefix$docker_compose_file_content$data_suffix | jq -C .)"
 
@@ -370,12 +389,16 @@ deploy() {
     local stack_id
     stack_id="$(echo "$STACK" | jq -j ".Id")"
     local stack_envvars
-    stack_envvars="$(echo -n "$STACK"| jq ".Env" -jc)"
+    stack_envvars="$(echo -n "$STACK" | jq ".Env" -jc)"
+    if [ -n "$ENVIRONMENT_VARIABLES_FILE" ]; then
+      new_stack_envvars=$(env_file_to_json)
+      stack_envvars="$(echo -n "${new_stack_envvars}${stack_envvars}" | jq -sjc 'add | unique_by(.name)')"
+    fi
     local data_prefix="{\"Id\":\"$stack_id\",\"StackFileContent\":\""
     local data_suffix="\",\"Env\":"$stack_envvars",\"Prune\":$PORTAINER_PRUNE}"
     echo "$data_prefix$docker_compose_file_content$data_suffix" > json.tmp
     echo_debug "Stack JSON -> $(echo $data_prefix$docker_compose_file_content$data_suffix | jq -C .)"
-    
+
     # Update stack
     echo_verbose "Updating stack $PORTAINER_STACK_NAME..."
     local update
@@ -390,7 +413,7 @@ deploy() {
       @json.tmp)
     check_for_errors $? "$update"
     echo_debug "Update action response -> $(echo $update | jq -C .)"
-    
+
     rm json.tmp
   fi
 }
@@ -434,6 +457,19 @@ undeploy() {
     "Authorization: Bearer $AUTH_TOKEN")
   check_for_errors $? "$delete"
   echo_debug "Delete action response -> $(echo $delete | jq -C .)"
+}
+
+###################################################
+# Convert environment variables from file to JSON #
+# Globals:                                        #
+#   ENVIRONMENT_VARIABLES_FILE                    #
+# Arguments:                                      #
+#   None                                          #
+# Returns:                                        #
+#   JSON string                                   #
+###################################################
+env_file_to_json() {
+  echo "$(env -i $(cat $ENVIRONMENT_VARIABLES_FILE) jq -n 'env | to_entries | map({name: .key, value: .value})')"
 }
 
 main "$@"
