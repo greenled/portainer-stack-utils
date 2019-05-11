@@ -391,6 +391,7 @@ deploy() {
     local stack_envvars
     stack_envvars="$(echo -n "$STACK" | jq ".Env" -jc)"
     if [ -n "$ENVIRONMENT_VARIABLES_FILE" ]; then
+      local new_stack_envvars
       new_stack_envvars=$(env_file_to_json)
       stack_envvars="$(echo -n "${new_stack_envvars}${stack_envvars}" | jq -sjc 'add | unique_by(.name)')"
     fi
