@@ -44,6 +44,7 @@ This is particularly useful for CI/CD pipelines.
 - `PORTAINER_URL` (string, required): URL to Portainer
 - `PORTAINER_STACK_NAME` (string, required): Stack name
 - `DOCKER_COMPOSE_FILE` (string, required if action=deploy): Path to doker-compose file
+- `ENVIRONMENT_VARIABLES_FILE` (string, optional, only used when action=deploy or action=update): Path to file with environment variables to be used by the stack. See [stack environment variables](#stack-environment-variables) below.
 - `PORTAINER_PRUNE` ("true" or "false", optional): Whether to prune unused containers or not. Defaults to `"false"`.
 - `PORTAINER_ENDPOINT` (int, optional): Which endpoint to use. Defaults to `1`.
 - `HTTPIE_VERIFY_SSL` ("yes" or "no", optional): Whether to verify SSL certificate or not. Defaults to `"yes"`.
@@ -60,6 +61,7 @@ export PORTAINER_PASSWORD="password"
 export PORTAINER_URL="http://portainer.local"
 export PORTAINER_STACK_NAME="mystack"
 export DOCKER_COMPOSE_FILE="/path/to/docker-compose.yml"
+export ENVIRONMENT_VARIABLES_FILE="/path/to/env_vars_file"
 
 ./psu
 ```
@@ -84,6 +86,7 @@ This is more suitable for standalone script usage.
 - `-l` (string, required): URL to Portainer
 - `-n` (string, required): Stack name
 - `-c` (string, required if action=deploy): Path to doker-compose file
+- `-g` (string, optional, only used when action=deploy or action=update): Path to file with environment variables to be used by the stack. See [stack environment variables](#stack-environment-variables) below.
 - `-r` ("true" or "false", optional): Whether to prune unused containers or not. Defaults to `"false"`.
 - `-e` (int, optional): Which endpoint to use. Defaults to `1`.
 - `-s` ("yes" or "no", optional): Whether to verify SSL certificate or not. Defaults to `"yes"`.
@@ -94,12 +97,25 @@ This is more suitable for standalone script usage.
 #### Examples
 
 ```bash
-./psu -a deploy -u admin -p password -l http://portainer.local -n mystack -c /path/to/docker-compose.yml
+./psu -a deploy -u admin -p password -l http://portainer.local -n mystack -c /path/to/docker-compose.yml -g /path/to/env_vars_file
 ```
 
 ```bash
 ./psu -a undeploy -u admin -p password -l http://portainer.local -n mystack
 ```
+
+### Stack environment variables
+
+There can be set environment variables for each stack, be it a new deployment or an update. For example:
+
+```bash
+touch .env
+echo "MYSQL_ROOT_PASSWORD=agoodpassword" >> .env
+echo "ALLOWED_HOSTS=*" >> .env
+./psu -a deploy -u admin -p password -l http://portainer.local -n django-stack -c /path/to/docker-compose.yml -g env_vars
+```
+
+Stack environment variables can be enabled through [ENVIRONMENT_VARIABLES_FILE envvar](#with-envvars) or [-g flag](#with-flags).
 
 ### Verbose mode
 
