@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Deploy/update/undeploy Docker stacks in a Portainer instance.
+# Deploy/update/undeploy/info/list Docker stacks in a Portainer instance.
 
 ##########################
 # Main entrypoint        #
@@ -11,6 +11,7 @@
 #   PORTAINER_USER       #
 #   PORTAINER_PASSWORD   #
 #   PORTAINER_STACK_NAME #
+#   STACKS               #
 #   STACK                #
 #   ACTION               #
 # Arguments:             #
@@ -37,18 +38,17 @@ main() {
 
   # Get list of all stacks
   echo_verbose "Getting stack $PORTAINER_STACK_NAME..."
-  local stacks
-  stacks=$(http \
+  STACKS=$(http \
     --check-status \
     --ignore-stdin \
     --verify=$HTTPIE_VERIFY_SSL \
     "$PORTAINER_URL/api/stacks" \
     "Authorization: Bearer $AUTH_TOKEN")
-  check_for_errors $? "$stacks"
-  echo_debug "Get stacks response -> $(echo $stacks | jq -C .)"
+  check_for_errors $? "$STACKS"
+  echo_debug "Get stacks response -> $(echo $STACKS | jq -C .)"
 
   # Get desired stack from stacks list by it's name
-  STACK=$(echo "$stacks" \
+  STACK=$(echo "$STACKS" \
     | jq --arg PORTAINER_STACK_NAME "$PORTAINER_STACK_NAME" -jc '.[] | select(.Name == $PORTAINER_STACK_NAME)')
   echo_debug "Stack ${PORTAINER_STACK_NAME} -> $(echo $STACK | jq -C .)"
 
@@ -59,6 +59,33 @@ main() {
 
   if [ $ACTION == "undeploy" ]; then
     undeploy
+    exit 0
+  fi
+
+  # Returns stack info
+  # If it already exists
+  if [ $ACTION == "info" ]; then
+    if [ -n "$STACK" ]; then
+      if [ $QUIET_MODE == "false" ]; then
+        echo "$STACK"
+      else
+        # Only display the stack name in quiet mode
+        echo "$STACK" | jq -r ".Name"
+      fi
+      exit 0
+    fi
+    exit 1
+  fi
+
+  # Get list of all stacks
+  if [ $ACTION == "list" ]; then
+    if [ $QUIET_MODE == "false" ]; then
+      # Returns response in JSON format
+      echo "$STACKS"
+    else
+      # Only display stack names in quiet mode
+      echo "$STACKS" | jq -r '.[] | [.Name] | add'
+    fi
     exit 0
   fi
 
@@ -81,6 +108,7 @@ main() {
 #   HTTPIE_VERIFY_SSL          #
 #   VERBOSE_MODE               #
 #   DEBUG_MODE                 #
+#   QUIET_MODE                 #
 #   STRICT_MODE                #
 # Arguments:                   #
 #   None                       #
@@ -101,10 +129,11 @@ set_globals() {
   HTTPIE_VERIFY_SSL=${HTTPIE_VERIFY_SSL:-"yes"}
   VERBOSE_MODE=${VERBOSE_MODE:-"false"}
   DEBUG_MODE=${DEBUG_MODE:-"false"}
+  QUIET_MODE=${QUIET_MODE:-"false"}
   STRICT_MODE=${STRICT_MODE:-"false"}
 
   # Set arguments through flags (overwrite envvars)
-  while getopts a:u:p:l:n:c:e:g:rsvdt option; do
+  while getopts a:u:p:l:n:c:e:g:rsvdqt option; do
     case "${option}" in
       a) ACTION=${OPTARG} ;;
       u) PORTAINER_USER=${OPTARG} ;;
@@ -118,6 +147,7 @@ set_globals() {
       s) HTTPIE_VERIFY_SSL="no" ;;
       v) VERBOSE_MODE="true" ;;
       d) DEBUG_MODE="true" ;;
+      q) QUIET_MODE="true" ;;
       t) STRICT_MODE="true" ;;
       *)
         echo_error "Unexpected option ${option}"
@@ -139,6 +169,7 @@ set_globals() {
   echo_debug "HTTPIE_VERIFY_SSL -> $HTTPIE_VERIFY_SSL"
   echo_debug "VERBOSE_MODE -> $VERBOSE_MODE"
   echo_debug "DEBUG_MODE -> $DEBUG_MODE"
+  echo_debug "QUIET_MODE -> $QUIET_MODE"
   echo_debug "STRICT_MODE -> $STRICT_MODE"
 
   # Check required arguments have been provided
@@ -146,7 +177,9 @@ set_globals() {
   check_argument "$PORTAINER_USER" "portainer user" "PORTAINER_USER" "u"
   check_argument "$PORTAINER_PASSWORD" "portainer password" "PORTAINER_PASSWORD" "p"
   check_argument "$PORTAINER_URL" "portainer url" "PORTAINER_URL" "l"
-  check_argument "$PORTAINER_STACK_NAME" "portainer stack name" "PORTAINER_STACK_NAME" "n"
+  if [ ! $ACTION == "list" ]; then
+    check_argument "$PORTAINER_STACK_NAME" "portainer stack name" "PORTAINER_STACK_NAME" "n"
+  fi
   if [ $ACTION == "deploy" ]; then
     check_argument "$DOCKER_COMPOSE_FILE" "docker compose file" "DOCKER_COMPOSE_FILE" "c"
     if [ -n "$ENVIRONMENT_VARIABLES_FILE" ] && [[ ! -f "$ENVIRONMENT_VARIABLES_FILE" ]]; then
