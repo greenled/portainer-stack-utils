@@ -25,7 +25,6 @@ set -e
 #   None                   #
 ############################
 main() {
-  # Set arguments through envvars
   VERSION="0.2.0-alpha.1"
   ACTIONS="deploy undeploy list info services tasks tasks_healthy containers status help version"
 
@@ -229,6 +228,7 @@ main() {
 #   None                       #
 ################################
 set_globals() {
+  # Set arguments through envvars
   VERSION=${VERSION}
   ACTIONS=${ACTIONS}
   ACTION=${ACTION}
