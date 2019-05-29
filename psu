@@ -470,7 +470,7 @@ undeploy() {
 #   JSON string                                   #
 ###################################################
 env_file_to_json() {
-  echo "$(env -i sh -c "(unset \$(env | sed 's/=.*//'); set -a; . $ENVIRONMENT_VARIABLES_FILE; set +a; jq -njc 'env | to_entries | map({name: .key, value: .value})')")"
+  echo "$(env -i sh -c "(unset \$(env | sed 's/=.*//'); set -a; . $(readlink -f $ENVIRONMENT_VARIABLES_FILE); set +a; jq -njc 'env | to_entries | map({name: .key, value: .value})')")"
 }
 
 main "$@"
