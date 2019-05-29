@@ -1,56 +1,68 @@
 #!/usr/bin/env bash
 #
-# Deploy/update/undeploy Docker stacks in a Portainer instance.
+# Deploy/update/undeploy/info/status Docker stacks in a Portainer instance.
+# And also list stacks, services and tasks
 
-##########################
-# Main entrypoint        #
-# Globals:               #
-#   AUTH_TOKEN           #
-#   HTTPIE_VERIFY_SSL    #
-#   PORTAINER_URL        #
-#   PORTAINER_USER       #
-#   PORTAINER_PASSWORD   #
-#   PORTAINER_STACK_NAME #
-#   STACK                #
-#   ACTION               #
-# Arguments:             #
-#   None                 #
-# Returns:               #
-#   None                 #
-##########################
+set -e
+
+############################
+# Main entrypoint          #
+# Globals:                 #
+#   AUTH_TOKEN             #
+#   HTTPIE_VERIFY_SSL      #
+#   PORTAINER_URL          #
+#   PORTAINER_USER         #
+#   PORTAINER_PASSWORD     #
+#   PORTAINER_STACK_NAME   #
+#   PORTAINER_SERVICE_NAME #
+#   STACKS                 #
+#   STACK                  #
+#   ROLLOUT_STATUS_TIMEOUT #
+#   ACTION                 #
+# Arguments:               #
+#   None                   #
+# Returns:                 #
+#   None                   #
+############################
 main() {
+  # Set arguments through envvars
+  VERSION="0.2.0"
+  # TODO: Add a "containers" action, see: https://docs.docker.com/engine/api/v1.30/#operation/ContainerList
+  ACTIONS="deploy undeploy list info services tasks tasks_healthy status help version"
+
   set_globals "$@"
 
-  # Get Portainer auth token. Will be used on every API request.
-  echo_verbose "Getting auth token..."
-  AUTH_TOKEN=$(http \
-    --check-status \
-    --ignore-stdin \
-    --verify=$HTTPIE_VERIFY_SSL \
-    $PORTAINER_URL/api/auth \
-    username=$PORTAINER_USER \
-    password=$PORTAINER_PASSWORD)
-  check_for_errors $? "$AUTH_TOKEN"
-  echo_debug "Get auth token response -> $(echo $AUTH_TOKEN | jq -C .)"
-  AUTH_TOKEN=$(echo $AUTH_TOKEN | jq -r .jwt)
-  echo_debug "Auth token -> $AUTH_TOKEN"
+  if [ "$ACTION" != "help" ] && [ "$ACTION" != "version" ]; then
+    # Get Portainer auth token. Will be used on every API request.
+    echo_verbose "Getting auth token..."
+    AUTH_TOKEN=$(http \
+      --check-status \
+      --ignore-stdin \
+      --verify=$HTTPIE_VERIFY_SSL \
+      $PORTAINER_URL/api/auth \
+      username=$PORTAINER_USER \
+      password=$PORTAINER_PASSWORD)
+    check_for_errors $? "$AUTH_TOKEN"
+    echo_debug "Get auth token response -> $(echo $AUTH_TOKEN | jq -C .)"
+    AUTH_TOKEN=$(echo $AUTH_TOKEN | jq -r .jwt)
+    echo_debug "Auth token -> $AUTH_TOKEN"
 
-  # Get list of all stacks
-  echo_verbose "Getting stack $PORTAINER_STACK_NAME..."
-  local stacks
-  stacks=$(http \
-    --check-status \
-    --ignore-stdin \
-    --verify=$HTTPIE_VERIFY_SSL \
-    "$PORTAINER_URL/api/stacks" \
-    "Authorization: Bearer $AUTH_TOKEN")
-  check_for_errors $? "$stacks"
-  echo_debug "Get stacks response -> $(echo $stacks | jq -C .)"
+    # Get list of all stacks
+    echo_verbose "Getting stack $PORTAINER_STACK_NAME..."
+    STACKS=$(http \
+      --check-status \
+      --ignore-stdin \
+      --verify=$HTTPIE_VERIFY_SSL \
+      "$PORTAINER_URL/api/stacks" \
+      "Authorization: Bearer $AUTH_TOKEN")
+    check_for_errors $? "$STACKS"
+    echo_debug "Get stacks response -> $(echo $STACKS | jq -C .)"
 
-  # Get desired stack from stacks list by it's name
-  STACK=$(echo "$stacks" \
-    | jq --arg PORTAINER_STACK_NAME "$PORTAINER_STACK_NAME" -jc '.[] | select(.Name == $PORTAINER_STACK_NAME)')
-  echo_debug "Stack ${PORTAINER_STACK_NAME} -> $(echo $STACK | jq -C .)"
+    # Get desired stack from stacks list by it's name
+    STACK=$(echo "$STACKS" \
+      | jq --arg PORTAINER_STACK_NAME "$PORTAINER_STACK_NAME" -jc '.[] | select(.Name == $PORTAINER_STACK_NAME)')
+    echo_debug "Stack ${PORTAINER_STACK_NAME} -> $(echo $STACK | jq -C .)"
+  fi
 
   if [ $ACTION == "deploy" ]; then
     deploy
@@ -62,8 +74,116 @@ main() {
     exit 0
   fi
 
-  echo_error "Error: Unknown action \"$ACTION\"."
-  exit 1
+  if [ $ACTION == "services" ]; then
+    echo_verbose "List service(s) of stack '$PORTAINER_STACK_NAME'..."
+    local services
+    services=$(services)
+    echo_debug "Services action response -> $(echo $services | jq -C .)"
+    if [ -n "$services" ] && [ ! "$services" == "[]" ]; then
+      if [ $QUIET_MODE == "false" ]; then
+        # Returns response in JSON format
+        echo "$services"
+      else
+        # Only display service(s) name in quiet mode
+        echo "$services" | jq -r '.[] | [.Spec.Name] | add'
+      fi
+      exit 0
+    fi
+    exit 1
+  fi
+
+  if [ $ACTION == "status" ]; then
+      echo_verbose "Status of tasks for the stack '$PORTAINER_STACK_NAME'..."
+      local status
+      # WIP: Each services should have at least one task
+      # with desired state == 'running' and state == 'running'
+      # or desired state == 'shutdown' and state == 'complete'
+      # Tasks should not have one of these states:
+      # 'failed', 'orphaned', 'remove'
+
+      timeout -t $ROLLOUT_STATUS_TIMEOUT bash -c "until (export DEBUG_MODE=false && export VERBOSE_MODE=false && psu -a tasks_healthy -q) >/dev/null 2>&1; do echo -n \$(if [ \"\$VERBOSE_MODE\" == \"true\" ]; then echo -n .; fi) && sleep 1; done;"
+      status=$?
+
+      if $(exit $status); then
+        echo_verbose "Status: healthy for the stack '$PORTAINER_STACK_NAME'"
+        exit 0
+      else
+        echo_verbose "Status: unhealthy for the stack '$PORTAINER_STACK_NAME'"
+        echo_error "Error: No tasks or not all tasks are running correctly for the stack \"$PORTAINER_STACK_NAME\""
+        exit 1
+      fi
+  fi
+
+  if [ $ACTION == "tasks" ] || [ $ACTION == "tasks_healthy" ]; then
+    local scope
+    scope="$(if [ $ACTION == "tasks_healthy" ]; then echo healthy; else echo all; fi)"
+    local tasks
+    if [ -n "$PORTAINER_SERVICE_NAME" ]; then
+      echo_verbose "List $scope tasks from service '$PORTAINER_SERVICE_NAME' of stack '$PORTAINER_STACK_NAME'..."
+      tasks=$(if [ $scope == "healthy" ]; then tasks_healthy; else tasks; fi)
+      echo_debug "Tasks action response -> $(echo $tasks | jq -C .)"
+    else
+      echo_verbose "List $scope tasks of stack '$PORTAINER_STACK_NAME'..."
+      local services
+      services="$(timeout -t $ROLLOUT_STATUS_TIMEOUT bash -c "until (export DEBUG_MODE=false && export VERBOSE_MODE=false && echo \"\$(psu -a services -q)\"); do sleep 1; done;")"
+      for service in $services; do
+        export PORTAINER_SERVICE_NAME=${service#"${PORTAINER_STACK_NAME}_"}
+        local new_tasks
+        new_tasks=$(if [ $scope == "healthy" ]; then tasks_healthy; else tasks; fi)
+        if [ -z "$new_tasks" ] || [ "$new_tasks" == "[]" ]; then
+          echo_verbose "Error: $scope tasks aren't running correctly for the stack \"$PORTAINER_STACK_NAME\""
+          exit 1;
+        fi
+        tasks="$(echo -n "${tasks}${new_tasks}" | jq -sjc 'add | unique_by(.ID)')"
+      done
+      echo_debug "Tasks action response -> $(echo $tasks | jq -C .)"
+    fi
+
+    if [ -n "$tasks" ] && [ ! "$tasks" == "[]" ]; then
+      if [ $QUIET_MODE == "false" ]; then
+        # Returns response in JSON format
+        echo "$tasks"
+      else
+        # Only display task(s) id in quiet mode
+        echo "$tasks" | jq -r '.[] | [.ID] | add'
+      fi
+      exit 0
+    fi
+    echo_verbose "Error: No tasks or not all tasks are running correctly for the stack \"$PORTAINER_STACK_NAME\""
+    exit 1
+  fi
+
+  # Returns stack info
+  # If it already exists
+  if [ $ACTION == "info" ]; then
+    if [ -n "$STACK" ]; then
+      if [ $QUIET_MODE == "false" ]; then
+        echo "$STACK"
+      else
+        # Only display the stack name in quiet mode
+        echo "$STACK" | jq -r ".Name"
+      fi
+      exit 0
+    fi
+    exit 1
+  fi
+
+  # Get list of all stacks
+  if [ $ACTION == "list" ]; then
+    if [ $QUIET_MODE == "false" ]; then
+      # Returns response in JSON format
+      echo "$STACKS"
+    else
+      # Only display stack names in quiet mode
+      echo "$STACKS" | jq -r '.[] | [.Name] | add'
+    fi
+    exit 0
+  fi
+
+  if [[ ! ${ACTIONS[*]} =~ $ACTION ]]; then
+    echo_error "Error: Unknown action \"$ACTION\"."
+    exit 1
+  fi
 }
 
 ################################
@@ -74,13 +194,17 @@ main() {
 #   PORTAINER_PASSWORD         #
 #   PORTAINER_URL              #
 #   PORTAINER_STACK_NAME       #
+#   PORTAINER_SERVICE_NAME     #
 #   DOCKER_COMPOSE_FILE        #
 #   ENVIRONMENT_VARIABLES_FILE #
 #   PORTAINER_ENDPOINT         #
 #   PORTAINER_PRUNE            #
+#   ROLLOUT_STATUS_TIMEOUT     #
+#   AUTO_DETECT_JOB            #
 #   HTTPIE_VERIFY_SSL          #
 #   VERBOSE_MODE               #
 #   DEBUG_MODE                 #
+#   QUIET_MODE                 #
 #   STRICT_MODE                #
 # Arguments:                   #
 #   None                       #
@@ -88,43 +212,28 @@ main() {
 #   None                       #
 ################################
 set_globals() {
-  # Set arguments through envvars
+  VERSION=${VERSION}
+  ACTIONS=${ACTIONS}
   ACTION=${ACTION}
   PORTAINER_USER=${PORTAINER_USER}
   PORTAINER_PASSWORD=${PORTAINER_PASSWORD}
   PORTAINER_URL=${PORTAINER_URL}
   PORTAINER_STACK_NAME=${PORTAINER_STACK_NAME}
+  PORTAINER_SERVICE_NAME=${PORTAINER_SERVICE_NAME}
   DOCKER_COMPOSE_FILE=${DOCKER_COMPOSE_FILE}
   ENVIRONMENT_VARIABLES_FILE=${ENVIRONMENT_VARIABLES_FILE}
   PORTAINER_ENDPOINT=${PORTAINER_ENDPOINT:-"1"}
   PORTAINER_PRUNE=${PORTAINER_PRUNE:-"false"}
+  ROLLOUT_STATUS_TIMEOUT=${ROLLOUT_STATUS_TIMEOUT:-100}
+  AUTO_DETECT_JOB=${AUTO_DETECT_JOB:-"true"}
   HTTPIE_VERIFY_SSL=${HTTPIE_VERIFY_SSL:-"yes"}
   VERBOSE_MODE=${VERBOSE_MODE:-"false"}
   DEBUG_MODE=${DEBUG_MODE:-"false"}
+  QUIET_MODE=${QUIET_MODE:-"false"}
   STRICT_MODE=${STRICT_MODE:-"false"}
 
-  # Set arguments through flags (overwrite envvars)
-  while getopts a:u:p:l:n:c:e:g:rsvdt option; do
-    case "${option}" in
-      a) ACTION=${OPTARG} ;;
-      u) PORTAINER_USER=${OPTARG} ;;
-      p) PORTAINER_PASSWORD=${OPTARG} ;;
-      l) PORTAINER_URL=${OPTARG} ;;
-      n) PORTAINER_STACK_NAME=${OPTARG} ;;
-      c) DOCKER_COMPOSE_FILE=${OPTARG} ;;
-      e) PORTAINER_ENDPOINT=${OPTARG} ;;
-      g) ENVIRONMENT_VARIABLES_FILE=${OPTARG} ;;
-      r) PORTAINER_PRUNE="true" ;;
-      s) HTTPIE_VERIFY_SSL="no" ;;
-      v) VERBOSE_MODE="true" ;;
-      d) DEBUG_MODE="true" ;;
-      t) STRICT_MODE="true" ;;
-      *)
-        echo_error "Unexpected option ${option}"
-        exit 1
-        ;;
-    esac
-  done
+  # Set arguments through argument and options (overwrite envvars)
+  inputs "$@"
 
   # Print config (only if debug mode is active)
   echo_debug "ACTION -> $ACTION"
@@ -132,28 +241,358 @@ set_globals() {
   echo_debug "PORTAINER_PASSWORD -> $PORTAINER_PASSWORD"
   echo_debug "PORTAINER_URL -> $PORTAINER_URL"
   echo_debug "PORTAINER_STACK_NAME -> $PORTAINER_STACK_NAME"
+  echo_debug "PORTAINER_SERVICE_NAME -> $PORTAINER_SERVICE_NAME"
   echo_debug "DOCKER_COMPOSE_FILE -> $DOCKER_COMPOSE_FILE"
   echo_debug "ENVIRONMENT_VARIABLES_FILE -> $ENVIRONMENT_VARIABLES_FILE"
   echo_debug "PORTAINER_ENDPOINT -> $PORTAINER_ENDPOINT"
   echo_debug "PORTAINER_PRUNE -> $PORTAINER_PRUNE"
+  echo_debug "ROLLOUT_STATUS_TIMEOUT -> $ROLLOUT_STATUS_TIMEOUT"
+  echo_debug "AUTO_DETECT_JOB -> $AUTO_DETECT_JOB"
   echo_debug "HTTPIE_VERIFY_SSL -> $HTTPIE_VERIFY_SSL"
   echo_debug "VERBOSE_MODE -> $VERBOSE_MODE"
   echo_debug "DEBUG_MODE -> $DEBUG_MODE"
+  echo_debug "QUIET_MODE -> $QUIET_MODE"
   echo_debug "STRICT_MODE -> $STRICT_MODE"
 
   # Check required arguments have been provided
-  check_argument "$ACTION" "action" "ACTION" "a"
-  check_argument "$PORTAINER_USER" "portainer user" "PORTAINER_USER" "u"
-  check_argument "$PORTAINER_PASSWORD" "portainer password" "PORTAINER_PASSWORD" "p"
-  check_argument "$PORTAINER_URL" "portainer url" "PORTAINER_URL" "l"
-  check_argument "$PORTAINER_STACK_NAME" "portainer stack name" "PORTAINER_STACK_NAME" "n"
-  if [ $ACTION == "deploy" ]; then
-    check_argument "$DOCKER_COMPOSE_FILE" "docker compose file" "DOCKER_COMPOSE_FILE" "c"
+  check_argument "$ACTION" "action" "ACTION" "a" "action"
+  if [ "$ACTION" != "help" ] && [ "$ACTION" != "version" ]; then
+    check_argument "$PORTAINER_USER" "portainer user" "PORTAINER_USER" "u" "user"
+    check_argument "$PORTAINER_PASSWORD" "portainer password" "PORTAINER_PASSWORD" "p" "password"
+    check_argument "$PORTAINER_URL" "portainer url" "PORTAINER_URL" "l" "url"
+  fi
+  if [ "$ACTION" == "deploy" ]; then
+    check_argument "$DOCKER_COMPOSE_FILE" "docker compose file" "DOCKER_COMPOSE_FILE" "c" "compose-file"
     if [ -n "$ENVIRONMENT_VARIABLES_FILE" ] && [[ ! -f "$ENVIRONMENT_VARIABLES_FILE" ]]; then
-      echo_error "Error: File path \"$ENVIRONMENT_VARIABLES_FILE\" not found for \"ENVIRONMENT_VARIABLES_FILE\" environment variable or the \"-g\" flag."
+      echo_error "Error: File path \"$ENVIRONMENT_VARIABLES_FILE\" not found for \"ENVIRONMENT_VARIABLES_FILE\" environment variable or the \"-g\" flag or the \"--env-file\" option."
       exit 1
     fi
   fi
+  if [ "$ACTION" != "list" ] && [ "$ACTION" != "help" ] && [ "$ACTION" != "version" ]; then
+    check_argument "$PORTAINER_STACK_NAME" "portainer stack name" "PORTAINER_STACK_NAME" "n" "name"
+  fi
+}
+
+inputs() {
+  while [ $# -gt 0 ]; do
+    case "$1" in
+      -u=*|--user=*|-u|--user)
+        PORTAINER_USER=$(input_option "$1" "$2")
+        if [ -n "$2" ] && [[ ! $2 =~ ^-.+$ ]] ; then
+          # When the second argument is the value of the current option
+          shift
+        fi
+        ;;
+      -p=*|--password=*|-p|--password)
+        PORTAINER_PASSWORD=$(input_option "$1" "$2")
+        if [ -n "$2" ] && [[ ! $2 =~ ^-.+$ ]] ; then
+          # When the second argument is the value of the current option
+          shift
+        fi
+        ;;
+      -l=*|--url=*|-l|--url)
+        PORTAINER_URL=$(input_option "$1" "$2")
+        if [ -n "$2" ] && [[ ! $2 =~ ^-.+$ ]] ; then
+          # When the second argument is the value of the current option
+          shift
+        fi
+        ;;
+      -n=*|--name=*|-n|--name)
+        PORTAINER_STACK_NAME=$(input_option "$1" "$2")
+        if [ -n "$2" ] && [[ ! $2 =~ ^-.+$ ]] ; then
+          # When the second argument is the value of the current option
+          shift
+        fi
+        ;;
+      -c=*|--compose-file=*|-c|--compose-file)
+        DOCKER_COMPOSE_FILE=$(input_option "$1" "$2")
+        if [ -n "$2" ] && [[ ! $2 =~ ^-.+$ ]] ; then
+          # When the second argument is the value of the current option
+          shift
+        fi
+        ;;
+      -g=*|--env-file=*|-g|--env-file)
+        ENVIRONMENT_VARIABLES_FILE=$(input_option "$1" "$2")
+        if [ -n "$2" ] && [[ ! $2 =~ ^-.+$ ]] ; then
+          # When the second argument is the value of the current option
+          shift
+        fi
+        ;;
+      -e=*|--endpoint=*|-e|--endpoint)
+        PORTAINER_ENDPOINT=$(input_option "$1" "$2")
+        if [ -n "$2" ] && [[ ! $2 =~ ^-.+$ ]] ; then
+          # When the second argument is the value of the current option
+          shift
+        fi
+        ;;
+      -r|--prune|-r=*|--prune=*)
+        PORTAINER_PRUNE=$(input_flag "$1" "$2")
+        if [ -n "$2" ] && [[ ! $2 =~ ^-.+$ ]] ; then
+          # When the second argument is the value of the current option
+          shift
+        fi
+        ;;
+      -T=*|--timeout=*|-T|--timeout)
+        ROLLOUT_STATUS_TIMEOUT=$(input_option "$1" "$2")
+        if [ -n "$2" ] && [[ ! $2 =~ ^-.+$ ]] ; then
+          # When the second argument is the value of the current option
+          shift
+        fi
+        ;;
+      -j|--detect-job|-j=*|--detect-job=*)
+        AUTO_DETECT_JOB=$(input_flag "$1" "$2")
+        if [ -n "$2" ] && [[ ! $2 =~ ^-.+$ ]] ; then
+          # When the second argument is the value of the current option
+          shift
+        fi
+        ;;
+      -S=*|--service=*|-S|--service)
+        PORTAINER_SERVICE_NAME=$(input_option "$1" "$2")
+        if [ -n "$2" ] && [[ ! $2 =~ ^-.+$ ]] ; then
+          # When the second argument is the value of the current option
+          shift
+        fi
+        ;;
+      -d|--debug|-d=*|--debug=*)
+        DEBUG_MODE=$(input_flag "$1" "$2")
+        if [ -n "$2" ] && [[ ! $2 =~ ^-.+$ ]] ; then
+          # When the second argument is the value of the current option
+          shift
+        fi
+        ;;
+      -v|--verbose|-v=*|--verbose=*)
+        VERBOSE_MODE=$(input_flag "$1" "$2")
+        if [ -n "$2" ] && [[ ! $2 =~ ^-.+$ ]] ; then
+          # When the second argument is the value of the current option
+          shift
+        fi
+        ;;
+      -q|--quiet|-q=*|--quiet=*)
+        QUIET_MODE=$(input_flag "$1" "$2")
+        if [ -n "$2" ] && [[ ! $2 =~ ^-.+$ ]] ; then
+          # When the second argument is the value of the current option
+          shift
+        fi
+        ;;
+      -t|--strict|-t=*|--strict=*)
+        STRICT_MODE=$(input_flag "$1" "$2")
+        if [ -n "$2" ] && [[ ! $2 =~ ^-.+$ ]] ; then
+          # When the second argument is the value of the current option
+          shift
+        fi
+        ;;
+      -i|--insecure|-i=*|--insecure=*)
+        local insecure
+        insecure=$(input_flag "$1" "$2")
+        if [ "$insecure" == "true" ]; then
+          HTTPIE_VERIFY_SSL="no"
+        else
+          HTTPIE_VERIFY_SSL="yes"
+        fi
+        if [ "$HTTPIE_VERIFY_SSL" == "no" ] && [ -z "$PYTHONWARNINGS" ]; then
+          # Fix httpie with Ubuntu 16.04
+          PYTHONWARNINGS="ignore:Unverified HTTPS request"
+        fi
+        if [ -n "$2" ] && [[ ! $2 =~ ^-.+$ ]] ; then
+          # When the second argument is the value of the current option
+          shift
+        fi
+        ;;
+      -s|--secure|-s=*|--secure=*)
+        # DEPRECATED: use `insecure` action instead
+        HTTPIE_VERIFY_SSL=$(input_flag "$1" "$2" "yes no" "no")
+        if [ "$HTTPIE_VERIFY_SSL" == "no" ] && [ -z "$PYTHONWARNINGS" ]; then
+          # Fix httpie with Ubuntu 16.04
+          PYTHONWARNINGS="ignore:Unverified HTTPS request"
+        fi
+        if [ -n "$2" ] && [[ ! $2 =~ ^-.+$ ]] ; then
+          # When the second argument is the value of the current option
+          shift
+        fi
+        ;;
+      -V|--version|version)
+        local message
+        local version_message
+        message="Portainer Stack Utils, version $VERSION
+  License GPLv3: GNU GPL version 3"
+        version_message="$(input_message "$1" "$message")"
+        if [ -n "$version_message" ]; then
+          ACTION="version"
+          echo "$version_message"
+        fi
+        ;;
+      -h|--help|help)
+        if [ -z "$ACTION" ] || [ "$1" == "help" ]; then
+          ACTION="help"
+          echo "Portainer Stack Utils, version $VERSION
+
+  Usage:
+    psu <action> [options]
+
+  Arguments:
+    action                         The name of the action to execute (possible values: '${ACTIONS// /\', \'}')
+
+  Options:
+    -u, --user=USERNAME            Username
+    -p, --password=PASSWORD        Password
+    -l, --url=URL                  URL to Portainer
+    -n, --name=STACK_NAME          Stack name
+    -c, --compose-file=[FILE_PATH] Path to docker-compose file (required if action=deploy)
+    -g, --env-file                 Path to file with environment variables to be used by the stack (only used when action=deploy or action=update)
+    -e, --endpoint=[ENDPOINT_ID]   Which Docker endpoint to use. Defaults to 1
+    -r, --prune                    Whether to prune unused containers or not. Defaults to false
+    -T, --timeout=[NUMBER_SECONDS] Status timeout, number of seconds before thrown an error (only used when action=status). Defaults to 100
+    -j, --detect-job=[true|false]  Auto detect services who are jobs. Defaults to true
+    -S, --service[=SERVICE_NAME]   Service name
+    -i, --insecure                 Skip the host's SSL certificate verification. Defaults to false
+    -v, --verbose                  Increase the verbosity of messages. Defaults to false
+    -d, --debug                    Print as much information as possible to help diagnosing a malfunction. Defaults to false
+    -q, --quiet                    Display the minimum of information or nothing, UNIX/Linux friendly. Defaults to false
+    -t, --strict                   Never updates an existent stack nor removes an unexistent one, and instead exits with an error. Defaults to false
+    -h, --help                     Display this help message
+    -V, --version                  Display the version of this programm
+    -s, --secure[=yes|no]          DEPRECATED: Use the --insecure option instead. Enable or disable the host's SSL certificate verification. Defaults to 'yes'
+    -a, --action=[ACTION_NAME]     DEPRECATED: Use <action> argument instead. The name of the action to execute
+
+  Help:
+    You can deploy/update/undeploy/list... stacks in a Portainer instance easily with this tool!"
+        else
+          if [ "$ACTION" == "list" ]; then
+              echo "Usage:
+    psu $ACTION [options]
+
+  Options:
+    -q, --quiet    Display only the stack names who are deployed
+    -h, --help     Display this help message
+
+  Help:
+    Returns a list of the stacks already deployed"
+            ACTION="help"
+          else
+            input_error "Error: no help is available for the '$ACTION' action, run the 'psu help' command for global help"
+            exit 1
+          fi
+        fi
+        ;;
+      -a=*|--action=*|-a|--action)
+        # DEPRECATED: To keep backwards compatibility with psu 0.1.x
+        ACTION=$(input_option "$1" "$2" "$ACTIONS")
+        if [ -n "$2" ] && [[ ! $2 =~ ^-.+$ ]] ; then
+          # When the second argument is the value of the current option
+          shift
+        fi
+        ;;
+      *)
+        # deploy|undeploy|list|info|status|tasks|services... argument
+        if [[ ${ACTIONS[*]} =~ $1 ]]; then
+          if [ -z "$ACTION" ]; then
+            ACTION="$1";
+          else
+            input_error "Error: <action> argument already set with the '$ACTION' value"
+            exit 1
+          fi
+        else
+          input_error "Error: Invalid argument: '$1', run the 'psu help' command for more information"
+          exit 1
+        fi
+    esac
+    shift
+  done
+
+  if [ -z "$ACTION" ]; then
+    input_error "Error: <action> argument is required, run the 'psu help' command for more information"
+    exit 1
+  fi
+}
+
+input_option() {
+  local option
+  local argument
+  local value
+  local allowed_values
+  option="$1"
+  argument="$2"
+  allowed_values="$3"
+
+  value="${option#*=}"
+  if [ "$value" == "$option" ]; then
+    if [[ -n $argument ]] && [[ ! $argument =~ ^-.+$ ]]; then
+      # When the second argument is the value of the current option
+      value="$argument"
+    else
+      unset value
+      if [ -n "$argument" ]; then
+        input_error "Error: wrong value '$argument' given for the '$option' option"
+        exit 1
+      fi
+    fi
+  fi
+
+  if [ -n "$value" ]; then
+    if [ -z "$allowed_values" ] || [[ ${allowed_values[*]} =~ $value ]]; then
+      echo "$value"
+    else
+      input_error "Error: wrong value given for the '${option%=*}' option, should be '${allowed_values// /\' or \'}'"
+      exit 1
+    fi
+  else
+    input_error "Error: no value given for the '$option' option"
+    exit 1
+  fi
+}
+
+input_flag() {
+  local option
+  local argument
+  local value
+  local allowed_values
+  local default_value
+  option="$1"
+  argument="$2"
+  allowed_values="${3:-"true false"}"
+  default_value="${4:-"true"}"
+
+  value="${option#*=}"
+  if [ "$value" == "$option" ]; then
+    if [[ -n $argument ]] && [[ ! $argument =~ ^-.+$ ]]; then
+      # Second argument is a value for the current option
+      value="$argument"
+    else
+      value="$default_value"
+    fi
+  fi
+
+  if [ -z "$allowed_values" ] || [[ ${allowed_values[*]} =~ $value ]]; then
+    echo "$value"
+  else
+    input_error "Error: wrong value given for the '${option%=*}' option, should be '${allowed_values// /\' or \'}'"
+    exit 1
+  fi
+}
+
+input_message() {
+  local option
+  local value
+  option="$1"
+  value="$2"
+
+  if [ -z "$ACTION" ]; then
+    echo "$value"
+  else
+    input_error "Error: invalid option '$option' for the '$ACTION' action"
+    exit 1
+  fi
+}
+
+input_error() {
+  local message
+  if [ -n "$1" ]; then
+    message="$1"
+  else
+    message="Error: Invalid argument."
+  fi
+
+  echo_error "$message"
 }
 
 ############################
@@ -189,9 +628,11 @@ check_argument() {
   local argument_name=$2
   local argument_envvar=$3
   local argument_flag=$4
+  local argument_option=$5
+
   if [ -z "$argument_value" ]; then
     echo_error "Error: Missing argument \"$argument_name\"."
-    echo_error "Try setting \"$argument_envvar\" environment variable or using the \"-$argument_flag\" flag."
+    echo_error "Try setting \"$argument_envvar\" environment variable $(if [ -n "$argument_flag" ]; then echo or using the \"-$argument_flag\" flag; fi)$(if [ -n "$argument_option" ]; then echo " or using the \"--$argument_option\" option"; fi)."
     exit 1
   fi
 }
@@ -472,5 +913,73 @@ undeploy() {
 env_file_to_json() {
   echo "$(env -i sh -c "(unset \$(env | sed 's/=.*//'); set -a; . $(readlink -f $ENVIRONMENT_VARIABLES_FILE); set +a; jq -njc 'env | to_entries | map({name: .key, value: .value})')")"
 }
+
+tasks() {
+  local desired_state=$1
+  local state=$2
+  local service_name
+  service_name=${PORTAINER_STACK_NAME}_${PORTAINER_SERVICE_NAME}
+  local filter_service
+  filter_service="\"service\":{\"$service_name\":true}"
+  local filter_desired_state
+  if [ -n "$desired_state" ]; then
+    filter_desired_state="\"desired-state\":{\"$desired_state\":true}"
+  fi
+  local filters
+  filters="{$filter_service$(if [ -n "$filter_desired_state" ]; then echo ",$filter_desired_state"; fi)}"
+  local tasks
+  tasks=$(http \
+    --check-status \
+    --ignore-stdin \
+    --verify=$HTTPIE_VERIFY_SSL \
+    "$PORTAINER_URL/api/endpoints/$PORTAINER_ENDPOINT/docker/tasks" \
+    filters=="$filters" \
+    "Authorization: Bearer $AUTH_TOKEN")
+  check_for_errors $? "$tasks"
+  if [ -n "$state" ]; then
+    local filter_status
+    filter_status="map(select(any(.Status; .State == \"$state\")))"
+    if [ "$desired_state" == "shutdown" ] && [ "$state" == "complete" ]; then
+      local filter_include_job_auto_detection
+      filter_include_job_auto_detection=$(if [ "$AUTO_DETECT_JOB" == "true" ]; then echo 'map(select(any(.Spec.RestartPolicy; .Condition == "none")))'; else echo 'map(select(.Spec.ContainerSpec.Labels."job-name"))'; fi)
+      # For tasks which run a script then shutdown when it's successfully executed, like 'Job' in Kubernetes
+      local last_task_created_at
+      # last_task_created_at=$(tasks | jq -jc "$filter_include_job_auto_detection | max_by(.CreatedAt) | select(.CreatedAt) | .CreatedAt")
+      last_task_created_at=$(tasks | jq -jc "max_by(.CreatedAt) | .CreatedAt")
+      local filter_created_at
+      filter_created_at="map(select(.CreatedAt >= \"$last_task_created_at\"))"
+      echo "$tasks" | jq -jc "$filter_status | $filter_include_job_auto_detection | sort_by(.CreatedAt) | reverse | unique_by(.Slot) | $filter_created_at"
+    else
+      local filter_exclude_job_auto_detection
+      filter_exclude_job_auto_detection=$(if [ "$AUTO_DETECT_JOB" == "true" ]; then echo 'map(select(any(.Spec.RestartPolicy; .Condition != "none")))'; else echo 'map(select(.Spec.ContainerSpec.Labels."job-name" | not))'; fi)
+      echo "$tasks" | jq -jc "$filter_status | $filter_exclude_job_auto_detection | sort_by(.CreatedAt) | reverse | unique_by(.Slot)"
+    fi
+  else
+    echo "$tasks" | jq --arg state "$state" -jc 'sort_by(.CreatedAt) | reverse | unique_by(.Slot)'
+  fi
+}
+
+tasks_healthy() {
+  local tasks_running
+  tasks_running=$(tasks 'running' 'running')
+  local tasks_job_complete
+  tasks_job_complete=$(tasks 'shutdown' 'complete')
+  echo "$(echo -n "${tasks_running}${tasks_job_complete}" | jq -sjc 'add | unique_by(.ID)')"
+}
+
+services() {
+  local services
+  services=$(http \
+    --check-status \
+    --ignore-stdin \
+    --verify=$HTTPIE_VERIFY_SSL \
+    "$PORTAINER_URL/api/endpoints/$PORTAINER_ENDPOINT/docker/services" \
+    filters=="{\"label\":{\"com.docker.stack.namespace=$PORTAINER_STACK_NAME\":true}}" \
+    "Authorization: Bearer $AUTH_TOKEN")
+  check_for_errors $? "$services"
+  echo "$services"
+}
+
+# TODO: add a "containers" function
 
 main "$@"
