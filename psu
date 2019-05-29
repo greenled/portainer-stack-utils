@@ -26,7 +26,7 @@ set -e
 ############################
 main() {
   # Set arguments through envvars
-  VERSION="0.2.0"
+  VERSION="0.2.0-alpha"
   # TODO: Add a "containers" action, see: https://docs.docker.com/engine/api/v1.30/#operation/ContainerList
   ACTIONS="deploy undeploy list info services tasks tasks_healthy status help version"
 
