@@ -393,7 +393,7 @@ deploy() {
     if [ -n "$ENVIRONMENT_VARIABLES_FILE" ]; then
       local new_stack_envvars
       new_stack_envvars=$(env_file_to_json)
-      stack_envvars="$(echo -n "${new_stack_envvars}${stack_envvars}" | jq -sjc 'add | unique_by(.name)')"
+      stack_envvars="$(echo "${new_stack_envvars}${stack_envvars}" | jq -sjc 'add | unique_by(.name)')"
     fi
     local data_prefix="{\"Id\":\"$stack_id\",\"StackFileContent\":\""
     local data_suffix="\",\"Env\":"$stack_envvars",\"Prune\":$PORTAINER_PRUNE}"
@@ -470,7 +470,7 @@ undeploy() {
 #   JSON string                                   #
 ###################################################
 env_file_to_json() {
-  echo "$(env -i $(cat $ENVIRONMENT_VARIABLES_FILE) jq -n 'env | to_entries | map({name: .key, value: .value})')"
+  echo "$(env -i sh -c "(unset \$(env | sed 's/=.*//'); set -a; . $(readlink -f $ENVIRONMENT_VARIABLES_FILE); set +a; jq -njc 'env | to_entries | map({name: .key, value: .value})')")"
 }
 
 main "$@"
