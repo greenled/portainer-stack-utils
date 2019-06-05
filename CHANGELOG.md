@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.1] - 2019-06-05
+### Fixed
+- Fixed error when environment variables loaded from file contain spaces in their values [#14](https://github.com/greenled/portainer-stack-utils/pull/14)
+
 ## [0.1.0] - 2019-05-24
 ### Added
 - Stack deployment
@@ -19,5 +23,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Debug mode
 - Strict mode
 
-[Unreleased]: https://github.com/greenled/portainer-stack-utils/compare/0.1.0...HEAD
+[Unreleased]: https://github.com/greenled/portainer-stack-utils/compare/0.1.1...HEAD
+[0.1.1]: https://github.com/greenled/portainer-stack-utils/releases/tag/0.1.1
 [0.1.0]: https://github.com/greenled/portainer-stack-utils/releases/tag/0.1.0
