@@ -8,7 +8,7 @@ Bash script to deploy/update/undeploy stacks in a [Portainer](https://portainer.
 
 ## Supported Portainer API
 
-Script was created for the latest Portainer API, which at the time of writing is [1.9.2](https://app.swaggerhub.com/apis/deviantony/Portainer/1.19.2).
+Script was created for the latest Portainer API, which at the time of writing is [1.19.2](https://app.swaggerhub.com/apis/deviantony/Portainer/1.19.2).
 
 ## How to install
 
