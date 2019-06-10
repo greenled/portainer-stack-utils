@@ -12,15 +12,17 @@ Script was created for the latest Portainer API, which at the time of writing is
 
 ## How to install
 
-Just clone the repo and use the script
+### Standalone
+
+Just clone the repo and use the script:
 
 ```bash
 git clone https://github.com/greenled/portainer-stack-utils.git
 cd portainer-stack-utils
-./psu ...
+./psu -a deploy ...
 ```
 
-### Requirements
+#### Requirements
 
 You will need these dependecies installed:
 
@@ -30,13 +32,32 @@ You will need these dependecies installed:
 
 For Debian and similar apt-powered systems: `apt install bash httpie jq`.
 
+### Docker image
+
+Use [the published Docker image](https://hub.docker.com/r/greenled/portainer-stack-utils/):
+
+```bash
+docker run -e ACTION=deploy greenled/portainer-stack-utils ...
+```
+
+See the [With envvars](#with-envvars) section for a list of all supported environment variables.
+
+#### Tags
+
+Published images are [tagged](https://hub.docker.com/r/greenled/portainer-stack-utils/tags/) matching [GitHub releases](https://github.com/greenled/portainer-stack-utils/releases):
+
+- `latest`, `0.1.1` -> `0.1.1`
+- `0.1.0` -> `0.1.0`
+- ...
+- `dev` -> `master`
+
 ## How to use
 
 The provided `psu` script allows to deploy/update/undeploy Portainer stacks. Settings can be passed through envvars and/or flags. Both envvars and flags can be mixed but flags will always overwrite envvar values. When deploying a stack, if it doesn't exist a new one is created, otherwise it's updated (unless strict mode is active).
 
 ### With envvars
 
-This is particularly useful for CI/CD pipelines.
+This is particularly useful for CI/CD pipelines using Docker containers.
 
 - `ACTION` ("deploy" or "undeploy", required): Whether to deploy or undeploy the stack
 - `PORTAINER_USER` (string, required): Username
