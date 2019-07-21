@@ -1,35 +1,25 @@
 FROM alpine
 
-ENV LANG="en_US.UTF-8" \
-  LC_ALL="C.UTF-8" \
-  LANGUAGE="en_US.UTF-8" \
-  TERM="xterm" \
-  ACTION="" \
-  PORTAINER_USER="" \
-  PORTAINER_PASSWORD="" \
-  PORTAINER_URL="" \
-  PORTAINER_STACK_NAME="" \
-  DOCKER_COMPOSE_FILE="" \
-  ENVIRONMENT_VARIABLES_FILE="" \
-  PORTAINER_PRUNE="false" \
-  PORTAINER_ENDPOINT="1" \
-  HTTPIE_VERIFY_SSL="yes" \
-  VERBOSE_MODE="false" \
-  DEBUG_MODE="false" \
-  STRICT_MODE="false"
+ENV PSU_AUTHENTICATION_PASSWORD="" \
+  PSU_AUTHENTICATION_USER="" \
+  PSU_CONFIG="" \
+  PSU_CONNECTION_INSECURE="" \
+  PSU_CONNECTION_TIMEOUT="" \
+  PSU_CONNECTION_URL="" \
+  PSU_DEBUG="" \
+  PSU_ENDPOINT_LIST_FORMAT="" \
+  PSU_STACK_DEPLOY_ENDPOINT="" \
+  PSU_STACK_DEPLOY_ENV_FILE="" \
+  PSU_STACK_DEPLOY_REPLACE_ENV="" \
+  PSU_STACK_DEPLOY_STACK_FILE="" \
+  PSU_STACK_LIST_ENDPOINT="" \
+  PSU_STACK_LIST_FORMAT="" \
+  PSU_STACK_LIST_QUIET="" \
+  PSU_STACK_LIST_SWARM="" \
+  PSU_STACK_REMOVE_STRICT="" \
+  PSU_STATUS_FORMAT="" \
+  PSU_VERBOSE=""
 
-RUN apk --update add \
-  bash \
-  ca-certificates \
-  httpie \
-  jq \
-  gettext \
-  && \
-  rm -rf /tmp/src && \
-  rm -rf /var/cache/apk/*
-
-COPY psu /usr/local/bin/
-
-RUN chmod +x /usr/local/bin/*
+COPY psu /usr/local/bin/psu
 
 ENTRYPOINT ["/usr/local/bin/psu"]

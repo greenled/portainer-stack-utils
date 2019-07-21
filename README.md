@@ -4,156 +4,192 @@
 [![Docker Pulls](https://img.shields.io/docker/pulls/greenled/portainer-stack-utils.svg)](https://hub.docker.com/r/greenled/portainer-stack-utils/)
 [![Microbadger](https://images.microbadger.com/badges/image/greenled/portainer-stack-utils.svg)](http://microbadger.com/images/greenled/portainer-stack-utils "Image size")
 
-Bash script to deploy/update/undeploy stacks in a [Portainer](https://portainer.io/) instance from a [docker-compose](https://docs.docker.com/compose) [yaml file](https://docs.docker.com/compose/compose-file). Based on previous work by [@vladbabii](https://github.com/vladbabii) on [docker-how-to/portainer-bash-scripts](https://github.com/docker-how-to/portainer-bash-scripts).
+## Overview
+
+Portainer Stack Utils is a CLI client for [Portainer](https://portainer.io/) written in Go
 
 ## Supported Portainer API
 
-Script was created for the latest Portainer API, which at the time of writing is [1.19.2](https://app.swaggerhub.com/apis/deviantony/Portainer/1.19.2).
+This application was created for the latest Portainer API, which at the time of writing is [1.21.0](https://app.swaggerhub.com/apis/deviantony/Portainer/1.21.0).
 
 ## How to install
 
-### Standalone
+Download the binaries for your platform from [the releases page](https://github.com/greenled/portainer-stack-utils/releases). The binaries have no external dependencies.
 
-Just clone the repo and use the script:
-
-```bash
-git clone https://github.com/greenled/portainer-stack-utils.git
-cd portainer-stack-utils
-./psu -a deploy ...
-```
-
-#### Requirements
-
-You will need these dependecies installed:
-
-- [bash](https://www.gnu.org/software/bash/)
-- [httpie](https://httpie.org/)
-- [jq](https://stedolan.github.io/jq/)
-
-For Debian and similar apt-powered systems: `apt install bash httpie jq`.
-
-### Docker image
-
-Use [the published Docker image](https://hub.docker.com/r/greenled/portainer-stack-utils/):
-
-```bash
-docker run -e ACTION=deploy greenled/portainer-stack-utils ...
-```
-
-See the [With envvars](#with-envvars) section for a list of all supported environment variables.
-
-#### Tags
-
-Published images are [tagged](https://hub.docker.com/r/greenled/portainer-stack-utils/tags/) matching [GitHub releases](https://github.com/greenled/portainer-stack-utils/releases):
-
-- `latest`, `0.1.1` -> `0.1.1`
-- `0.1.0` -> `0.1.0`
-- ...
-- `dev` -> `master`
+You can also install the source code with `go` and build the binaries yourself.
 
 ## How to use
 
-The provided `psu` script allows to deploy/update/undeploy Portainer stacks. Settings can be passed through envvars and/or flags. Both envvars and flags can be mixed but flags will always overwrite envvar values. When deploying a stack, if it doesn't exist a new one is created, otherwise it's updated (unless strict mode is active).
+The application is built on a structure of commands, arguments and flags.
+                   
+**Commands** represent actions, **Args** are things and **Flags** are modifiers for those actions:
 
-### With envvars
-
-This is particularly useful for CI/CD pipelines using Docker containers.
-
-- `ACTION` ("deploy" or "undeploy", required): Whether to deploy or undeploy the stack
-- `PORTAINER_USER` (string, required): Username
-- `PORTAINER_PASSWORD` (string, required): Password
-- `PORTAINER_URL` (string, required): URL to Portainer
-- `PORTAINER_STACK_NAME` (string, required): Stack name
-- `DOCKER_COMPOSE_FILE` (string, required if action=deploy): Path to doker-compose file
-- `ENVIRONMENT_VARIABLES_FILE` (string, optional, only used when action=deploy or action=update): Path to file with environment variables to be used by the stack. See [stack environment variables](#stack-environment-variables) below.
-- `PORTAINER_PRUNE` ("true" or "false", optional): Whether to prune unused containers or not. Defaults to `"false"`.
-- `PORTAINER_ENDPOINT` (int, optional): Which endpoint to use. Defaults to `1`.
-- `HTTPIE_VERIFY_SSL` ("yes" or "no", optional): Whether to verify SSL certificate or not. Defaults to `"yes"`.
-- `VERBOSE_MODE` ("true" or "false", optional): Whether to activate verbose output mode or not. Defaults to `"false"`. See [verbose mode](#verbose-mode) below.
-- `DEBUG_MODE` ("true" or "false", optional): Whether to activate debug output mode or not. Defaults to `"false"`. See [debug mode](#debug-mode) below.
-- `STRICT_MODE` ("true" or "false", optional): Whether to activate strict mode or not. Defaults to `"false"`. See [strict mode](#strict-mode) below.
-
-#### Examples
-
-```bash
-export ACTION="deploy"
-export PORTAINER_USER="admin"
-export PORTAINER_PASSWORD="password"
-export PORTAINER_URL="http://portainer.local"
-export PORTAINER_STACK_NAME="mystack"
-export DOCKER_COMPOSE_FILE="/path/to/docker-compose.yml"
-export ENVIRONMENT_VARIABLES_FILE="/path/to/env_vars_file"
-
-./psu
+```text
+APPNAME COMMAND ARG --FLAG
 ```
 
-```bash
-export ACTION="undeploy"
-export PORTAINER_USER="admin"
-export PORTAINER_PASSWORD="password"
-export PORTAINER_URL="http://portainer.local"
-export PORTAINER_STACK_NAME="mystack"
+Here are some examples:
 
-./psu
+```bash
+psu help
+psu status --help
+psu stack ls --quiet --endpoint 5
+psu stack deploy mystack --stack-file docker-compose.yml -e .env --verbose
+psu stack rm mystack
 ```
 
-### With flags
+Commands can have subcommands, like `stack ls` and `stack deploy` in the previous example. They can also have aliases (i.e. `create` and `up` are aliases of `deploy`).
 
-This is more suitable for standalone script usage.
+Some flags are global, which means they affect every command (i.e. `--verbose`), while others are local, which mean they only affect the command they belong to (i.e. `--stack-file` flag from `deploy` command). Also, some flags have a short version (i.e `--debug`, `-d`).
 
-- `-a` ("deploy" or "undeploy", required): Whether to deploy or undeploy the stack
-- `-u` (string, required): Username
-- `-p` (string, required): Password
-- `-l` (string, required): URL to Portainer
-- `-n` (string, required): Stack name
-- `-c` (string, required if action=deploy): Path to doker-compose file
-- `-g` (string, optional, only used when action=deploy or action=update): Path to file with environment variables to be used by the stack. See [stack environment variables](#stack-environment-variables) below.
-- `-r` ("true" or "false", optional): Whether to prune unused containers or not. Defaults to `"false"`.
-- `-e` (int, optional): Which endpoint to use. Defaults to `1`.
-- `-s` ("yes" or "no", optional): Whether to verify SSL certificate or not. Defaults to `"yes"`.
-- `-v` ("true" or "false", optional): Whether to activate verbose output mode or not. Defaults to `"false"`. See [verbose mode](#verbose-mode) below.
-- `-d` ("true" or "false", optional): Whether to activate debug output mode or not. Defaults to `"false"`. See [debug mode](#debug-mode) below.
-- `-t` ("true" or "false", optional): Whether to activate strict mode or not. Defaults to `"false"`. See [strict mode](#strict-mode) below.
+### Configuration
 
-#### Examples
+Each flag can be set inline (i.e. `--debug`), through an environment variable (i.e. `PSU_DEBUG=true`) and through a configuration file ([see below](#with-configuration-file)). All three methods can be combined, but if a flag is set more than once the order of precedence is:
+
+1. Inline flag
+2. Environment variable
+3. Configuration file
+
+#### With inline flags
+
+Each command has it's own flags. Run `psu [COMMAND [SUBCOMMAND]] --help` to see each command's flag set.
 
 ```bash
-./psu -a deploy -u admin -p password -l http://portainer.local -n mystack -c /path/to/docker-compose.yml -g /path/to/env_vars_file
+psu --help
+psu stack --help
+psu stack deploy --help
 ```
 
-```bash
-./psu -a undeploy -u admin -p password -l http://portainer.local -n mystack
+#### With environment variables
+
+This is particularly useful for CI/CD pipelines.
+
+Environment variables can be bound to flags following the `PSU_[COMMAND_[SUBCOMMAND_]]FLAG` naming pattern:
+
+| Command and subcommand | Flag | Environment variable | Comment |
+| :--------------------- | :--- | :------------------- | :------ |
+|  | --verbose | PSU_VERBOSE=true | All environment variables are prefixed with "PSU_" |
+| stack list | --quiet | PSU_STACK_LIST_QUIET=true | Commands and subcommands are uppercased and joined with "_" |
+| stack deploy | --env-file .env | PSU_STACK_DEPLOY_ENV_FILE=.env | Characters "-" in flag name are replaced with "_" |
+
+#### With configuration file
+
+Flags can be bound to a configuration file. Use the `--config` flag to specify a configuration file to load flags from. By default the file `$HOME/.psu.yaml` is used if present.
+
+#### Using Yaml
+
+If you use a Yaml configuration file:
+
+```text
+[command:
+  [subcommand:]]
+    flag: value
+```
+
+```yaml
+verbose: true
+url: http://localhost:10000
+insecure: true
+stack:
+  deploy:
+    stack-file: docker-compose.yml
+    env-file: .env
+  list:
+    quiet: true
+```
+
+This is valid too:
+
+```text
+[command.[subcommand.]]flag: value
+```
+
+```yaml
+verbose: true
+url: http://localhost:10000
+insecure: true
+stack.deploy.stack-file: docker-compose.yml
+stack.deploy.env-file: .env
+stack.list.quiet: true
+```
+
+#### Using Json
+
+If you use a Json configuration file:
+
+```text
+{
+  ["command": {
+    ["subcommand": {]]
+      "flag": value
+    [}]
+  [}]
+{
+```
+
+```json
+{
+  "verbose": true,
+  "url": "http://localhost:10000",
+  "insecure": true,
+  "stack": {
+    "deploy": {
+      "stack-file": "docker-compose.yml",
+      "env-file": ".env"
+    },
+    "list": {
+      "quiet": true
+    }
+  }
+}
+```
+
+This is valid too:
+
+```text
+{
+  "[command.[subcommand.]]flag": value
+}
+```
+
+```json
+{
+"verbose": true,
+"url": "http://localhost:10000",
+"insecure": true,
+"stack.deploy.stack-file": "docker-compose.yml",
+"stack.deploy.env-file": ".env",
+"stack.list.quiet": true
+}
+
 ```
 
 ### Stack environment variables
 
-There can be set environment variables for each stack, be it a new deployment or an update. For example:
+You will usually want to set some environment variables in your stacks. You can do so with the `--env-file` flag:
 
 ```bash
 touch .env
 echo "MYSQL_ROOT_PASSWORD=agoodpassword" >> .env
 echo "ALLOWED_HOSTS=*" >> .env
-./psu -a deploy -u admin -p password -l http://portainer.local -n django-stack -c /path/to/docker-compose.yml -g env_vars
+psu stack deploy django-stack -c /path/to/docker-compose.yml -e .env
 ```
 
-Stack environment variables can be enabled through [ENVIRONMENT_VARIABLES_FILE envvar](#with-envvars) or [-g flag](#with-flags).
+As every flag, this one can also be used with the `PSU_STACK_DEPLOY_ENV_FILE` [environment variable](#with-environment-variables) and the `psu.stack.deploy.env-file` [configuration key](#with-configuration-file).
 
 ### Verbose mode
 
 In verbose mode the script prints execution steps.
 
 ```text
-Getting auth token...
-Getting stack mystack...
-Stack mystack not found.
-Getting Docker info...
-Getting swarm cluster (if any)...
-Swarm cluster found.
-Preparing stack JSON...
-Creating stack mystack...
+2019/07/20 19:15:45 [Using config file: /home/johndoe/.psu.yaml]
+2019/07/20 19:15:45 [Getting stack mystack...]
+2019/07/20 19:15:45 [Getting auth token...]
+2019/07/20 19:15:45 [Stack mystack not found. Deploying...]
+2019/07/20 19:15:45 [Swarm cluster found with id qwe123rty456uio789asd123f]
 ```
 
-Verbose mode can be enabled through [VERBOSE_MODE envvar](#with-envvars) or [-v flag](#with-flags).
+Verbose mode can be enabled through the `PSU_VERBOSE` [environment variable](#with-environment-variables) and the `verbose` [configuration key](#with-configuration-file).
 
 ### Debug mode
 
@@ -161,13 +197,7 @@ In debug mode the script prints as much information as possible to help diagnosi
 
 **WARNING**: Debug mode will print configuration values (with Portainer credentials) and Portainer API responses (with sensitive information like authentication token and stacks environment variables). Avoid using debug mode in CI/CD pipelines, as pipeline logs are usually recorded.
 
-Debug mode can be enabled through [DEBUG_MODE envvar](#with-envvars) or [-d flag](#with-flags).
-
-### Strict mode
-
-In strict mode the script never updates an existent stack nor removes an unexistent one, and instead exits with an error.
-
-Strict mode can be enabled through [STRICT_MODE envvar](#with-envvars) or [-t flag](#with-flags).
+Debug mode can be enabled through the `DEBUG_MODE` [environment variable](#with-environment-variables) and the `debug` [configuration key](#with-configuration-file).
 
 ## License
 

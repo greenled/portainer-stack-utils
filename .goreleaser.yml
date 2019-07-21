@@ -1,0 +1,50 @@
+project_name: psu
+before:
+  hooks:
+    - go get github.com/spf13/cobra
+    - go get github.com/joho/godotenv
+builds:
+  - main: main.go
+    binary: psu
+    ldflags:
+      - -X github.com/greenled/portainer-stack-utils/common.commitHash={{ .ShortCommit }} -X github.com/greenled/portainer-stack-utils/common.buildDate={{ .Date }}
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - darwin
+      - linux
+      - windows
+    goarch:
+      - 386
+      - amd64
+      - arm
+      - arm64
+    goarm:
+      - 7
+archives:
+  - format: tar.gz
+    format_overrides:
+      - goos: windows
+        format: zip
+    replacements:
+      386: 32bit
+      amd64: 64bit
+      arm: ARM
+      arm64: ARM64
+      darwin: macOS
+      linux: Linux
+      windows: Windows
+dockers:
+  - image_templates:
+      - "greenled/portainer-stack-utils:{{ .Major }}"
+      - "greenled/portainer-stack-utils:{{ .Major }}.{{ .Minor }}"
+      - "greenled/portainer-stack-utils:{{ .Major }}.{{ .Minor }}.{{ .Patch }}"
+    goos: linux
+    goarch: amd64
+    binaries:
+      - psu
+    dockerfile: Dockerfile
+checksum:
+  name_template: 'checksums.txt'
+snapshot:
+  name_template: "{{ .Tag }}-next"
