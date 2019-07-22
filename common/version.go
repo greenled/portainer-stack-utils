@@ -38,7 +38,11 @@ type Version struct {
 }
 
 func (v Version) String() string {
-	return fmt.Sprintf("%d.%d.%d%s", v.Major, v.Minor, v.Patch, v.Suffix)
+	if v.Suffix != "" {
+		return fmt.Sprintf("%d.%d.%d-%s", v.Major, v.Minor, v.Patch, v.Suffix)
+	} else {
+		return fmt.Sprintf("%d.%d.%d", v.Major, v.Minor, v.Patch)
+	}
 }
 
 func BuildVersionString() string {
