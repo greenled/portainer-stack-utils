@@ -7,10 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 ### Added
 - `endpoint list|ls` command to print the endpoints list as a table.
+  - `--format` flag to format output using a Go template.
 - `stack list|ls` command to print the stacks list as a table.
   - `--swarm` flag sets a filter by swarm Id.
   - `--endpoint` flag sets a filter by endpoint Id.
   -`-q, --quiet`) flag causes stack list to print only stack names.
+  - `--format` flag to format output using a Go template.
 - `stack deploy|up|create` command to deploy a stack.
   - `-c, --stack-file` flag sets the stack file to use.
   - `-e, --env-file` flag sets the environment variables file to use.
@@ -20,11 +22,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `stack remove|rm|down` command to remove a stack.
   - `--strict` flag causes a failure if the stack does not exist.
 - `status` command to show Portainer status as a table.
+  - `--format` flag to format output using a Go template.
 - `help` command and `-h, --help` global flag to print global help.
 - `-h, --help` flags on each command to print its help.
 - `-t, --timeout` global flag to set a timeout for requests execution.
 - `--config` global flag to set the path to a configuration file.
 - `--version` global flag to print the client version.
+- `completion` command to print Bash completion script.
 
 ### Removed
 - `-a` flag, which used to select an action to execute. There is a command now for each action.
