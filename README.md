@@ -6,7 +6,7 @@
 
 ## Overview
 
-Portainer Stack Utils is a CLI client for [Portainer](https://portainer.io/) written in Go
+Portainer Stack Utils is a CLI client for [Portainer](https://portainer.io/) written in Go.
 
 ## Supported Portainer API
 
