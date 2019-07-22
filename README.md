@@ -197,7 +197,7 @@ In debug mode the script prints as much information as possible to help diagnosi
 
 **WARNING**: Debug mode will print configuration values (with Portainer credentials) and Portainer API responses (with sensitive information like authentication token and stacks environment variables). Avoid using debug mode in CI/CD pipelines, as pipeline logs are usually recorded.
 
-Debug mode can be enabled through the `DEBUG_MODE` [environment variable](#with-environment-variables) and the `debug` [configuration key](#with-configuration-file).
+Debug mode can be enabled through the `PSU_DEBUG` [environment variable](#with-environment-variables) and the `debug` [configuration key](#with-configuration-file).
 
 ## License
 
