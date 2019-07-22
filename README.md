@@ -199,6 +199,20 @@ In debug mode the script prints as much information as possible to help diagnosi
 
 Debug mode can be enabled through the `PSU_DEBUG` [environment variable](#with-environment-variables) and the `debug` [configuration key](#with-configuration-file).
 
+## Contributing
+
+So, you want to contribute to the project:
+
+- Fork it
+- Download your fork to your PC (git clone https://github.com/your_username/portainer-stack-utils && cd portainer-stack-utils)
+- Create your feature branch (git checkout -b my-new-feature)
+- Make changes and add them (git add .)
+- Commit your changes (git commit -m 'Add some feature')
+- Push to the branch (git push origin my-new-feature)
+- Create a new pull request
+
+If you are submitting a complex feature, create a small design proposal on the [issue tracker](https://github.com/greenled/portainer-stack-utils/issues) before you start.
+
 ## License
 
 Source code contained by this project is licensed under the [GNU General Public License version 3](https://www.gnu.org/licenses/gpl-3.0.en.html). See [LICENSE](LICENSE) file for reference.
