@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 ### Added
 - `config` command to get and set configuration options.
+  - `-l, --list` flag to list all available configuration keys.
 - `endpoint list|ls` command to print the endpoints list as a table.
   - `--format` flag to format output using a Go template.
 - `stack list|ls` command to print the stacks list as a table.
