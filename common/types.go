@@ -72,3 +72,12 @@ type GenericError struct {
 func (e *GenericError) Error() string {
 	return fmt.Sprintf("%s: %s", e.Err, e.Details)
 }
+
+type AuthenticateUserRequest struct {
+	Username string
+	Password string
+}
+
+type AuthenticateUserResponse struct {
+	Jwt string
+}

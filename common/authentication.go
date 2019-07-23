@@ -66,15 +66,6 @@ func GetNewAuthenticationToken() (string, error) {
 	return respBody.Jwt, nil
 }
 
-type AuthenticateUserRequest struct {
-	Username string
-	Password string
-}
-
-type AuthenticateUserResponse struct {
-	Jwt string
-}
-
 func AddAuthorizationHeader(request *http.Request) error {
 	token, err := GetAuthenticationToken()
 	if err != nil {
