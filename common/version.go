@@ -15,6 +15,9 @@ var (
 		Suffix: "",
 	}
 
+	// The program name
+	programName = "Portainer Stack Utils"
+
 	// commitHash contains the current Git revision. Use Go Releaser to make sure this gets set.
 	commitHash string
 
@@ -46,8 +49,6 @@ func (v Version) String() string {
 }
 
 func BuildVersionString() string {
-	program := "Portainer Stack Utils"
-
 	version := "v" + CurrentVersion.String()
 
 	if commitHash != "" {
@@ -61,5 +62,5 @@ func BuildVersionString() string {
 		date = "unknown"
 	}
 
-	return fmt.Sprintf("%s %s %s BuildDate: %s", program, version, osArch, date)
+	return fmt.Sprintf("%s %s %s BuildDate: %s", programName, version, osArch, date)
 }
