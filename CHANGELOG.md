@@ -21,7 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `-e, --env-file` flag sets the environment variables file to use.
   - `--replace-env` flag causes environment variables to be replaced instead of merged while updating a stack.
   - `--endpoint` flag sets the endpoint to use.
-  - `-p, --prune` flag causes services that are no longer referenced to be removed.
+  - `-r, --prune` flag causes services that are no longer referenced to be removed.
 - `stack remove|rm|down` command to remove a stack.
   - `--strict` flag causes a failure if the stack does not exist.
 - `status` command to show Portainer status as a table.
