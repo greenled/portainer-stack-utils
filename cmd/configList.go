@@ -20,13 +20,21 @@ var configListCmd = &cobra.Command{
 			return keys[i] < keys[j]
 		})
 
-		// List keys and values
 		for _, key := range keys {
-			fmt.Printf("%s: %v\n", key, viper.Get(key))
+			if viper.GetBool("config.list.keys") {
+				// List config key
+				fmt.Println(key)
+			} else {
+				// List config key and value
+				fmt.Printf("%s: %v\n", key, viper.Get(key))
+			}
 		}
 	},
 }
 
 func init() {
 	configCmd.AddCommand(configListCmd)
+
+	configListCmd.Flags().Bool("keys", false, "list only keys")
+	viper.BindPFlag("config.list.keys", configListCmd.Flags().Lookup("keys"))
 }
