@@ -57,7 +57,7 @@ If you don't want or can't install `psu` and its dependencies, you can run it wi
 ```bash
 docker run psuapp/psu deploy ...
 ```
-_**Note**: Docker images are also available on [GitLab](https://gitlab.com/psuapp/psu/container_registry)._
+> **Note**: Docker images are also available on [GitLab](https://gitlab.com/psuapp/psu/container_registry).
 
 For detailed instructions, see [How to use](#how-to-use) section.
 
