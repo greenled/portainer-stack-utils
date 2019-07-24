@@ -13,10 +13,14 @@ var cachedAuthenticationToken string
 
 func GetAuthenticationToken() (string, error) {
 	if cachedAuthenticationToken == "" {
-		var authenticationTokenRetrievalErr error
-		cachedAuthenticationToken, authenticationTokenRetrievalErr = GetNewAuthenticationToken()
-		if authenticationTokenRetrievalErr != nil {
-			return "", authenticationTokenRetrievalErr
+		if viper.GetString("auth-token") != "" {
+			cachedAuthenticationToken = viper.GetString("auth-token")
+		} else {
+			var authenticationTokenRetrievalErr error
+			cachedAuthenticationToken, authenticationTokenRetrievalErr = GetNewAuthenticationToken()
+			if authenticationTokenRetrievalErr != nil {
+				return "", authenticationTokenRetrievalErr
+			}
 		}
 	}
 	return cachedAuthenticationToken, nil

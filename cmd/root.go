@@ -44,6 +44,7 @@ func init() {
 	rootCmd.PersistentFlags().StringP("url", "l", "", "Portainer url")
 	rootCmd.PersistentFlags().StringP("user", "u", "", "Portainer user")
 	rootCmd.PersistentFlags().StringP("password", "p", "", "Portainer password")
+	rootCmd.PersistentFlags().StringP("auth-token", "A", "", "Portainer auth token")
 	rootCmd.PersistentFlags().DurationP("timeout", "t", 0, "waiting time before aborting (like 100ms, 30s, 1h20m)")
 	viper.BindPFlag("config", rootCmd.PersistentFlags().Lookup("config"))
 	viper.BindPFlag("verbose", rootCmd.PersistentFlags().Lookup("verbose"))
@@ -53,6 +54,7 @@ func init() {
 	viper.BindPFlag("timeout", rootCmd.PersistentFlags().Lookup("timeout"))
 	viper.BindPFlag("user", rootCmd.PersistentFlags().Lookup("user"))
 	viper.BindPFlag("password", rootCmd.PersistentFlags().Lookup("password"))
+	viper.BindPFlag("auth-token", rootCmd.PersistentFlags().Lookup("auth-token"))
 }
 
 // initConfig reads in config file and ENV variables if set.
