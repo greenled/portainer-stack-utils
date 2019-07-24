@@ -10,8 +10,8 @@ import (
 
 // configListCmd represents the list command
 var configListCmd = &cobra.Command{
-	Use:   "list",
-	Short: "List configs",
+	Use:     "list",
+	Short:   "List configs",
 	Aliases: []string{"ls"},
 	Run: func(cmd *cobra.Command, args []string) {
 		// Get alphabetically ordered list of config keys

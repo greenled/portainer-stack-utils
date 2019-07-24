@@ -12,8 +12,8 @@ import (
 
 // configCmd represents the config command
 var configCmd = &cobra.Command{
-	Use:   "config KEY [VALUE]",
-	Short: "Get and set configuration options",
+	Use:     "config KEY [VALUE]",
+	Short:   "Get and set configuration options",
 	Example: "psu config user admin",
 	Args:    cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
@@ -46,7 +46,7 @@ func init() {
 	rootCmd.AddCommand(configCmd)
 }
 
-func loadCofig () (*viper.Viper, error) {
+func loadCofig() (*viper.Viper, error) {
 	// Set config file name
 	var configFile string
 	if viper.ConfigFileUsed() != "" {
@@ -74,7 +74,7 @@ func loadCofig () (*viper.Viper, error) {
 }
 
 func getConfig(key string) (interface{}, error) {
-	newViper, configLoadingErr := loadCofig ()
+	newViper, configLoadingErr := loadCofig()
 	if configLoadingErr != nil {
 		return nil, configLoadingErr
 	}
@@ -83,7 +83,7 @@ func getConfig(key string) (interface{}, error) {
 }
 
 func setConfig(key string, value string) error {
-	newViper, configLoadingErr := loadCofig ()
+	newViper, configLoadingErr := loadCofig()
 	if configLoadingErr != nil {
 		return configLoadingErr
 	}

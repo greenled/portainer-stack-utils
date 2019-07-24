@@ -16,7 +16,7 @@ var cfgFile string
 var rootCmd = &cobra.Command{
 	Use:     "psu",
 	Short:   "A CLI client for Portainer",
-	Version:  "is set on common/version.CurrentVersion",
+	Version: "is set on common/version.CurrentVersion",
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
