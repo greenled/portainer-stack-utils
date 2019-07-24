@@ -28,7 +28,7 @@ repository_url_protocol=$(echo $CI_PROJECT_URL | sed -E 's/^(https?:\/\/).+$/\1/
 repository_user=$GITLAB_WRITE_REPO_USER
 repository_password=$GITLAB_WRITE_REPO_TOKEN
 repository_url=${repository_url_protocol}${repository_user}:${repository_password}@${repository_url_path}
-last_commit_message=$(git log -1 -z --format="%s%n%ncommit %H%nAuthor: %an <%ae>%nDate: %ad" HEAD)
+last_commit_message=$(git log -1 -z --format="%s%n%ncommit %H%nAuthor: %an <%ae>%nDate: %ad" HEAD | tr '\0' '\n')
 
 if ! $(git clone --quiet --branch=$branch --single-branch $repository_url $repository_path); then
   # Create $branch if needed
