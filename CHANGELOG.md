@@ -40,10 +40,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - Single executable binary instead of a bash script. Project has been rewritten in Go language.
 - No external programs (bash, httpie, jq) dependency. The new executable binary is self-sufficient.
-- `-u` global flag renamed to `--user`.
-- `-p` global flag renamed to `--password`.
-- `-l` global flag renamed to `--url`.
-- `-s` global flag renamed to `--insecure`. It does not receive a value anymore, it is a boolean flag.
+- `-s` global flag renamed to `-i`. It does not receive a value anymore, it is a boolean flag.
 - `-v` global flag renamed to `-v, --verbose`. It does not receive a value anymore, it is a boolean flag.
 - `-d` global flag renamed to `-d, --debug`. It does not receive a value anymore, it is a boolean flag.
 - `-n` global flag moved as a parameter to the `stack deploy` command.
