@@ -29,54 +29,78 @@ var configCmd = &cobra.Command{
 			log.Fatalf("Unkonwn configuration key \"%s\"", args[0])
 		}
 
-		// Create new viper
-		commandViper := viper.New()
-
-		// Set config file name
-		var configFile string
-		if viper.ConfigFileUsed() != "" {
-			// Use config file from viper
-			configFile = viper.ConfigFileUsed()
-		} else {
-			// Find home directory
-			home, err := homedir.Dir()
-			if err != nil {
-				fmt.Println(err)
-				os.Exit(1)
-			}
-
-			// Use $HOME/.psu.yaml
-			configFile = fmt.Sprintf("%s%s.psu.yaml", home, string(os.PathSeparator))
-		}
-		commandViper.SetConfigFile(configFile)
-
-		// Read config from file
-		if configReadingErr := commandViper.ReadInConfig(); configReadingErr != nil {
-			common.PrintVerbose(fmt.Sprintf("Could not read configuration from \"%s\". Expect all configuration values to be unset.", configFile))
-		}
-
 		if len(args) == 1 {
 			// Get config
-			fmt.Println(commandViper.Get(args[0]))
+			value, configGettingErr := getConfig(args[0])
+			common.CheckError(configGettingErr)
+			fmt.Println(value)
 		} else {
 			// Set config
-			commandViper.Set(args[0], args[1])
-
-			// Make sure the config file exists
-			_, fileCreationErr := os.Create(configFile)
-			if fileCreationErr != nil {
-				common.CheckError(fileCreationErr)
-			}
-
-			// Write te config file
-			configWritingErr := commandViper.WriteConfig()
-			if configWritingErr != nil {
-				common.CheckError(configWritingErr)
-			}
+			configSettingErr := setConfig(args[0], args[1])
+			common.CheckError(configSettingErr)
 		}
 	},
 }
 
 func init() {
 	rootCmd.AddCommand(configCmd)
+}
+
+func loadCofig () (*viper.Viper, error) {
+	// Set config file name
+	var configFile string
+	if viper.ConfigFileUsed() != "" {
+		// Use config file from viper
+		configFile = viper.ConfigFileUsed()
+	} else {
+		// Find home directory
+		home, err := homedir.Dir()
+		if err != nil {
+			return &viper.Viper{}, err
+		}
+
+		// Use $HOME/.psu.yaml
+		configFile = fmt.Sprintf("%s%s.psu.yaml", home, string(os.PathSeparator))
+	}
+	newViper := viper.New()
+	newViper.SetConfigFile(configFile)
+
+	// Read config from file
+	if configReadingErr := newViper.ReadInConfig(); configReadingErr != nil {
+		common.PrintVerbose(fmt.Sprintf("Could not read configuration from \"%s\". Expect all configuration values to be unset.", configFile))
+	}
+
+	return newViper, nil
+}
+
+func getConfig(key string) (interface{}, error) {
+	newViper, configLoadingErr := loadCofig ()
+	if configLoadingErr != nil {
+		return nil, configLoadingErr
+	}
+
+	return newViper.Get(key), nil
+}
+
+func setConfig(key string, value string) error {
+	newViper, configLoadingErr := loadCofig ()
+	if configLoadingErr != nil {
+		return configLoadingErr
+	}
+
+	newViper.Set(key, value)
+
+	// Make sure the config file exists
+	_, fileCreationErr := os.Create(newViper.ConfigFileUsed())
+	if fileCreationErr != nil {
+		return fileCreationErr
+	}
+
+	// Write te config file
+	configWritingErr := newViper.WriteConfig()
+	if configWritingErr != nil {
+		return configWritingErr
+	}
+
+	return nil
 }
