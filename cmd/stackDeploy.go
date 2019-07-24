@@ -94,11 +94,11 @@ var stackDeployCmd = &cobra.Command{
 				common.CheckError(deploymentErr)
 			default:
 				// Something else happened
-				log.Fatalln(selectionErr)
+				common.CheckError(stackRetrievalErr)
 			}
 		default:
 			// Something else happened
-			log.Fatalln(stackRetrievalErr)
+			common.CheckError(stackRetrievalErr)
 		}
 	},
 }

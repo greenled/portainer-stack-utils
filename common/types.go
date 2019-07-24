@@ -70,7 +70,11 @@ type GenericError struct {
 }
 
 func (e *GenericError) Error() string {
-	return fmt.Sprintf("%s: %s", e.Err, e.Details)
+	if e.Details != "" {
+		return fmt.Sprintf("%s: %s", e.Err, e.Details)
+	} else {
+		return fmt.Sprintf("%s", e.Err)
+	}
 }
 
 type AuthenticateUserRequest struct {
