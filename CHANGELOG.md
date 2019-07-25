@@ -42,6 +42,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Debug mode
 - Strict mode
 
-[Unreleased]: https://gitlab.com/psuapp/psu/compare/v0.1.1...master
+[Unreleased]: https://gitlab.com/psuapp/psu/compare/v1.0.0...master
+[1.0.0]: https://gitlab.com/psuapp/psu/-/tags/v1.0.0
 [0.1.1]: https://gitlab.com/psuapp/psu/-/tags/v0.1.1
 [0.1.0]: https://gitlab.com/psuapp/psu/-/tags/v0.1.0
