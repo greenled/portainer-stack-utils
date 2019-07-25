@@ -5,6 +5,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [1.0.0] - 2019-07-25
 ### Added
 - New actions: `ls`, `status`, `services`, `tasks`, `tasks:healthy`, `containers`, `login`, `lint`, `inspect`, `system:info`, `actions`, `help` and `version`
 - New options: `--auth-token=[AUTH_TOKEN]`,	`--compose-file-base64=[BASE64]`, `--env-file-base64=[BASE64]`, `--timeout=[SECONDS]`, `--detect-job=[true|false]`, `--service=[SERVICE_NAME]`, `--insecure`, `--masked-variables`, `--quiet`, `--lint`, `--help` and `--version`
