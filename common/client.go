@@ -16,7 +16,7 @@ import (
 	"github.com/spf13/viper"
 )
 
-var client *PortainerClient
+var cachedClient *PortainerClient
 
 type ClientConfig struct {
 	Url           string
@@ -305,14 +305,14 @@ func NewClient(config ClientConfig) (c *PortainerClient, err error) {
 
 // Get the cached client or a new one
 func GetClient() (c *PortainerClient, err error) {
-	if client == nil {
-		client, err = NewClient(ClientConfig{
+	if cachedClient == nil {
+		cachedClient, err = NewClient(ClientConfig{
 			Url:      viper.GetString("url"),
 			User:     viper.GetString("user"),
 			Password: viper.GetString("password"),
 			Token:    viper.GetString("auth-token"),
 		})
 	}
-	c = client
+	c = cachedClient
 	return
 }
