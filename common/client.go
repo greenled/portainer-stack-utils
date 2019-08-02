@@ -10,6 +10,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"strings"
 	"time"
 
 	"github.com/spf13/viper"
@@ -282,7 +283,7 @@ func (n *PortainerClient) Clone() (c *PortainerClient, err error) {
 
 // Create a new client
 func NewClient(config ClientConfig) (c *PortainerClient, err error) {
-	apiUrl, err := url.Parse(config.Url + "/api/")
+	apiUrl, err := url.Parse(strings.TrimRight(config.Url, "/") + "/api/")
 	if err != nil {
 		return
 	}
