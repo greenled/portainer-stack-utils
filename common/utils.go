@@ -1,34 +1,18 @@
 package common
 
 import (
-	"encoding/json"
 	"fmt"
-	"net/http"
 )
 
-func GetAllStacks() ([]Stack, error) {
-	return GetAllStacksFiltered(StackListFilter{})
-}
-
-func GetAllStacksFiltered(filter StackListFilter) (stacks []Stack, err error) {
-	PrintVerbose("Getting all stacks...")
-
+func GetStackByName(name string) (stack Stack, err error) {
 	client, err := GetClient()
 	if err != nil {
 		return
 	}
 
-	filterJsonBytes, _ := json.Marshal(filter)
-	filterJsonString := string(filterJsonBytes)
-
-	err = client.DoJSON(fmt.Sprintf("stacks?filters=%s", filterJsonString), http.MethodGet, nil, &stacks)
-	return
-}
-
-func GetStackByName(name string) (Stack, error) {
-	stacks, err := GetAllStacks()
+	stacks, err := client.GetStacks("", 0)
 	if err != nil {
-		return Stack{}, err
+		return
 	}
 
 	PrintVerbose(fmt.Sprintf("Getting stack %s...", name))
@@ -37,9 +21,10 @@ func GetStackByName(name string) (Stack, error) {
 			return stack, nil
 		}
 	}
-	return Stack{}, &StackNotFoundError{
+	err = &StackNotFoundError{
 		StackName: name,
 	}
+	return
 }
 
 type StackListFilter struct {
@@ -54,16 +39,4 @@ type StackNotFoundError struct {
 
 func (e *StackNotFoundError) Error() string {
 	return fmt.Sprintf("Stack %s not found", e.StackName)
-}
-
-func GetAllEndpoints() (endpoints []EndpointSubset, err error) {
-	PrintVerbose("Getting all endpoints...")
-
-	client, err := GetClient()
-	if err != nil {
-		return
-	}
-
-	err = client.DoJSON("endpoints", http.MethodGet, nil, &endpoints)
-	return
 }

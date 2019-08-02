@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
-	"net/http"
 
 	"github.com/greenled/portainer-stack-utils/common"
 	"github.com/joho/godotenv"
@@ -27,6 +26,9 @@ var stackDeployCmd = &cobra.Command{
 			common.CheckError(loadingErr)
 		}
 
+		client, clientRetrievalErr := common.GetClient()
+		common.CheckError(clientRetrievalErr)
+
 		stackName := args[0]
 		retrievedStack, stackRetrievalErr := common.GetStackByName(stackName)
 		switch stackRetrievalErr.(type) {
@@ -41,7 +43,7 @@ var stackDeployCmd = &cobra.Command{
 				common.CheckError(loadingErr)
 			} else {
 				var stackFileContentRetrievalErr error
-				stackFileContent, stackFileContentRetrievalErr = getStackFileContent(retrievedStack.Id)
+				stackFileContent, stackFileContentRetrievalErr = client.GetStackFileContent(retrievedStack.Id)
 				common.CheckError(stackFileContentRetrievalErr)
 			}
 
@@ -66,8 +68,8 @@ var stackDeployCmd = &cobra.Command{
 				}
 			}
 
-			updateErr := updateStack(retrievedStack, newEnvironmentVariables, stackFileContent, viper.GetBool("stack.deploy.prune"))
-			common.CheckError(updateErr)
+			err := client.UpdateStack(retrievedStack, newEnvironmentVariables, stackFileContent, viper.GetBool("stack.deploy.prune"), viper.GetString("stack.deploy.endpoint"))
+			common.CheckError(err)
 		case *common.StackNotFoundError:
 			// We are deploying a new stack
 			common.PrintVerbose(fmt.Sprintf("Stack %s not found. Deploying...", stackName))
@@ -83,12 +85,12 @@ var stackDeployCmd = &cobra.Command{
 			case nil:
 				// It's a swarm cluster
 				common.PrintVerbose(fmt.Sprintf("Swarm cluster found with id %s", swarmClusterId))
-				deploymentErr := deploySwarmStack(stackName, loadedEnvironmentVariables, stackFileContent, swarmClusterId)
+				deploymentErr := client.CreateSwarmStack(stackName, loadedEnvironmentVariables, stackFileContent, swarmClusterId, viper.GetString("stack.deploy.endpoint"))
 				common.CheckError(deploymentErr)
 			case *valueNotFoundError:
 				// It's not a swarm cluster
 				common.PrintVerbose("Swarm cluster not found")
-				deploymentErr := deployComposeStack(stackName, loadedEnvironmentVariables, stackFileContent)
+				deploymentErr := client.CreateComposeStack(stackName, loadedEnvironmentVariables, stackFileContent, viper.GetString("stack.deploy.endpoint"))
 				common.CheckError(deploymentErr)
 			default:
 				// Something else happened
@@ -116,58 +118,6 @@ func init() {
 	viper.BindPFlag("stack.deploy.prune", stackDeployCmd.Flags().Lookup("prune"))
 }
 
-func deploySwarmStack(stackName string, environmentVariables []common.StackEnv, dockerComposeFileContent string, swarmClusterId string) (err error) {
-	client, err := common.GetClient()
-	if err != nil {
-		return
-	}
-
-	reqBody := common.StackCreateRequest{
-		Name:             stackName,
-		Env:              environmentVariables,
-		SwarmID:          swarmClusterId,
-		StackFileContent: dockerComposeFileContent,
-	}
-
-	err = client.DoJSON(fmt.Sprintf("stacks?type=%v&method=%s&endpointId=%s", 1, "string", viper.GetString("stack.deploy.endpoint")), http.MethodPost, &reqBody, nil)
-
-	return
-}
-
-func deployComposeStack(stackName string, environmentVariables []common.StackEnv, stackFileContent string) (err error) {
-	client, err := common.GetClient()
-	if err != nil {
-		return
-	}
-
-	reqBody := common.StackCreateRequest{
-		Name:             stackName,
-		Env:              environmentVariables,
-		StackFileContent: stackFileContent,
-	}
-
-	err = client.DoJSON(fmt.Sprintf("stacks?type=%v&method=%s&endpointId=%s", 2, "string", viper.GetString("stack.deploy.endpoint")), http.MethodPost, &reqBody, nil)
-
-	return
-}
-
-func updateStack(stack common.Stack, environmentVariables []common.StackEnv, stackFileContent string, prune bool) (err error) {
-	client, err := common.GetClient()
-	if err != nil {
-		return
-	}
-
-	reqBody := common.StackUpdateRequest{
-		Env:              environmentVariables,
-		StackFileContent: stackFileContent,
-		Prune:            prune,
-	}
-
-	err = client.DoJSON(fmt.Sprintf("stacks/%v?endpointId=%s", stack.Id, viper.GetString("stack.deploy.endpoint")), http.MethodPut, &reqBody, nil)
-
-	return
-}
-
 func getSwarmClusterId() (id string, err error) {
 	// Get docker information for endpoint
 	client, err := common.GetClient()
@@ -175,9 +125,7 @@ func getSwarmClusterId() (id string, err error) {
 		return
 	}
 
-	var result map[string]interface{}
-
-	err = client.DoJSON(fmt.Sprintf("endpoints/%v/docker/info", viper.GetString("stack.deploy.endpoint")), http.MethodGet, nil, &result)
+	result, err := client.GetEndpointDockerInfo(viper.GetString("stack.deploy.endpoint"))
 	if err != nil {
 		return
 	}
@@ -227,24 +175,6 @@ func loadEnvironmentVariablesFile(path string) ([]common.StackEnv, error) {
 	}
 
 	return variables, nil
-}
-
-func getStackFileContent(stackId uint32) (content string, err error) {
-	client, err := common.GetClient()
-	if err != nil {
-		return
-	}
-
-	var respBody common.StackFileInspectResponse
-
-	err = client.DoJSON(fmt.Sprintf("stacks/%v/file", stackId), http.MethodGet, nil, respBody)
-	if err != nil {
-		return
-	}
-
-	content = respBody.StackFileContent
-
-	return
 }
 
 type valueNotFoundError struct{}

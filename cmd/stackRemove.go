@@ -3,7 +3,6 @@ package cmd
 import (
 	"fmt"
 	"log"
-	"net/http"
 
 	"github.com/greenled/portainer-stack-utils/common"
 	"github.com/spf13/cobra"
@@ -33,7 +32,7 @@ var stackRemoveCmd = &cobra.Command{
 			client, err := common.GetClient()
 			common.CheckError(err)
 
-			err = client.DoJSON(fmt.Sprintf("stacks/%d", stackId), http.MethodDelete, nil, nil)
+			err = client.DeleteStack(stackId)
 			common.CheckError(err)
 		case *common.StackNotFoundError:
 			// The stack does not exist

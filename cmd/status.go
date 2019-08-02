@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"fmt"
-	"net/http"
 	"os"
 	"text/template"
 
@@ -19,8 +18,7 @@ var statusCmd = &cobra.Command{
 		client, err := common.GetClient()
 		common.CheckError(err)
 
-		var respBody common.Status
-		err = client.DoJSON("status", http.MethodGet, nil, &respBody)
+		respBody, err := client.GetStatus()
 		common.CheckError(err)
 
 		if viper.GetString("status.format") != "" {

@@ -18,10 +18,11 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/greenled/portainer-stack-utils/common"
-	"github.com/spf13/viper"
 	"os"
 	"text/template"
+
+	"github.com/greenled/portainer-stack-utils/common"
+	"github.com/spf13/viper"
 
 	"github.com/spf13/cobra"
 )
@@ -32,7 +33,10 @@ var endpointListCmd = &cobra.Command{
 	Short:   "List endpoints",
 	Aliases: []string{"ls"},
 	Run: func(cmd *cobra.Command, args []string) {
-		endpoints, err := common.GetAllEndpoints()
+		client, err := common.GetClient()
+		common.CheckError(err)
+
+		endpoints, err := client.GetEndpoints()
 		common.CheckError(err)
 
 		if viper.GetString("endpoint.list.format") != "" {

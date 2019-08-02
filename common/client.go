@@ -130,6 +130,110 @@ func (n *PortainerClient) Authenticate(user, password string) (token string, err
 	return
 }
 
+// Get endpoints
+func (n *PortainerClient) GetEndpoints() (endpoints []EndpointSubset, err error) {
+	PrintVerbose("Getting endpoints...")
+	err = n.DoJSON("endpoints", http.MethodGet, nil, &endpoints)
+	return
+}
+
+// Get stacks, optionally filtered by swarmId and endpointId
+func (n *PortainerClient) GetStacks(swarmId string, endpointId uint32) (stacks []Stack, err error) {
+	PrintVerbose("Getting stacks...")
+
+	filter := StackListFilter{
+		SwarmId:    swarmId,
+		EndpointId: endpointId,
+	}
+
+	filterJsonBytes, _ := json.Marshal(filter)
+	filterJsonString := string(filterJsonBytes)
+
+	err = n.DoJSON(fmt.Sprintf("stacks?filters=%s", filterJsonString), http.MethodGet, nil, &stacks)
+	return
+}
+
+// Create swarm stack
+func (n *PortainerClient) CreateSwarmStack(stackName string, environmentVariables []StackEnv, stackFileContent string, swarmClusterId string, endpointId string) (err error) {
+	PrintVerbose("Deploying stack...")
+
+	reqBody := StackCreateRequest{
+		Name:             stackName,
+		Env:              environmentVariables,
+		SwarmID:          swarmClusterId,
+		StackFileContent: stackFileContent,
+	}
+
+	err = n.DoJSON(fmt.Sprintf("stacks?type=%v&method=%s&endpointId=%s", 1, "string", endpointId), http.MethodPost, &reqBody, nil)
+	return
+}
+
+// Create compose stack
+func (n *PortainerClient) CreateComposeStack(stackName string, environmentVariables []StackEnv, stackFileContent string, endpointId string) (err error) {
+	PrintVerbose("Deploying stack...")
+
+	reqBody := StackCreateRequest{
+		Name:             stackName,
+		Env:              environmentVariables,
+		StackFileContent: stackFileContent,
+	}
+
+	err = n.DoJSON(fmt.Sprintf("stacks?type=%v&method=%s&endpointId=%s", 2, "string", endpointId), http.MethodPost, &reqBody, nil)
+	return
+}
+
+// Update stack
+func (n *PortainerClient) UpdateStack(stack Stack, environmentVariables []StackEnv, stackFileContent string, prune bool, endpointId string) (err error) {
+	PrintVerbose("Updating stack...")
+
+	reqBody := StackUpdateRequest{
+		Env:              environmentVariables,
+		StackFileContent: stackFileContent,
+		Prune:            prune,
+	}
+
+	err = n.DoJSON(fmt.Sprintf("stacks/%v?endpointId=%s", stack.Id, endpointId), http.MethodPut, &reqBody, nil)
+	return
+}
+
+// Delete stack
+func (n *PortainerClient) DeleteStack(stackId uint32) (err error) {
+	PrintVerbose("Deleting stack...")
+
+	err = n.DoJSON(fmt.Sprintf("stacks/%d", stackId), http.MethodDelete, nil, nil)
+	return
+}
+
+// Get stack file content
+func (n *PortainerClient) GetStackFileContent(stackId uint32) (content string, err error) {
+	PrintVerbose("Getting stack file content...")
+
+	var respBody StackFileInspectResponse
+
+	err = n.DoJSON(fmt.Sprintf("stacks/%v/file", stackId), http.MethodGet, nil, &respBody)
+	if err != nil {
+		return
+	}
+
+	content = respBody.StackFileContent
+
+	return
+}
+
+// Get endpoint Docker info
+func (n *PortainerClient) GetEndpointDockerInfo(endpointId string) (info map[string]interface{}, err error) {
+	PrintVerbose("Getting endpoint Docker info...")
+
+	err = n.DoJSON(fmt.Sprintf("endpoints/%v/docker/info", endpointId), http.MethodGet, nil, &info)
+	return
+}
+
+// Get Portainer status info
+func (n *PortainerClient) GetStatus() (status Status, err error) {
+	err = n.DoJSON("status", http.MethodGet, nil, &status)
+	return
+}
+
 type clientConfig struct {
 	Url      string
 	User     string

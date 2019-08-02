@@ -2,11 +2,12 @@ package cmd
 
 import (
 	"fmt"
+	"os"
+	"text/template"
+
 	"github.com/greenled/portainer-stack-utils/common"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"os"
-	"text/template"
 )
 
 // stackListCmd represents the remove command
@@ -16,10 +17,10 @@ var stackListCmd = &cobra.Command{
 	Aliases: []string{"ls"},
 	Example: "psu stack list --endpoint 1",
 	Run: func(cmd *cobra.Command, args []string) {
-		stacks, err := common.GetAllStacksFiltered(common.StackListFilter{
-			SwarmId:    viper.GetString("stack.list.swarm"),
-			EndpointId: viper.GetUint32("stack.list.endpoint"),
-		})
+		client, err := common.GetClient()
+		common.CheckError(err)
+
+		stacks, err := client.GetStacks(viper.GetString("stack.list.swarm"), viper.GetUint32("stack.list.endpoint"))
 		common.CheckError(err)
 
 		if viper.GetBool("stack.list.quiet") {
