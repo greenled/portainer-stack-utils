@@ -17,19 +17,23 @@ import (
 
 var client *PortainerClient
 
-type clientConfig struct {
-	Url      string
-	User     string
-	Password string
-	Token    string
-	Insecure bool
-	Timeout  time.Duration
+type ClientConfig struct {
+	Url           string
+	User          string
+	Password      string
+	Token         string
+	DoNotUseToken bool
+	Insecure      bool
+	Timeout       time.Duration
 }
 
 type PortainerClient struct {
 	http.Client
-	url   *url.URL
-	token string
+	url           *url.URL
+	user          string
+	password      string
+	token         string
+	doNotUseToken bool
 }
 
 // Check if an http.Response object has errors
@@ -73,7 +77,19 @@ func (n *PortainerClient) do(uri, method string, request io.Reader, requestType 
 		req.Header.Set("Content-Type", requestType)
 	}
 
-	if n.token != "" {
+	if !n.doNotUseToken {
+		if n.token == "" {
+			clientClone, cloneErr := n.Clone()
+			if cloneErr != nil {
+				return resp, cloneErr
+			}
+			clientClone.doNotUseToken = true
+			n.token, err = clientClone.Authenticate()
+			if err != nil {
+				return
+			}
+			PrintDebug(fmt.Sprintf("Auth token: %s", n.token))
+		}
 		req.Header.Set("Authorization", "Bearer "+n.token)
 	}
 
@@ -123,12 +139,12 @@ func (n *PortainerClient) doJSON(uri, method string, request interface{}, respon
 }
 
 // Authenticate a user to get an auth token
-func (n *PortainerClient) Authenticate(user, password string) (token string, err error) {
+func (n *PortainerClient) Authenticate() (token string, err error) {
 	PrintVerbose("Getting auth token...")
 
 	reqBody := AuthenticateUserRequest{
-		Username: user,
-		Password: password,
+		Username: n.user,
+		Password: n.password,
 	}
 
 	respBody := AuthenticateUserResponse{}
@@ -247,15 +263,35 @@ func (n *PortainerClient) GetStatus() (status Status, err error) {
 	return
 }
 
+// Get a clone of the client
+func (n *PortainerClient) Clone() (c *PortainerClient, err error) {
+	c = &PortainerClient{
+		url:           n.url,
+		user:          n.user,
+		password:      n.password,
+		token:         n.token,
+		doNotUseToken: n.doNotUseToken,
+	}
+
+	c.Timeout = n.Timeout
+
+	c.Transport = n.Transport
+
+	return
+}
+
 // Create a new client
-func newClient(config clientConfig) (c *PortainerClient, err error) {
+func NewClient(config ClientConfig) (c *PortainerClient, err error) {
 	apiUrl, err := url.Parse(config.Url + "/api/")
 	if err != nil {
 		return
 	}
 
 	c = &PortainerClient{
-		url: apiUrl,
+		url:      apiUrl,
+		user:     config.User,
+		password: config.Password,
+		token:    config.Token,
 	}
 
 	c.Timeout = config.Timeout
@@ -266,23 +302,13 @@ func newClient(config clientConfig) (c *PortainerClient, err error) {
 		},
 	}
 
-	if config.Token != "" {
-		c.token = config.Token
-	} else {
-		c.token, err = c.Authenticate(config.User, config.Password)
-		if err != nil {
-			return nil, err
-		}
-		PrintDebug(fmt.Sprintf("Auth token: %s", c.token))
-	}
-
 	return
 }
 
 // Get the cached client or a new one
 func GetClient() (c *PortainerClient, err error) {
 	if client == nil {
-		client, err = newClient(clientConfig{
+		client, err = NewClient(ClientConfig{
 			Url:      viper.GetString("url"),
 			User:     viper.GetString("user"),
 			Password: viper.GetString("password"),
