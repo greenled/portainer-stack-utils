@@ -17,6 +17,15 @@ import (
 
 var client *PortainerClient
 
+type clientConfig struct {
+	Url      string
+	User     string
+	Password string
+	Token    string
+	Insecure bool
+	Timeout  time.Duration
+}
+
 type PortainerClient struct {
 	http.Client
 	url   *url.URL
@@ -236,15 +245,6 @@ func (n *PortainerClient) GetEndpointDockerInfo(endpointId string) (info map[str
 func (n *PortainerClient) GetStatus() (status Status, err error) {
 	err = n.doJSON("status", http.MethodGet, nil, &status)
 	return
-}
-
-type clientConfig struct {
-	Url      string
-	User     string
-	Password string
-	Token    string
-	Insecure bool
-	Timeout  time.Duration
 }
 
 // Create a new client
