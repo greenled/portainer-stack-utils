@@ -83,7 +83,7 @@ func (n *PortainerClient) do(uri, method string, request io.Reader, requestType 
 	return
 }
 
-func (n *PortainerClient) DoJSON(uri, method string, request interface{}, response interface{}) error {
+func (n *PortainerClient) doJSON(uri, method string, request interface{}, response interface{}) error {
 	var body io.Reader
 
 	if request != nil {
@@ -120,7 +120,7 @@ func (n *PortainerClient) Authenticate(user, password string) (token string, err
 
 	respBody := AuthenticateUserResponse{}
 
-	err = n.DoJSON("auth", http.MethodPost, &reqBody, &respBody)
+	err = n.doJSON("auth", http.MethodPost, &reqBody, &respBody)
 	if err != nil {
 		return
 	}
@@ -133,7 +133,7 @@ func (n *PortainerClient) Authenticate(user, password string) (token string, err
 // Get endpoints
 func (n *PortainerClient) GetEndpoints() (endpoints []EndpointSubset, err error) {
 	PrintVerbose("Getting endpoints...")
-	err = n.DoJSON("endpoints", http.MethodGet, nil, &endpoints)
+	err = n.doJSON("endpoints", http.MethodGet, nil, &endpoints)
 	return
 }
 
@@ -149,7 +149,7 @@ func (n *PortainerClient) GetStacks(swarmId string, endpointId uint32) (stacks [
 	filterJsonBytes, _ := json.Marshal(filter)
 	filterJsonString := string(filterJsonBytes)
 
-	err = n.DoJSON(fmt.Sprintf("stacks?filters=%s", filterJsonString), http.MethodGet, nil, &stacks)
+	err = n.doJSON(fmt.Sprintf("stacks?filters=%s", filterJsonString), http.MethodGet, nil, &stacks)
 	return
 }
 
@@ -164,7 +164,7 @@ func (n *PortainerClient) CreateSwarmStack(stackName string, environmentVariable
 		StackFileContent: stackFileContent,
 	}
 
-	err = n.DoJSON(fmt.Sprintf("stacks?type=%v&method=%s&endpointId=%s", 1, "string", endpointId), http.MethodPost, &reqBody, nil)
+	err = n.doJSON(fmt.Sprintf("stacks?type=%v&method=%s&endpointId=%s", 1, "string", endpointId), http.MethodPost, &reqBody, nil)
 	return
 }
 
@@ -178,7 +178,7 @@ func (n *PortainerClient) CreateComposeStack(stackName string, environmentVariab
 		StackFileContent: stackFileContent,
 	}
 
-	err = n.DoJSON(fmt.Sprintf("stacks?type=%v&method=%s&endpointId=%s", 2, "string", endpointId), http.MethodPost, &reqBody, nil)
+	err = n.doJSON(fmt.Sprintf("stacks?type=%v&method=%s&endpointId=%s", 2, "string", endpointId), http.MethodPost, &reqBody, nil)
 	return
 }
 
@@ -192,7 +192,7 @@ func (n *PortainerClient) UpdateStack(stack Stack, environmentVariables []StackE
 		Prune:            prune,
 	}
 
-	err = n.DoJSON(fmt.Sprintf("stacks/%v?endpointId=%s", stack.Id, endpointId), http.MethodPut, &reqBody, nil)
+	err = n.doJSON(fmt.Sprintf("stacks/%v?endpointId=%s", stack.Id, endpointId), http.MethodPut, &reqBody, nil)
 	return
 }
 
@@ -200,7 +200,7 @@ func (n *PortainerClient) UpdateStack(stack Stack, environmentVariables []StackE
 func (n *PortainerClient) DeleteStack(stackId uint32) (err error) {
 	PrintVerbose("Deleting stack...")
 
-	err = n.DoJSON(fmt.Sprintf("stacks/%d", stackId), http.MethodDelete, nil, nil)
+	err = n.doJSON(fmt.Sprintf("stacks/%d", stackId), http.MethodDelete, nil, nil)
 	return
 }
 
@@ -210,7 +210,7 @@ func (n *PortainerClient) GetStackFileContent(stackId uint32) (content string, e
 
 	var respBody StackFileInspectResponse
 
-	err = n.DoJSON(fmt.Sprintf("stacks/%v/file", stackId), http.MethodGet, nil, &respBody)
+	err = n.doJSON(fmt.Sprintf("stacks/%v/file", stackId), http.MethodGet, nil, &respBody)
 	if err != nil {
 		return
 	}
@@ -224,13 +224,13 @@ func (n *PortainerClient) GetStackFileContent(stackId uint32) (content string, e
 func (n *PortainerClient) GetEndpointDockerInfo(endpointId string) (info map[string]interface{}, err error) {
 	PrintVerbose("Getting endpoint Docker info...")
 
-	err = n.DoJSON(fmt.Sprintf("endpoints/%v/docker/info", endpointId), http.MethodGet, nil, &info)
+	err = n.doJSON(fmt.Sprintf("endpoints/%v/docker/info", endpointId), http.MethodGet, nil, &info)
 	return
 }
 
 // Get Portainer status info
 func (n *PortainerClient) GetStatus() (status Status, err error) {
-	err = n.DoJSON("status", http.MethodGet, nil, &status)
+	err = n.doJSON("status", http.MethodGet, nil, &status)
 	return
 }
 
