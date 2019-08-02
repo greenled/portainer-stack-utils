@@ -15,7 +15,7 @@ import (
 	"github.com/spf13/viper"
 )
 
-var cachedClient *PortainerClient
+var cachedClient PortainerClient
 
 type ClientConfig struct {
 	Url           string
@@ -25,7 +25,20 @@ type ClientConfig struct {
 	DoNotUseToken bool
 }
 
-type PortainerClient struct {
+type PortainerClient interface {
+	Authenticate() (token string, err error)
+	GetEndpoints() ([]EndpointSubset, error)
+	GetStacks(swarmId string, endpointId uint32) ([]Stack, error)
+	CreateSwarmStack(stackName string, environmentVariables []StackEnv, stackFileContent string, swarmClusterId string, endpointId string) error
+	CreateComposeStack(stackName string, environmentVariables []StackEnv, stackFileContent string, endpointId string) error
+	UpdateStack(stack Stack, environmentVariables []StackEnv, stackFileContent string, prune bool, endpointId string) error
+	DeleteStack(stackId uint32) error
+	GetStackFileContent(stackId uint32) (content string, err error)
+	GetEndpointDockerInfo(endpointId string) (info map[string]interface{}, err error)
+	GetStatus() (Status, error)
+}
+
+type PortainerClientImp struct {
 	httpClient    *http.Client
 	url           *url.URL
 	user          string
@@ -56,7 +69,7 @@ func checkResponseForErrors(resp *http.Response) error {
 }
 
 // Do an http request
-func (n *PortainerClient) do(uri, method string, request io.Reader, requestType string, headers http.Header) (resp *http.Response, err error) {
+func (n *PortainerClientImp) do(uri, method string, request io.Reader, requestType string, headers http.Header) (resp *http.Response, err error) {
 	requestUrl, err := n.url.Parse(uri)
 	if err != nil {
 		return
@@ -104,7 +117,7 @@ func (n *PortainerClient) do(uri, method string, request io.Reader, requestType 
 }
 
 // Do a JSON http request
-func (n *PortainerClient) doJSON(uri, method string, request interface{}, response interface{}) error {
+func (n *PortainerClientImp) doJSON(uri, method string, request interface{}, response interface{}) error {
 	var body io.Reader
 
 	if request != nil {
@@ -132,7 +145,7 @@ func (n *PortainerClient) doJSON(uri, method string, request interface{}, respon
 }
 
 // Authenticate a user to get an auth token
-func (n *PortainerClient) Authenticate() (token string, err error) {
+func (n *PortainerClientImp) Authenticate() (token string, err error) {
 	PrintVerbose("Getting auth token...")
 
 	reqBody := AuthenticateUserRequest{
@@ -158,14 +171,14 @@ func (n *PortainerClient) Authenticate() (token string, err error) {
 }
 
 // Get endpoints
-func (n *PortainerClient) GetEndpoints() (endpoints []EndpointSubset, err error) {
+func (n *PortainerClientImp) GetEndpoints() (endpoints []EndpointSubset, err error) {
 	PrintVerbose("Getting endpoints...")
 	err = n.doJSON("endpoints", http.MethodGet, nil, &endpoints)
 	return
 }
 
 // Get stacks, optionally filtered by swarmId and endpointId
-func (n *PortainerClient) GetStacks(swarmId string, endpointId uint32) (stacks []Stack, err error) {
+func (n *PortainerClientImp) GetStacks(swarmId string, endpointId uint32) (stacks []Stack, err error) {
 	PrintVerbose("Getting stacks...")
 
 	filter := StackListFilter{
@@ -181,7 +194,7 @@ func (n *PortainerClient) GetStacks(swarmId string, endpointId uint32) (stacks [
 }
 
 // Create swarm stack
-func (n *PortainerClient) CreateSwarmStack(stackName string, environmentVariables []StackEnv, stackFileContent string, swarmClusterId string, endpointId string) (err error) {
+func (n *PortainerClientImp) CreateSwarmStack(stackName string, environmentVariables []StackEnv, stackFileContent string, swarmClusterId string, endpointId string) (err error) {
 	PrintVerbose("Deploying stack...")
 
 	reqBody := StackCreateRequest{
@@ -196,7 +209,7 @@ func (n *PortainerClient) CreateSwarmStack(stackName string, environmentVariable
 }
 
 // Create compose stack
-func (n *PortainerClient) CreateComposeStack(stackName string, environmentVariables []StackEnv, stackFileContent string, endpointId string) (err error) {
+func (n *PortainerClientImp) CreateComposeStack(stackName string, environmentVariables []StackEnv, stackFileContent string, endpointId string) (err error) {
 	PrintVerbose("Deploying stack...")
 
 	reqBody := StackCreateRequest{
@@ -210,7 +223,7 @@ func (n *PortainerClient) CreateComposeStack(stackName string, environmentVariab
 }
 
 // Update stack
-func (n *PortainerClient) UpdateStack(stack Stack, environmentVariables []StackEnv, stackFileContent string, prune bool, endpointId string) (err error) {
+func (n *PortainerClientImp) UpdateStack(stack Stack, environmentVariables []StackEnv, stackFileContent string, prune bool, endpointId string) (err error) {
 	PrintVerbose("Updating stack...")
 
 	reqBody := StackUpdateRequest{
@@ -224,7 +237,7 @@ func (n *PortainerClient) UpdateStack(stack Stack, environmentVariables []StackE
 }
 
 // Delete stack
-func (n *PortainerClient) DeleteStack(stackId uint32) (err error) {
+func (n *PortainerClientImp) DeleteStack(stackId uint32) (err error) {
 	PrintVerbose("Deleting stack...")
 
 	err = n.doJSON(fmt.Sprintf("stacks/%d", stackId), http.MethodDelete, nil, nil)
@@ -232,7 +245,7 @@ func (n *PortainerClient) DeleteStack(stackId uint32) (err error) {
 }
 
 // Get stack file content
-func (n *PortainerClient) GetStackFileContent(stackId uint32) (content string, err error) {
+func (n *PortainerClientImp) GetStackFileContent(stackId uint32) (content string, err error) {
 	PrintVerbose("Getting stack file content...")
 
 	var respBody StackFileInspectResponse
@@ -248,7 +261,7 @@ func (n *PortainerClient) GetStackFileContent(stackId uint32) (content string, e
 }
 
 // Get endpoint Docker info
-func (n *PortainerClient) GetEndpointDockerInfo(endpointId string) (info map[string]interface{}, err error) {
+func (n *PortainerClientImp) GetEndpointDockerInfo(endpointId string) (info map[string]interface{}, err error) {
 	PrintVerbose("Getting endpoint Docker info...")
 
 	err = n.doJSON(fmt.Sprintf("endpoints/%v/docker/info", endpointId), http.MethodGet, nil, &info)
@@ -256,19 +269,19 @@ func (n *PortainerClient) GetEndpointDockerInfo(endpointId string) (info map[str
 }
 
 // Get Portainer status info
-func (n *PortainerClient) GetStatus() (status Status, err error) {
+func (n *PortainerClientImp) GetStatus() (status Status, err error) {
 	err = n.doJSON("status", http.MethodGet, nil, &status)
 	return
 }
 
 // Create a new client
-func NewClient(httpClient *http.Client, config ClientConfig) (c *PortainerClient, err error) {
+func NewClient(httpClient *http.Client, config ClientConfig) (c PortainerClient, err error) {
 	apiUrl, err := url.Parse(strings.TrimRight(config.Url, "/") + "/api/")
 	if err != nil {
 		return
 	}
 
-	c = &PortainerClient{
+	c = &PortainerClientImp{
 		httpClient: httpClient,
 		url:        apiUrl,
 		user:       config.User,
@@ -280,7 +293,7 @@ func NewClient(httpClient *http.Client, config ClientConfig) (c *PortainerClient
 }
 
 // Get the cached client or a new one
-func GetClient() (c *PortainerClient, err error) {
+func GetClient() (c PortainerClient, err error) {
 	if cachedClient == nil {
 		cachedClient, err = GetDefaultClient()
 		if err != nil {
@@ -291,7 +304,7 @@ func GetClient() (c *PortainerClient, err error) {
 }
 
 // Get the default client
-func GetDefaultClient() (c *PortainerClient, err error) {
+func GetDefaultClient() (c PortainerClient, err error) {
 	return NewClient(GetDefaultHttpClient(), GetDefaultClientConfig())
 }
 
