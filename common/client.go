@@ -80,10 +80,7 @@ func (n *PortainerClient) do(uri, method string, request io.Reader, requestType 
 
 	if !n.doNotUseToken {
 		if n.token == "" {
-			clientClone, cloneErr := n.Clone()
-			if cloneErr != nil {
-				return resp, cloneErr
-			}
+			clientClone := n.Clone()
 			clientClone.doNotUseToken = true
 			n.token, err = clientClone.Authenticate()
 			if err != nil {
@@ -265,7 +262,7 @@ func (n *PortainerClient) GetStatus() (status Status, err error) {
 }
 
 // Get a clone of the client
-func (n *PortainerClient) Clone() (c *PortainerClient, err error) {
+func (n *PortainerClient) Clone() (c *PortainerClient) {
 	c = &PortainerClient{
 		url:           n.url,
 		user:          n.user,
