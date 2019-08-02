@@ -14,12 +14,10 @@ var loginCmd = &cobra.Command{
 	Short: "Log in to a Portainer instance",
 	Run: func(cmd *cobra.Command, args []string) {
 		// Get auth token
-		client, err := common.NewClient(common.ClientConfig{
-			Url:           viper.GetString("url"),
-			User:          viper.GetString("user"),
-			Password:      viper.GetString("password"),
-			DoNotUseToken: true,
-		})
+		config := common.GetDefaultClientConfig()
+		config.DoNotUseToken = true
+
+		client, err := common.NewClient(common.GetDefaultHttpClient(), config)
 		common.CheckError(err)
 
 		authToken, err := client.Authenticate()

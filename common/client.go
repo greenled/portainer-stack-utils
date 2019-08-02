@@ -11,7 +11,6 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
-	"time"
 
 	"github.com/spf13/viper"
 )
@@ -24,12 +23,10 @@ type ClientConfig struct {
 	Password      string
 	Token         string
 	DoNotUseToken bool
-	Insecure      bool
-	Timeout       time.Duration
 }
 
 type PortainerClient struct {
-	http.Client
+	httpClient    *http.Client
 	url           *url.URL
 	user          string
 	password      string
@@ -93,7 +90,7 @@ func (n *PortainerClient) do(uri, method string, request io.Reader, requestType 
 
 	PrintDebugRequest("Request", req)
 
-	resp, err = n.Do(req)
+	resp, err = n.httpClient.Do(req)
 	if err != nil {
 		return
 	}
@@ -264,6 +261,7 @@ func (n *PortainerClient) GetStatus() (status Status, err error) {
 // Get a clone of the client
 func (n *PortainerClient) Clone() (c *PortainerClient) {
 	c = &PortainerClient{
+		httpClient:    n.httpClient,
 		url:           n.url,
 		user:          n.user,
 		password:      n.password,
@@ -271,33 +269,22 @@ func (n *PortainerClient) Clone() (c *PortainerClient) {
 		doNotUseToken: n.doNotUseToken,
 	}
 
-	c.Timeout = n.Timeout
-
-	c.Transport = n.Transport
-
 	return
 }
 
 // Create a new client
-func NewClient(config ClientConfig) (c *PortainerClient, err error) {
+func NewClient(httpClient *http.Client, config ClientConfig) (c *PortainerClient, err error) {
 	apiUrl, err := url.Parse(strings.TrimRight(config.Url, "/") + "/api/")
 	if err != nil {
 		return
 	}
 
 	c = &PortainerClient{
-		url:      apiUrl,
-		user:     config.User,
-		password: config.Password,
-		token:    config.Token,
-	}
-
-	c.Timeout = config.Timeout
-
-	c.Transport = &http.Transport{
-		TLSClientConfig: &tls.Config{
-			InsecureSkipVerify: config.Insecure,
-		},
+		httpClient: httpClient,
+		url:        apiUrl,
+		user:       config.User,
+		password:   config.Password,
+		token:      config.Token,
 	}
 
 	return
@@ -306,13 +293,38 @@ func NewClient(config ClientConfig) (c *PortainerClient, err error) {
 // Get the cached client or a new one
 func GetClient() (c *PortainerClient, err error) {
 	if cachedClient == nil {
-		cachedClient, err = NewClient(ClientConfig{
-			Url:      viper.GetString("url"),
-			User:     viper.GetString("user"),
-			Password: viper.GetString("password"),
-			Token:    viper.GetString("auth-token"),
-		})
+		cachedClient, err = GetDefaultClient()
+		if err != nil {
+			return
+		}
 	}
-	c = cachedClient
-	return
+	return cachedClient, nil
+}
+
+// Get the default client
+func GetDefaultClient() (c *PortainerClient, err error) {
+	return NewClient(GetDefaultHttpClient(), GetDefaultClientConfig())
+}
+
+// Get the default config for a client
+func GetDefaultClientConfig() ClientConfig {
+	return ClientConfig{
+		Url:           viper.GetString("url"),
+		User:          viper.GetString("user"),
+		Password:      viper.GetString("password"),
+		Token:         viper.GetString("auth-token"),
+		DoNotUseToken: false,
+	}
+}
+
+// Get the default http client for a Portainer client
+func GetDefaultHttpClient() *http.Client {
+	return &http.Client{
+		Timeout: viper.GetDuration("timeout"),
+		Transport: &http.Transport{
+			TLSClientConfig: &tls.Config{
+				InsecureSkipVerify: viper.GetBool("insecure"),
+			},
+		},
+	}
 }
