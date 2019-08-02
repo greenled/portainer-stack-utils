@@ -23,6 +23,7 @@ type PortainerClient struct {
 	token string
 }
 
+// Check if an http.Response object has errors
 func checkResponseForErrors(resp *http.Response) error {
 	if 300 <= resp.StatusCode {
 		// Guess it's a GenericError
@@ -43,6 +44,7 @@ func checkResponseForErrors(resp *http.Response) error {
 	return nil
 }
 
+// Do an http request
 func (n *PortainerClient) do(uri, method string, request io.Reader, requestType string, headers http.Header) (resp *http.Response, err error) {
 	requestUrl, err := n.url.Parse(uri)
 	if err != nil {
@@ -83,6 +85,7 @@ func (n *PortainerClient) do(uri, method string, request io.Reader, requestType 
 	return
 }
 
+// Do a JSON http request
 func (n *PortainerClient) doJSON(uri, method string, request interface{}, response interface{}) error {
 	var body io.Reader
 
@@ -110,6 +113,7 @@ func (n *PortainerClient) doJSON(uri, method string, request interface{}, respon
 	return nil
 }
 
+// Authenticate a user to get an auth token
 func (n *PortainerClient) Authenticate(user, password string) (token string, err error) {
 	PrintVerbose("Getting auth token...")
 
@@ -243,6 +247,7 @@ type clientConfig struct {
 	Timeout  time.Duration
 }
 
+// Create a new client
 func newClient(config clientConfig) (c *PortainerClient, err error) {
 	apiUrl, err := url.Parse(config.Url + "/api/")
 	if err != nil {
@@ -274,6 +279,7 @@ func newClient(config clientConfig) (c *PortainerClient, err error) {
 	return
 }
 
+// Get the cached client or a new one
 func GetClient() (c *PortainerClient, err error) {
 	if client == nil {
 		client, err = newClient(clientConfig{
