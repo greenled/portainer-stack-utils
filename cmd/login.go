@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+
 	"github.com/greenled/portainer-stack-utils/common"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -13,8 +14,11 @@ var loginCmd = &cobra.Command{
 	Short: "Log in to a Portainer instance",
 	Run: func(cmd *cobra.Command, args []string) {
 		// Get auth token
-		authToken, authenticationTokenRetrievalError := common.GetNewAuthenticationToken()
-		common.CheckError(authenticationTokenRetrievalError)
+		client, err := common.GetClient()
+		common.CheckError(err)
+
+		authToken, err := client.Authenticate(viper.GetString("url"), viper.GetString("password"))
+		common.CheckError(err)
 
 		if viper.GetBool("login.print") {
 			fmt.Println(authToken)

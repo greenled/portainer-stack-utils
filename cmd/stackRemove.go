@@ -2,13 +2,12 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/greenled/portainer-stack-utils/common"
-	"github.com/spf13/viper"
 	"log"
 	"net/http"
-	"net/url"
 
+	"github.com/greenled/portainer-stack-utils/common"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 // stackRemoveCmd represents the remove command
@@ -30,22 +29,12 @@ var stackRemoveCmd = &cobra.Command{
 			stackId := stack.Id
 
 			common.PrintVerbose(fmt.Sprintf("Removing stack %s...", stackName))
-			reqUrl, err := url.Parse(fmt.Sprintf("%s/api/stacks/%d", viper.GetString("url"), stackId))
+
+			client, err := common.GetClient()
 			common.CheckError(err)
 
-			req, err := http.NewRequest(http.MethodDelete, reqUrl.String(), nil)
+			err = client.DoJSON(fmt.Sprintf("stacks/%d", stackId), http.MethodDelete, nil, nil)
 			common.CheckError(err)
-			headerErr := common.AddAuthorizationHeader(req)
-			common.CheckError(headerErr)
-			common.PrintDebugRequest("Remove stack request", req)
-
-			client := common.NewHttpClient()
-
-			resp, err := client.Do(req)
-			common.PrintDebugResponse("Remove stack response", resp)
-			common.CheckError(err)
-
-			common.CheckError(common.CheckResponseForErrors(resp))
 		case *common.StackNotFoundError:
 			// The stack does not exist
 			common.PrintVerbose(fmt.Sprintf("Stack %s does not exist.", stackName))

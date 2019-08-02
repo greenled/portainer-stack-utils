@@ -1,17 +1,15 @@
 package cmd
 
 import (
-	"bytes"
-	"encoding/json"
 	"fmt"
+	"io/ioutil"
+	"log"
+	"net/http"
+
 	"github.com/greenled/portainer-stack-utils/common"
 	"github.com/joho/godotenv"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"io/ioutil"
-	"log"
-	"net/http"
-	"net/url"
 )
 
 // stackDeployCmd represents the undeploy command
@@ -118,7 +116,12 @@ func init() {
 	viper.BindPFlag("stack.deploy.prune", stackDeployCmd.Flags().Lookup("prune"))
 }
 
-func deploySwarmStack(stackName string, environmentVariables []common.StackEnv, dockerComposeFileContent string, swarmClusterId string) error {
+func deploySwarmStack(stackName string, environmentVariables []common.StackEnv, dockerComposeFileContent string, swarmClusterId string) (err error) {
+	client, err := common.GetClient()
+	if err != nil {
+		return
+	}
+
 	reqBody := common.StackCreateRequest{
 		Name:             stackName,
 		Env:              environmentVariables,
@@ -126,174 +129,67 @@ func deploySwarmStack(stackName string, environmentVariables []common.StackEnv, 
 		StackFileContent: dockerComposeFileContent,
 	}
 
-	reqBodyBytes, marshalingErr := json.Marshal(reqBody)
-	if marshalingErr != nil {
-		return marshalingErr
-	}
+	err = client.DoJSON(fmt.Sprintf("stacks?type=%v&method=%s&endpointId=%s", 1, "string", viper.GetString("stack.deploy.endpoint")), http.MethodPost, &reqBody, nil)
 
-	reqUrl, parsingErr := url.Parse(fmt.Sprintf("%s/api/stacks?type=%v&method=%s&endpointId=%s", viper.GetString("url"), 1, "string", viper.GetString("stack.deploy.endpoint")))
-	if parsingErr != nil {
-		return parsingErr
-	}
-
-	req, newRequestErr := http.NewRequest(http.MethodPost, reqUrl.String(), bytes.NewBuffer(reqBodyBytes))
-	if newRequestErr != nil {
-		return newRequestErr
-	}
-	headerErr := common.AddAuthorizationHeader(req)
-	req.Header.Add("Content-Type", "application/json")
-	if headerErr != nil {
-		return headerErr
-	}
-	common.PrintDebugRequest("Deploy stack request", req)
-
-	client := common.NewHttpClient()
-
-	resp, requestExecutionErr := client.Do(req)
-	if requestExecutionErr != nil {
-		return requestExecutionErr
-	}
-	common.PrintDebugResponse("Deploy stack response", resp)
-
-	responseErr := common.CheckResponseForErrors(resp)
-	if responseErr != nil {
-		return responseErr
-	}
-
-	return nil
+	return
 }
 
-func deployComposeStack(stackName string, environmentVariables []common.StackEnv, stackFileContent string) error {
+func deployComposeStack(stackName string, environmentVariables []common.StackEnv, stackFileContent string) (err error) {
+	client, err := common.GetClient()
+	if err != nil {
+		return
+	}
+
 	reqBody := common.StackCreateRequest{
 		Name:             stackName,
 		Env:              environmentVariables,
 		StackFileContent: stackFileContent,
 	}
 
-	reqBodyBytes, marshalingErr := json.Marshal(reqBody)
-	if marshalingErr != nil {
-		return marshalingErr
-	}
+	err = client.DoJSON(fmt.Sprintf("stacks?type=%v&method=%s&endpointId=%s", 2, "string", viper.GetString("stack.deploy.endpoint")), http.MethodPost, &reqBody, nil)
 
-	reqUrl, parsingErr := url.Parse(fmt.Sprintf("%s/api/stacks?type=%v&method=%s&endpointId=%s", viper.GetString("url"), 2, "string", viper.GetString("stack.deploy.endpoint")))
-	if parsingErr != nil {
-		return parsingErr
-	}
-
-	req, newRequestErr := http.NewRequest(http.MethodPost, reqUrl.String(), bytes.NewBuffer(reqBodyBytes))
-	if newRequestErr != nil {
-		return newRequestErr
-	}
-	headerErr := common.AddAuthorizationHeader(req)
-	req.Header.Add("Content-Type", "application/json")
-	if headerErr != nil {
-		return headerErr
-	}
-	common.PrintDebugRequest("Deploy stack request", req)
-
-	client := common.NewHttpClient()
-
-	resp, requestExecutionErr := client.Do(req)
-	if requestExecutionErr != nil {
-		return requestExecutionErr
-	}
-	common.PrintDebugResponse("Deploy stack response", resp)
-
-	responseErr := common.CheckResponseForErrors(resp)
-	if responseErr != nil {
-		return responseErr
-	}
-
-	return nil
+	return
 }
 
-func updateStack(stack common.Stack, environmentVariables []common.StackEnv, stackFileContent string, prune bool) error {
+func updateStack(stack common.Stack, environmentVariables []common.StackEnv, stackFileContent string, prune bool) (err error) {
+	client, err := common.GetClient()
+	if err != nil {
+		return
+	}
+
 	reqBody := common.StackUpdateRequest{
 		Env:              environmentVariables,
 		StackFileContent: stackFileContent,
 		Prune:            prune,
 	}
 
-	reqBodyBytes, marshalingErr := json.Marshal(reqBody)
-	if marshalingErr != nil {
-		return marshalingErr
-	}
+	err = client.DoJSON(fmt.Sprintf("stacks/%v?endpointId=%s", stack.Id, viper.GetString("stack.deploy.endpoint")), http.MethodPut, &reqBody, nil)
 
-	reqUrl, parsingErr := url.Parse(fmt.Sprintf("%s/api/stacks/%v?endpointId=%s", viper.GetString("url"), stack.Id, viper.GetString("stack.deploy.endpoint")))
-	if parsingErr != nil {
-		return parsingErr
-	}
-
-	req, newRequestErr := http.NewRequest(http.MethodPut, reqUrl.String(), bytes.NewBuffer(reqBodyBytes))
-	if newRequestErr != nil {
-		return newRequestErr
-	}
-	headerErr := common.AddAuthorizationHeader(req)
-	req.Header.Add("Content-Type", "application/json")
-	if headerErr != nil {
-		return headerErr
-	}
-	common.PrintDebugRequest("Update stack request", req)
-
-	client := common.NewHttpClient()
-
-	resp, requestExecutionErr := client.Do(req)
-	if requestExecutionErr != nil {
-		return requestExecutionErr
-	}
-	common.PrintDebugResponse("Update stack response", resp)
-
-	responseErr := common.CheckResponseForErrors(resp)
-	if responseErr != nil {
-		return responseErr
-	}
-
-	return nil
+	return
 }
 
-func getSwarmClusterId() (string, error) {
+func getSwarmClusterId() (id string, err error) {
 	// Get docker information for endpoint
-	reqUrl, parsingErr := url.Parse(fmt.Sprintf("%s/api/endpoints/%v/docker/info", viper.GetString("url"), viper.GetString("stack.deploy.endpoint")))
-	if parsingErr != nil {
-		return "", parsingErr
+	client, err := common.GetClient()
+	if err != nil {
+		return
 	}
 
-	req, newRequestErr := http.NewRequest(http.MethodGet, reqUrl.String(), nil)
-	if newRequestErr != nil {
-		return "", newRequestErr
-	}
-	headerErr := common.AddAuthorizationHeader(req)
-	if headerErr != nil {
-		return "", headerErr
-	}
-	common.PrintDebugRequest("Get docker info request", req)
+	var result map[string]interface{}
 
-	client := common.NewHttpClient()
-
-	resp, requestExecutionErr := client.Do(req)
-	if requestExecutionErr != nil {
-		return "", requestExecutionErr
-	}
-	common.PrintDebugResponse("Get docker info response", resp)
-
-	responseErr := common.CheckResponseForErrors(resp)
-	if responseErr != nil {
-		return "", responseErr
+	err = client.DoJSON(fmt.Sprintf("endpoints/%v/docker/info", viper.GetString("stack.deploy.endpoint")), http.MethodGet, nil, &result)
+	if err != nil {
+		return
 	}
 
 	// Get swarm (if any) information for endpoint
-	var result map[string]interface{}
-	decodingError := json.NewDecoder(resp.Body).Decode(&result)
-	if decodingError != nil {
-		return "", decodingError
+	swarmClusterId, err := selectValue(result, []string{"Swarm", "Cluster", "ID"})
+	if err != nil {
+		return
 	}
+	id = swarmClusterId.(string)
 
-	swarmClusterId, selectionErr := selectValue(result, []string{"Swarm", "Cluster", "ID"})
-	if selectionErr != nil {
-		return "", selectionErr
-	}
-
-	return swarmClusterId.(string), nil
+	return
 }
 
 func selectValue(jsonMap map[string]interface{}, jsonPath []string) (interface{}, error) {
@@ -333,42 +229,22 @@ func loadEnvironmentVariablesFile(path string) ([]common.StackEnv, error) {
 	return variables, nil
 }
 
-func getStackFileContent(stackId uint32) (string, error) {
-	reqUrl, parsingErr := url.Parse(fmt.Sprintf("%s/api/stacks/%v/file", viper.GetString("url"), stackId))
-	if parsingErr != nil {
-		return "", parsingErr
-	}
-
-	req, newRequestErr := http.NewRequest(http.MethodGet, reqUrl.String(), nil)
-	if newRequestErr != nil {
-		return "", newRequestErr
-	}
-	headerErr := common.AddAuthorizationHeader(req)
-	if headerErr != nil {
-		return "", headerErr
-	}
-	common.PrintDebugRequest("Get stack file content request", req)
-
-	client := common.NewHttpClient()
-
-	resp, requestExecutionErr := client.Do(req)
-	if requestExecutionErr != nil {
-		return "", requestExecutionErr
-	}
-	common.PrintDebugResponse("Get stack file content response", resp)
-
-	responseErr := common.CheckResponseForErrors(resp)
-	if responseErr != nil {
-		return "", responseErr
+func getStackFileContent(stackId uint32) (content string, err error) {
+	client, err := common.GetClient()
+	if err != nil {
+		return
 	}
 
 	var respBody common.StackFileInspectResponse
-	decodingErr := json.NewDecoder(resp.Body).Decode(&respBody)
-	if decodingErr != nil {
-		return "", decodingErr
+
+	err = client.DoJSON(fmt.Sprintf("stacks/%v/file", stackId), http.MethodGet, nil, respBody)
+	if err != nil {
+		return
 	}
 
-	return respBody.StackFileContent, nil
+	content = respBody.StackFileContent
+
+	return
 }
 
 type valueNotFoundError struct{}
