@@ -77,9 +77,7 @@ func (n *PortainerClient) do(uri, method string, request io.Reader, requestType 
 
 	if !n.doNotUseToken {
 		if n.token == "" {
-			clientClone := n.Clone()
-			clientClone.doNotUseToken = true
-			n.token, err = clientClone.Authenticate()
+			n.token, err = n.Authenticate()
 			if err != nil {
 				return
 			}
@@ -144,10 +142,15 @@ func (n *PortainerClient) Authenticate() (token string, err error) {
 
 	respBody := AuthenticateUserResponse{}
 
+	previousDoNotUseTokenValue := n.doNotUseToken
+	n.doNotUseToken = true
+
 	err = n.doJSON("auth", http.MethodPost, &reqBody, &respBody)
 	if err != nil {
 		return
 	}
+
+	n.doNotUseToken = previousDoNotUseTokenValue
 
 	token = respBody.Jwt
 
@@ -255,20 +258,6 @@ func (n *PortainerClient) GetEndpointDockerInfo(endpointId string) (info map[str
 // Get Portainer status info
 func (n *PortainerClient) GetStatus() (status Status, err error) {
 	err = n.doJSON("status", http.MethodGet, nil, &status)
-	return
-}
-
-// Get a clone of the client
-func (n *PortainerClient) Clone() (c *PortainerClient) {
-	c = &PortainerClient{
-		httpClient:    n.httpClient,
-		url:           n.url,
-		user:          n.user,
-		password:      n.password,
-		token:         n.token,
-		doNotUseToken: n.doNotUseToken,
-	}
-
 	return
 }
 

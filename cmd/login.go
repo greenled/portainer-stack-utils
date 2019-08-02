@@ -14,10 +14,7 @@ var loginCmd = &cobra.Command{
 	Short: "Log in to a Portainer instance",
 	Run: func(cmd *cobra.Command, args []string) {
 		// Get auth token
-		config := common.GetDefaultClientConfig()
-		config.DoNotUseToken = true
-
-		client, err := common.NewClient(common.GetDefaultHttpClient(), config)
+		client, err := common.GetDefaultClient()
 		common.CheckError(err)
 
 		authToken, err := client.Authenticate()
