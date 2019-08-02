@@ -118,8 +118,8 @@ func (n *PortainerClient) Authenticate(user, password string) (token string, err
 	PrintVerbose("Getting auth token...")
 
 	reqBody := AuthenticateUserRequest{
-		Username: viper.GetString("user"),
-		Password: viper.GetString("password"),
+		Username: user,
+		Password: password,
 	}
 
 	respBody := AuthenticateUserResponse{}
