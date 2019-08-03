@@ -5,6 +5,10 @@ import (
 	"io/ioutil"
 	"log"
 
+	"github.com/greenled/portainer-stack-utils/util"
+
+	"github.com/greenled/portainer-stack-utils/client"
+
 	"github.com/greenled/portainer-stack-utils/common"
 	"github.com/joho/godotenv"
 	"github.com/spf13/cobra"
@@ -19,35 +23,35 @@ var stackDeployCmd = &cobra.Command{
 	Example: "psu stack deploy mystack --stack-file mystack.yml",
 	Args:    cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		var loadedEnvironmentVariables []common.StackEnv
+		var loadedEnvironmentVariables []client.StackEnv
 		if viper.GetString("stack.deploy.env-file") != "" {
 			var loadingErr error
 			loadedEnvironmentVariables, loadingErr = loadEnvironmentVariablesFile(viper.GetString("stack.deploy.env-file"))
-			common.CheckError(loadingErr)
+			util.CheckError(loadingErr)
 		}
 
-		client, clientRetrievalErr := common.GetClient()
-		common.CheckError(clientRetrievalErr)
+		portainerClient, clientRetrievalErr := common.GetClient()
+		util.CheckError(clientRetrievalErr)
 
 		stackName := args[0]
 		retrievedStack, stackRetrievalErr := common.GetStackByName(stackName)
 		switch stackRetrievalErr.(type) {
 		case nil:
 			// We are updating an existing stack
-			common.PrintVerbose(fmt.Sprintf("Stack %s found. Updating...", retrievedStack.Name))
+			util.PrintVerbose(fmt.Sprintf("Stack %s found. Updating...", retrievedStack.Name))
 
 			var stackFileContent string
 			if viper.GetString("stack.deploy.stack-file") != "" {
 				var loadingErr error
 				stackFileContent, loadingErr = loadStackFile(viper.GetString("stack.deploy.stack-file"))
-				common.CheckError(loadingErr)
+				util.CheckError(loadingErr)
 			} else {
 				var stackFileContentRetrievalErr error
-				stackFileContent, stackFileContentRetrievalErr = client.GetStackFileContent(retrievedStack.Id)
-				common.CheckError(stackFileContentRetrievalErr)
+				stackFileContent, stackFileContentRetrievalErr = portainerClient.GetStackFileContent(retrievedStack.Id)
+				util.CheckError(stackFileContentRetrievalErr)
 			}
 
-			var newEnvironmentVariables []common.StackEnv
+			var newEnvironmentVariables []client.StackEnv
 			if viper.GetBool("stack.deploy.replace-env") {
 				newEnvironmentVariables = loadedEnvironmentVariables
 			} else {
@@ -61,44 +65,44 @@ var stackDeployCmd = &cobra.Command{
 							continue LoadedVariablesLoop
 						}
 					}
-					newEnvironmentVariables = append(newEnvironmentVariables, common.StackEnv{
+					newEnvironmentVariables = append(newEnvironmentVariables, client.StackEnv{
 						Name:  loadedEnvironmentVariable.Name,
 						Value: loadedEnvironmentVariable.Value,
 					})
 				}
 			}
 
-			err := client.UpdateStack(retrievedStack, newEnvironmentVariables, stackFileContent, viper.GetBool("stack.deploy.prune"), viper.GetString("stack.deploy.endpoint"))
-			common.CheckError(err)
+			err := portainerClient.UpdateStack(retrievedStack, newEnvironmentVariables, stackFileContent, viper.GetBool("stack.deploy.prune"), viper.GetString("stack.deploy.endpoint"))
+			util.CheckError(err)
 		case *common.StackNotFoundError:
 			// We are deploying a new stack
-			common.PrintVerbose(fmt.Sprintf("Stack %s not found. Deploying...", stackName))
+			util.PrintVerbose(fmt.Sprintf("Stack %s not found. Deploying...", stackName))
 
 			if viper.GetString("stack.deploy.stack-file") == "" {
 				log.Fatalln("Specify a docker-compose file with --stack-file")
 			}
 			stackFileContent, loadingErr := loadStackFile(viper.GetString("stack.deploy.stack-file"))
-			common.CheckError(loadingErr)
+			util.CheckError(loadingErr)
 
 			swarmClusterId, selectionErr := getSwarmClusterId()
 			switch selectionErr.(type) {
 			case nil:
 				// It's a swarm cluster
-				common.PrintVerbose(fmt.Sprintf("Swarm cluster found with id %s", swarmClusterId))
-				deploymentErr := client.CreateSwarmStack(stackName, loadedEnvironmentVariables, stackFileContent, swarmClusterId, viper.GetString("stack.deploy.endpoint"))
-				common.CheckError(deploymentErr)
+				util.PrintVerbose(fmt.Sprintf("Swarm cluster found with id %s", swarmClusterId))
+				deploymentErr := portainerClient.CreateSwarmStack(stackName, loadedEnvironmentVariables, stackFileContent, swarmClusterId, viper.GetString("stack.deploy.endpoint"))
+				util.CheckError(deploymentErr)
 			case *valueNotFoundError:
 				// It's not a swarm cluster
-				common.PrintVerbose("Swarm cluster not found")
-				deploymentErr := client.CreateComposeStack(stackName, loadedEnvironmentVariables, stackFileContent, viper.GetString("stack.deploy.endpoint"))
-				common.CheckError(deploymentErr)
+				util.PrintVerbose("Swarm cluster not found")
+				deploymentErr := portainerClient.CreateComposeStack(stackName, loadedEnvironmentVariables, stackFileContent, viper.GetString("stack.deploy.endpoint"))
+				util.CheckError(deploymentErr)
 			default:
 				// Something else happened
-				common.CheckError(stackRetrievalErr)
+				util.CheckError(stackRetrievalErr)
 			}
 		default:
 			// Something else happened
-			common.CheckError(stackRetrievalErr)
+			util.CheckError(stackRetrievalErr)
 		}
 	},
 }
@@ -160,15 +164,15 @@ func loadStackFile(path string) (string, error) {
 }
 
 // Load environment variables
-func loadEnvironmentVariablesFile(path string) ([]common.StackEnv, error) {
-	var variables []common.StackEnv
+func loadEnvironmentVariablesFile(path string) ([]client.StackEnv, error) {
+	var variables []client.StackEnv
 	variablesMap, readingErr := godotenv.Read(path)
 	if readingErr != nil {
-		return []common.StackEnv{}, readingErr
+		return []client.StackEnv{}, readingErr
 	}
 
 	for key, value := range variablesMap {
-		variables = append(variables, common.StackEnv{
+		variables = append(variables, client.StackEnv{
 			Name:  key,
 			Value: value,
 		})

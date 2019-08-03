@@ -21,6 +21,8 @@ import (
 	"os"
 	"text/template"
 
+	"github.com/greenled/portainer-stack-utils/util"
+
 	"github.com/greenled/portainer-stack-utils/common"
 	"github.com/spf13/viper"
 
@@ -34,23 +36,23 @@ var endpointListCmd = &cobra.Command{
 	Aliases: []string{"ls"},
 	Run: func(cmd *cobra.Command, args []string) {
 		client, err := common.GetClient()
-		common.CheckError(err)
+		util.CheckError(err)
 
 		endpoints, err := client.GetEndpoints()
-		common.CheckError(err)
+		util.CheckError(err)
 
 		if viper.GetString("endpoint.list.format") != "" {
 			// Print endpoint fields formatted
 			template, templateParsingErr := template.New("endpointTpl").Parse(viper.GetString("endpoint.list.format"))
-			common.CheckError(templateParsingErr)
+			util.CheckError(templateParsingErr)
 			for _, e := range endpoints {
 				templateExecutionErr := template.Execute(os.Stdout, e)
-				common.CheckError(templateExecutionErr)
+				util.CheckError(templateExecutionErr)
 				fmt.Println()
 			}
 		} else {
 			// Print all endpoint fields as a table
-			writer, err := common.NewTabWriter([]string{
+			writer, err := util.NewTabWriter([]string{
 				"ENDPOINT ID",
 				"NAME",
 				"TYPE",
@@ -58,7 +60,7 @@ var endpointListCmd = &cobra.Command{
 				"PUBLIC URL",
 				"GROUP ID",
 			})
-			common.CheckError(err)
+			util.CheckError(err)
 			for _, e := range endpoints {
 				var endpointType string
 				if e.Type == 1 {
@@ -75,10 +77,10 @@ var endpointListCmd = &cobra.Command{
 					e.PublicURL,
 					e.GroupID,
 				))
-				common.CheckError(err)
+				util.CheckError(err)
 			}
 			flushErr := writer.Flush()
-			common.CheckError(flushErr)
+			util.CheckError(flushErr)
 		}
 	},
 }

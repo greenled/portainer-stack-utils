@@ -2,9 +2,13 @@ package common
 
 import (
 	"fmt"
+
+	"github.com/greenled/portainer-stack-utils/util"
+
+	"github.com/greenled/portainer-stack-utils/client"
 )
 
-func GetStackByName(name string) (stack Stack, err error) {
+func GetStackByName(name string) (stack client.Stack, err error) {
 	client, err := GetClient()
 	if err != nil {
 		return
@@ -15,7 +19,7 @@ func GetStackByName(name string) (stack Stack, err error) {
 		return
 	}
 
-	PrintVerbose(fmt.Sprintf("Getting stack %s...", name))
+	util.PrintVerbose(fmt.Sprintf("Getting stack %s...", name))
 	for _, stack := range stacks {
 		if stack.Name == name {
 			return stack, nil
@@ -25,11 +29,6 @@ func GetStackByName(name string) (stack Stack, err error) {
 		StackName: name,
 	}
 	return
-}
-
-type StackListFilter struct {
-	SwarmId    string `json:",omitempty"`
-	EndpointId uint32 `json:",omitempty"`
 }
 
 // Custom customerrors

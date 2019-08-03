@@ -5,6 +5,8 @@ import (
 	"os"
 	"text/template"
 
+	"github.com/greenled/portainer-stack-utils/util"
+
 	"github.com/greenled/portainer-stack-utils/common"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -16,27 +18,27 @@ var statusCmd = &cobra.Command{
 	Short: "Check Portainer status",
 	Run: func(cmd *cobra.Command, args []string) {
 		client, err := common.GetClient()
-		common.CheckError(err)
+		util.CheckError(err)
 
 		respBody, err := client.GetStatus()
-		common.CheckError(err)
+		util.CheckError(err)
 
 		if viper.GetString("status.format") != "" {
 			// Print stack fields formatted
 			template, templateParsingErr := template.New("statusTpl").Parse(viper.GetString("status.format"))
-			common.CheckError(templateParsingErr)
+			util.CheckError(templateParsingErr)
 			templateExecutionErr := template.Execute(os.Stdout, respBody)
-			common.CheckError(templateExecutionErr)
+			util.CheckError(templateExecutionErr)
 			fmt.Println()
 		} else {
 			// Print status fields as a table
-			writer, newTabWriterErr := common.NewTabWriter([]string{
+			writer, newTabWriterErr := util.NewTabWriter([]string{
 				"VERSION",
 				"AUTHENTICATION",
 				"ENDPOINT MANAGEMENT",
 				"ANALYTICS",
 			})
-			common.CheckError(newTabWriterErr)
+			util.CheckError(newTabWriterErr)
 
 			_, printingErr := fmt.Fprintln(writer, fmt.Sprintf(
 				"%s\t%v\t%v\t%v",
@@ -45,10 +47,10 @@ var statusCmd = &cobra.Command{
 				respBody.EndpointManagement,
 				respBody.Analytics,
 			))
-			common.CheckError(printingErr)
+			util.CheckError(printingErr)
 
 			flushErr := writer.Flush()
-			common.CheckError(flushErr)
+			util.CheckError(flushErr)
 		}
 	},
 }

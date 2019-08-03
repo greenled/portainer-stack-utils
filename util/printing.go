@@ -1,15 +1,16 @@
-package common
+package util
 
 import (
 	"bytes"
 	"fmt"
-	"github.com/spf13/viper"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
 	"strings"
 	"text/tabwriter"
+
+	"github.com/spf13/viper"
 )
 
 func PrintVerbose(a ...interface{}) {

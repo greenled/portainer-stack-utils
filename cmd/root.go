@@ -2,12 +2,14 @@ package cmd
 
 import (
 	"fmt"
+	"os"
+	"strings"
+
 	"github.com/greenled/portainer-stack-utils/common"
+	"github.com/greenled/portainer-stack-utils/util"
 	"github.com/mitchellh/go-homedir"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"os"
-	"strings"
 )
 
 var cfgFile string
@@ -83,6 +85,6 @@ func initConfig() {
 
 	// If a config file is found, read it in.
 	if err := viper.ReadInConfig(); err == nil {
-		common.PrintVerbose("Using config file:", viper.ConfigFileUsed())
+		util.PrintVerbose("Using config file:", viper.ConfigFileUsed())
 	}
 }

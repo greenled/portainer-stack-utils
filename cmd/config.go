@@ -2,12 +2,13 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/greenled/portainer-stack-utils/common"
+	"log"
+	"os"
+
+	"github.com/greenled/portainer-stack-utils/util"
 	"github.com/mitchellh/go-homedir"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"log"
-	"os"
 )
 
 // configCmd represents the config command
@@ -32,12 +33,12 @@ var configCmd = &cobra.Command{
 		if len(args) == 1 {
 			// Get config
 			value, configGettingErr := getConfig(args[0])
-			common.CheckError(configGettingErr)
+			util.CheckError(configGettingErr)
 			fmt.Println(value)
 		} else {
 			// Set config
 			configSettingErr := setConfig(args[0], args[1])
-			common.CheckError(configSettingErr)
+			util.CheckError(configSettingErr)
 		}
 	},
 }
@@ -67,7 +68,7 @@ func loadCofig() (*viper.Viper, error) {
 
 	// Read config from file
 	if configReadingErr := newViper.ReadInConfig(); configReadingErr != nil {
-		common.PrintVerbose(fmt.Sprintf("Could not read configuration from \"%s\". Expect all configuration values to be unset.", configFile))
+		util.PrintVerbose(fmt.Sprintf("Could not read configuration from \"%s\". Expect all configuration values to be unset.", configFile))
 	}
 
 	return newViper, nil

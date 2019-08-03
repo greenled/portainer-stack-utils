@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/greenled/portainer-stack-utils/util"
+
 	"github.com/greenled/portainer-stack-utils/common"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -23,26 +25,26 @@ var stackRemoveCmd = &cobra.Command{
 		switch err.(type) {
 		case nil:
 			// The stack exists
-			common.PrintVerbose(fmt.Sprintf("Stack %s exists.", stackName))
+			util.PrintVerbose(fmt.Sprintf("Stack %s exists.", stackName))
 
 			stackId := stack.Id
 
-			common.PrintVerbose(fmt.Sprintf("Removing stack %s...", stackName))
+			util.PrintVerbose(fmt.Sprintf("Removing stack %s...", stackName))
 
 			client, err := common.GetClient()
-			common.CheckError(err)
+			util.CheckError(err)
 
 			err = client.DeleteStack(stackId)
-			common.CheckError(err)
+			util.CheckError(err)
 		case *common.StackNotFoundError:
 			// The stack does not exist
-			common.PrintVerbose(fmt.Sprintf("Stack %s does not exist.", stackName))
+			util.PrintVerbose(fmt.Sprintf("Stack %s does not exist.", stackName))
 			if viper.GetBool("stack.remove.strict") {
 				log.Fatalln(fmt.Sprintf("Stack %s does not exist.", stackName))
 			}
 		default:
 			// Something else happened
-			common.CheckError(err)
+			util.CheckError(err)
 		}
 	},
 }

@@ -5,6 +5,8 @@ import (
 	"os"
 	"text/template"
 
+	"github.com/greenled/portainer-stack-utils/util"
+
 	"github.com/greenled/portainer-stack-utils/common"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -18,29 +20,29 @@ var stackListCmd = &cobra.Command{
 	Example: "psu stack list --endpoint 1",
 	Run: func(cmd *cobra.Command, args []string) {
 		client, err := common.GetClient()
-		common.CheckError(err)
+		util.CheckError(err)
 
 		stacks, err := client.GetStacks(viper.GetString("stack.list.swarm"), viper.GetUint32("stack.list.endpoint"))
-		common.CheckError(err)
+		util.CheckError(err)
 
 		if viper.GetBool("stack.list.quiet") {
 			// Print only stack names
 			for _, s := range stacks {
 				_, err := fmt.Println(s.Name)
-				common.CheckError(err)
+				util.CheckError(err)
 			}
 		} else if viper.GetString("stack.list.format") != "" {
 			// Print stack fields formatted
 			template, templateParsingErr := template.New("stackTpl").Parse(viper.GetString("stack.list.format"))
-			common.CheckError(templateParsingErr)
+			util.CheckError(templateParsingErr)
 			for _, s := range stacks {
 				templateExecutionErr := template.Execute(os.Stdout, s)
-				common.CheckError(templateExecutionErr)
+				util.CheckError(templateExecutionErr)
 				fmt.Println()
 			}
 		} else {
 			// Print all stack fields as a table
-			writer, err := common.NewTabWriter([]string{
+			writer, err := util.NewTabWriter([]string{
 				"STACK ID",
 				"NAME",
 				"TYPE",
@@ -49,7 +51,7 @@ var stackListCmd = &cobra.Command{
 				"ENDPOINT ID",
 				"SWARM ID",
 			})
-			common.CheckError(err)
+			util.CheckError(err)
 			for _, s := range stacks {
 				_, err := fmt.Fprintln(writer, fmt.Sprintf(
 					"%v\t%s\t%v\t%s\t%s\t%v\t%s",
@@ -61,10 +63,10 @@ var stackListCmd = &cobra.Command{
 					s.EndpointID,
 					s.SwarmID,
 				))
-				common.CheckError(err)
+				util.CheckError(err)
 			}
 			flushErr := writer.Flush()
-			common.CheckError(flushErr)
+			util.CheckError(flushErr)
 		}
 	},
 }
