@@ -40,7 +40,7 @@ type PortainerClient interface {
 	GetStatus() (Status, error)
 }
 
-type PortainerClientImp struct {
+type portainerClientImp struct {
 	httpClient    *http.Client
 	url           *url.URL
 	user          string
@@ -71,7 +71,7 @@ func checkResponseForErrors(resp *http.Response) error {
 }
 
 // Do an http request
-func (n *PortainerClientImp) do(uri, method string, request io.Reader, requestType string, headers http.Header) (resp *http.Response, err error) {
+func (n *portainerClientImp) do(uri, method string, request io.Reader, requestType string, headers http.Header) (resp *http.Response, err error) {
 	requestUrl, err := n.url.Parse(uri)
 	if err != nil {
 		return
@@ -119,7 +119,7 @@ func (n *PortainerClientImp) do(uri, method string, request io.Reader, requestTy
 }
 
 // Do a JSON http request
-func (n *PortainerClientImp) doJSON(uri, method string, request interface{}, response interface{}) error {
+func (n *portainerClientImp) doJSON(uri, method string, request interface{}, response interface{}) error {
 	var body io.Reader
 
 	if request != nil {
@@ -147,7 +147,7 @@ func (n *PortainerClientImp) doJSON(uri, method string, request interface{}, res
 }
 
 // Authenticate a user to get an auth token
-func (n *PortainerClientImp) Authenticate() (token string, err error) {
+func (n *portainerClientImp) Authenticate() (token string, err error) {
 	util.PrintVerbose("Getting auth token...")
 
 	reqBody := AuthenticateUserRequest{
@@ -173,14 +173,14 @@ func (n *PortainerClientImp) Authenticate() (token string, err error) {
 }
 
 // Get endpoints
-func (n *PortainerClientImp) GetEndpoints() (endpoints []EndpointSubset, err error) {
+func (n *portainerClientImp) GetEndpoints() (endpoints []EndpointSubset, err error) {
 	util.PrintVerbose("Getting endpoints...")
 	err = n.doJSON("endpoints", http.MethodGet, nil, &endpoints)
 	return
 }
 
 // Get stacks, optionally filtered by swarmId and endpointId
-func (n *PortainerClientImp) GetStacks(swarmId string, endpointId uint32) (stacks []Stack, err error) {
+func (n *portainerClientImp) GetStacks(swarmId string, endpointId uint32) (stacks []Stack, err error) {
 	util.PrintVerbose("Getting stacks...")
 
 	filter := StackListFilter{
@@ -196,7 +196,7 @@ func (n *PortainerClientImp) GetStacks(swarmId string, endpointId uint32) (stack
 }
 
 // Create swarm stack
-func (n *PortainerClientImp) CreateSwarmStack(stackName string, environmentVariables []StackEnv, stackFileContent string, swarmClusterId string, endpointId string) (err error) {
+func (n *portainerClientImp) CreateSwarmStack(stackName string, environmentVariables []StackEnv, stackFileContent string, swarmClusterId string, endpointId string) (err error) {
 	util.PrintVerbose("Deploying stack...")
 
 	reqBody := StackCreateRequest{
@@ -211,7 +211,7 @@ func (n *PortainerClientImp) CreateSwarmStack(stackName string, environmentVaria
 }
 
 // Create compose stack
-func (n *PortainerClientImp) CreateComposeStack(stackName string, environmentVariables []StackEnv, stackFileContent string, endpointId string) (err error) {
+func (n *portainerClientImp) CreateComposeStack(stackName string, environmentVariables []StackEnv, stackFileContent string, endpointId string) (err error) {
 	util.PrintVerbose("Deploying stack...")
 
 	reqBody := StackCreateRequest{
@@ -225,7 +225,7 @@ func (n *PortainerClientImp) CreateComposeStack(stackName string, environmentVar
 }
 
 // Update stack
-func (n *PortainerClientImp) UpdateStack(stack Stack, environmentVariables []StackEnv, stackFileContent string, prune bool, endpointId string) (err error) {
+func (n *portainerClientImp) UpdateStack(stack Stack, environmentVariables []StackEnv, stackFileContent string, prune bool, endpointId string) (err error) {
 	util.PrintVerbose("Updating stack...")
 
 	reqBody := StackUpdateRequest{
@@ -239,7 +239,7 @@ func (n *PortainerClientImp) UpdateStack(stack Stack, environmentVariables []Sta
 }
 
 // Delete stack
-func (n *PortainerClientImp) DeleteStack(stackId uint32) (err error) {
+func (n *portainerClientImp) DeleteStack(stackId uint32) (err error) {
 	util.PrintVerbose("Deleting stack...")
 
 	err = n.doJSON(fmt.Sprintf("stacks/%d", stackId), http.MethodDelete, nil, nil)
@@ -247,7 +247,7 @@ func (n *PortainerClientImp) DeleteStack(stackId uint32) (err error) {
 }
 
 // Get stack file content
-func (n *PortainerClientImp) GetStackFileContent(stackId uint32) (content string, err error) {
+func (n *portainerClientImp) GetStackFileContent(stackId uint32) (content string, err error) {
 	util.PrintVerbose("Getting stack file content...")
 
 	var respBody StackFileInspectResponse
@@ -263,7 +263,7 @@ func (n *PortainerClientImp) GetStackFileContent(stackId uint32) (content string
 }
 
 // Get endpoint Docker info
-func (n *PortainerClientImp) GetEndpointDockerInfo(endpointId string) (info map[string]interface{}, err error) {
+func (n *portainerClientImp) GetEndpointDockerInfo(endpointId string) (info map[string]interface{}, err error) {
 	util.PrintVerbose("Getting endpoint Docker info...")
 
 	err = n.doJSON(fmt.Sprintf("endpoints/%v/docker/info", endpointId), http.MethodGet, nil, &info)
@@ -271,7 +271,7 @@ func (n *PortainerClientImp) GetEndpointDockerInfo(endpointId string) (info map[
 }
 
 // Get Portainer status info
-func (n *PortainerClientImp) GetStatus() (status Status, err error) {
+func (n *portainerClientImp) GetStatus() (status Status, err error) {
 	err = n.doJSON("status", http.MethodGet, nil, &status)
 	return
 }
@@ -283,7 +283,7 @@ func NewClient(httpClient *http.Client, config Config) (c PortainerClient, err e
 		return
 	}
 
-	c = &PortainerClientImp{
+	c = &portainerClientImp{
 		httpClient: httpClient,
 		url:        apiUrl,
 		user:       config.User,
