@@ -19,7 +19,7 @@ type StackListFilter struct {
 	EndpointId uint32 `json:",omitempty"`
 }
 
-type ClientConfig struct {
+type Config struct {
 	Url           string
 	User          string
 	Password      string
@@ -277,7 +277,7 @@ func (n *PortainerClientImp) GetStatus() (status Status, err error) {
 }
 
 // Create a new client
-func NewClient(httpClient *http.Client, config ClientConfig) (c PortainerClient, err error) {
+func NewClient(httpClient *http.Client, config Config) (c PortainerClient, err error) {
 	apiUrl, err := url.Parse(strings.TrimRight(config.Url, "/") + "/api/")
 	if err != nil {
 		return

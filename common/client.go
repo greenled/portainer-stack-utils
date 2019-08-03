@@ -28,8 +28,8 @@ func GetDefaultClient() (c client.PortainerClient, err error) {
 }
 
 // Get the default config for a client
-func GetDefaultClientConfig() client.ClientConfig {
-	return client.ClientConfig{
+func GetDefaultClientConfig() client.Config {
+	return client.Config{
 		Url:           viper.GetString("url"),
 		User:          viper.GetString("user"),
 		Password:      viper.GetString("password"),
