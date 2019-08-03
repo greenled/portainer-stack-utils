@@ -20,24 +20,24 @@ var stackListCmd = &cobra.Command{
 	Example: "psu stack list --endpoint 1",
 	Run: func(cmd *cobra.Command, args []string) {
 		client, err := common.GetClient()
-		util.CheckError(err)
+		common.CheckError(err)
 
 		stacks, err := client.GetStacks(viper.GetString("stack.list.swarm"), viper.GetUint32("stack.list.endpoint"))
-		util.CheckError(err)
+		common.CheckError(err)
 
 		if viper.GetBool("stack.list.quiet") {
 			// Print only stack names
 			for _, s := range stacks {
 				_, err := fmt.Println(s.Name)
-				util.CheckError(err)
+				common.CheckError(err)
 			}
 		} else if viper.GetString("stack.list.format") != "" {
 			// Print stack fields formatted
 			template, templateParsingErr := template.New("stackTpl").Parse(viper.GetString("stack.list.format"))
-			util.CheckError(templateParsingErr)
+			common.CheckError(templateParsingErr)
 			for _, s := range stacks {
 				templateExecutionErr := template.Execute(os.Stdout, s)
-				util.CheckError(templateExecutionErr)
+				common.CheckError(templateExecutionErr)
 				fmt.Println()
 			}
 		} else {
@@ -51,7 +51,7 @@ var stackListCmd = &cobra.Command{
 				"ENDPOINT ID",
 				"SWARM ID",
 			})
-			util.CheckError(err)
+			common.CheckError(err)
 			for _, s := range stacks {
 				_, err := fmt.Fprintln(writer, fmt.Sprintf(
 					"%v\t%s\t%v\t%s\t%s\t%v\t%s",
@@ -63,10 +63,10 @@ var stackListCmd = &cobra.Command{
 					s.EndpointID,
 					s.SwarmID,
 				))
-				util.CheckError(err)
+				common.CheckError(err)
 			}
 			flushErr := writer.Flush()
-			util.CheckError(flushErr)
+			common.CheckError(flushErr)
 		}
 	},
 }

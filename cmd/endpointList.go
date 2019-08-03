@@ -36,18 +36,18 @@ var endpointListCmd = &cobra.Command{
 	Aliases: []string{"ls"},
 	Run: func(cmd *cobra.Command, args []string) {
 		client, err := common.GetClient()
-		util.CheckError(err)
+		common.CheckError(err)
 
 		endpoints, err := client.GetEndpoints()
-		util.CheckError(err)
+		common.CheckError(err)
 
 		if viper.GetString("endpoint.list.format") != "" {
 			// Print endpoint fields formatted
 			template, templateParsingErr := template.New("endpointTpl").Parse(viper.GetString("endpoint.list.format"))
-			util.CheckError(templateParsingErr)
+			common.CheckError(templateParsingErr)
 			for _, e := range endpoints {
 				templateExecutionErr := template.Execute(os.Stdout, e)
-				util.CheckError(templateExecutionErr)
+				common.CheckError(templateExecutionErr)
 				fmt.Println()
 			}
 		} else {
@@ -60,7 +60,7 @@ var endpointListCmd = &cobra.Command{
 				"PUBLIC URL",
 				"GROUP ID",
 			})
-			util.CheckError(err)
+			common.CheckError(err)
 			for _, e := range endpoints {
 				var endpointType string
 				if e.Type == 1 {
@@ -77,10 +77,10 @@ var endpointListCmd = &cobra.Command{
 					e.PublicURL,
 					e.GroupID,
 				))
-				util.CheckError(err)
+				common.CheckError(err)
 			}
 			flushErr := writer.Flush()
-			util.CheckError(flushErr)
+			common.CheckError(flushErr)
 		}
 	},
 }

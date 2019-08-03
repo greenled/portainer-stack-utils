@@ -18,17 +18,17 @@ var statusCmd = &cobra.Command{
 	Short: "Check Portainer status",
 	Run: func(cmd *cobra.Command, args []string) {
 		client, err := common.GetClient()
-		util.CheckError(err)
+		common.CheckError(err)
 
 		respBody, err := client.GetStatus()
-		util.CheckError(err)
+		common.CheckError(err)
 
 		if viper.GetString("status.format") != "" {
 			// Print stack fields formatted
 			template, templateParsingErr := template.New("statusTpl").Parse(viper.GetString("status.format"))
-			util.CheckError(templateParsingErr)
+			common.CheckError(templateParsingErr)
 			templateExecutionErr := template.Execute(os.Stdout, respBody)
-			util.CheckError(templateExecutionErr)
+			common.CheckError(templateExecutionErr)
 			fmt.Println()
 		} else {
 			// Print status fields as a table
@@ -38,7 +38,7 @@ var statusCmd = &cobra.Command{
 				"ENDPOINT MANAGEMENT",
 				"ANALYTICS",
 			})
-			util.CheckError(newTabWriterErr)
+			common.CheckError(newTabWriterErr)
 
 			_, printingErr := fmt.Fprintln(writer, fmt.Sprintf(
 				"%s\t%v\t%v\t%v",
@@ -47,10 +47,10 @@ var statusCmd = &cobra.Command{
 				respBody.EndpointManagement,
 				respBody.Analytics,
 			))
-			util.CheckError(printingErr)
+			common.CheckError(printingErr)
 
 			flushErr := writer.Flush()
-			util.CheckError(flushErr)
+			common.CheckError(flushErr)
 		}
 	},
 }

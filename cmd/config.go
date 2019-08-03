@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 
+	"github.com/greenled/portainer-stack-utils/common"
 	"github.com/greenled/portainer-stack-utils/util"
 	"github.com/mitchellh/go-homedir"
 	"github.com/spf13/cobra"
@@ -33,12 +34,12 @@ var configCmd = &cobra.Command{
 		if len(args) == 1 {
 			// Get config
 			value, configGettingErr := getConfig(args[0])
-			util.CheckError(configGettingErr)
+			common.CheckError(configGettingErr)
 			fmt.Println(value)
 		} else {
 			// Set config
 			configSettingErr := setConfig(args[0], args[1])
-			util.CheckError(configSettingErr)
+			common.CheckError(configSettingErr)
 		}
 	},
 }

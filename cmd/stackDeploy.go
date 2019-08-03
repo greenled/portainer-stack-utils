@@ -27,11 +27,11 @@ var stackDeployCmd = &cobra.Command{
 		if viper.GetString("stack.deploy.env-file") != "" {
 			var loadingErr error
 			loadedEnvironmentVariables, loadingErr = loadEnvironmentVariablesFile(viper.GetString("stack.deploy.env-file"))
-			util.CheckError(loadingErr)
+			common.CheckError(loadingErr)
 		}
 
 		portainerClient, clientRetrievalErr := common.GetClient()
-		util.CheckError(clientRetrievalErr)
+		common.CheckError(clientRetrievalErr)
 
 		stackName := args[0]
 		retrievedStack, stackRetrievalErr := common.GetStackByName(stackName)
@@ -44,11 +44,11 @@ var stackDeployCmd = &cobra.Command{
 			if viper.GetString("stack.deploy.stack-file") != "" {
 				var loadingErr error
 				stackFileContent, loadingErr = loadStackFile(viper.GetString("stack.deploy.stack-file"))
-				util.CheckError(loadingErr)
+				common.CheckError(loadingErr)
 			} else {
 				var stackFileContentRetrievalErr error
 				stackFileContent, stackFileContentRetrievalErr = portainerClient.GetStackFileContent(retrievedStack.Id)
-				util.CheckError(stackFileContentRetrievalErr)
+				common.CheckError(stackFileContentRetrievalErr)
 			}
 
 			var newEnvironmentVariables []client.StackEnv
@@ -73,7 +73,7 @@ var stackDeployCmd = &cobra.Command{
 			}
 
 			err := portainerClient.UpdateStack(retrievedStack, newEnvironmentVariables, stackFileContent, viper.GetBool("stack.deploy.prune"), viper.GetString("stack.deploy.endpoint"))
-			util.CheckError(err)
+			common.CheckError(err)
 		case *common.StackNotFoundError:
 			// We are deploying a new stack
 			util.PrintVerbose(fmt.Sprintf("Stack %s not found. Deploying...", stackName))
@@ -82,7 +82,7 @@ var stackDeployCmd = &cobra.Command{
 				log.Fatalln("Specify a docker-compose file with --stack-file")
 			}
 			stackFileContent, loadingErr := loadStackFile(viper.GetString("stack.deploy.stack-file"))
-			util.CheckError(loadingErr)
+			common.CheckError(loadingErr)
 
 			swarmClusterId, selectionErr := getSwarmClusterId()
 			switch selectionErr.(type) {
@@ -90,19 +90,19 @@ var stackDeployCmd = &cobra.Command{
 				// It's a swarm cluster
 				util.PrintVerbose(fmt.Sprintf("Swarm cluster found with id %s", swarmClusterId))
 				deploymentErr := portainerClient.CreateSwarmStack(stackName, loadedEnvironmentVariables, stackFileContent, swarmClusterId, viper.GetString("stack.deploy.endpoint"))
-				util.CheckError(deploymentErr)
+				common.CheckError(deploymentErr)
 			case *valueNotFoundError:
 				// It's not a swarm cluster
 				util.PrintVerbose("Swarm cluster not found")
 				deploymentErr := portainerClient.CreateComposeStack(stackName, loadedEnvironmentVariables, stackFileContent, viper.GetString("stack.deploy.endpoint"))
-				util.CheckError(deploymentErr)
+				common.CheckError(deploymentErr)
 			default:
 				// Something else happened
-				util.CheckError(stackRetrievalErr)
+				common.CheckError(stackRetrievalErr)
 			}
 		default:
 			// Something else happened
-			util.CheckError(stackRetrievalErr)
+			common.CheckError(stackRetrievalErr)
 		}
 	},
 }

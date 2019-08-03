@@ -32,10 +32,10 @@ var stackRemoveCmd = &cobra.Command{
 			util.PrintVerbose(fmt.Sprintf("Removing stack %s...", stackName))
 
 			client, err := common.GetClient()
-			util.CheckError(err)
+			common.CheckError(err)
 
 			err = client.DeleteStack(stackId)
-			util.CheckError(err)
+			common.CheckError(err)
 		case *common.StackNotFoundError:
 			// The stack does not exist
 			util.PrintVerbose(fmt.Sprintf("Stack %s does not exist.", stackName))
@@ -44,7 +44,7 @@ var stackRemoveCmd = &cobra.Command{
 			}
 		default:
 			// Something else happened
-			util.CheckError(err)
+			common.CheckError(err)
 		}
 	},
 }
