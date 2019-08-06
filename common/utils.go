@@ -3,8 +3,6 @@ package common
 import (
 	"fmt"
 
-	"github.com/greenled/portainer-stack-utils/util"
-
 	"github.com/greenled/portainer-stack-utils/client"
 )
 
@@ -19,7 +17,6 @@ func GetStackByName(name string) (stack client.Stack, err error) {
 		return
 	}
 
-	util.PrintVerbose(fmt.Sprintf("Getting stack %s...", name))
 	for _, stack := range stacks {
 		if stack.Name == name {
 			return stack, nil

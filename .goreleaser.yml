@@ -3,6 +3,7 @@ before:
   hooks:
     - go get github.com/spf13/cobra
     - go get github.com/joho/godotenv
+    - go get github.com/sirupsen/logrus
 builds:
   - main: main.go
     binary: psu

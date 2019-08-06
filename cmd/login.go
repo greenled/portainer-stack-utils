@@ -3,9 +3,8 @@ package cmd
 import (
 	"fmt"
 
-	"github.com/greenled/portainer-stack-utils/util"
-
 	"github.com/greenled/portainer-stack-utils/common"
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -19,7 +18,10 @@ var loginCmd = &cobra.Command{
 		client, err := common.GetDefaultClient()
 		common.CheckError(err)
 
-		util.PrintVerbose("Getting auth token...")
+		user := viper.GetString("user")
+		logrus.WithFields(logrus.Fields{
+			"user": user,
+		}).Debug("Getting auth token")
 		authToken, err := client.Authenticate()
 		common.CheckError(err)
 

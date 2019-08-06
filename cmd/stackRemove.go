@@ -1,12 +1,8 @@
 package cmd
 
 import (
-	"fmt"
-	"log"
-
-	"github.com/greenled/portainer-stack-utils/util"
-
 	"github.com/greenled/portainer-stack-utils/common"
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -25,23 +21,25 @@ var stackRemoveCmd = &cobra.Command{
 		switch err.(type) {
 		case nil:
 			// The stack exists
-			util.PrintVerbose(fmt.Sprintf("Stack %s exists.", stackName))
-
 			stackId := stack.Id
-
-			util.PrintVerbose(fmt.Sprintf("Removing stack %s...", stackName))
 
 			client, err := common.GetClient()
 			common.CheckError(err)
 
-			util.PrintVerbose("Deleting stack...")
+			logrus.WithFields(logrus.Fields{
+				"stack": stackName,
+			}).Info("Removing stack")
 			err = client.DeleteStack(stackId)
 			common.CheckError(err)
 		case *common.StackNotFoundError:
 			// The stack does not exist
-			util.PrintVerbose(fmt.Sprintf("Stack %s does not exist.", stackName))
+			logrus.WithFields(logrus.Fields{
+				"stack": stackName,
+			}).Debug("Stack not found")
 			if viper.GetBool("stack.remove.strict") {
-				log.Fatalln(fmt.Sprintf("Stack %s does not exist.", stackName))
+				logrus.WithFields(logrus.Fields{
+					"stack": stackName,
+				}).Fatal("Stack does not exist")
 			}
 		default:
 			// Something else happened

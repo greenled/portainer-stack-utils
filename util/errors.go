@@ -1,13 +1,12 @@
 package util
 
 import (
-	"fmt"
-	"log"
+	"github.com/sirupsen/logrus"
 )
 
 // CheckError checks if an error occurred (it's not nil)
 func CheckError(err error) {
 	if err != nil {
-		log.Fatalln(fmt.Sprintf("Error: %s", err.Error()))
+		logrus.Fatal(err.Error())
 	}
 }

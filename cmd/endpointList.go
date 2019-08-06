@@ -21,9 +21,8 @@ import (
 	"os"
 	"text/template"
 
-	"github.com/greenled/portainer-stack-utils/util"
-
 	"github.com/greenled/portainer-stack-utils/common"
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 
 	"github.com/spf13/cobra"
@@ -38,7 +37,7 @@ var endpointListCmd = &cobra.Command{
 		client, err := common.GetClient()
 		common.CheckError(err)
 
-		util.PrintVerbose("Getting endpoints...")
+		logrus.Debug("Getting endpoints")
 		endpoints, err := client.GetEndpoints()
 		common.CheckError(err)
 

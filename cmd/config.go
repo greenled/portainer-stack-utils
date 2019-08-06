@@ -2,12 +2,11 @@ package cmd
 
 import (
 	"fmt"
-	"log"
 	"os"
 
 	"github.com/greenled/portainer-stack-utils/common"
-	"github.com/greenled/portainer-stack-utils/util"
 	"github.com/mitchellh/go-homedir"
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -28,7 +27,9 @@ var configCmd = &cobra.Command{
 			}
 		}
 		if !keyExists {
-			log.Fatalf("Unkonwn configuration key \"%s\"", args[0])
+			logrus.WithFields(logrus.Fields{
+				"key": args[0],
+			}).Fatal("Unkonwn configuration key")
 		}
 
 		if len(args) == 1 {
@@ -69,7 +70,9 @@ func loadCofig() (*viper.Viper, error) {
 
 	// Read config from file
 	if configReadingErr := newViper.ReadInConfig(); configReadingErr != nil {
-		util.PrintVerbose(fmt.Sprintf("Could not read configuration from \"%s\". Expect all configuration values to be unset.", configFile))
+		logrus.WithFields(logrus.Fields{
+			"file": configFile,
+		}).Warn("Could not read configuration from file. Expect all configuration values to be unset.")
 	}
 
 	return newViper, nil

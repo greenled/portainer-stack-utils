@@ -5,8 +5,9 @@ import (
 	"os"
 	"strings"
 
+	"github.com/sirupsen/logrus"
+
 	"github.com/greenled/portainer-stack-utils/common"
-	"github.com/greenled/portainer-stack-utils/util"
 	"github.com/mitchellh/go-homedir"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -31,7 +32,7 @@ func Execute() {
 }
 
 func init() {
-	cobra.OnInitialize(initConfig)
+	cobra.OnInitialize(initConfig, initLogger)
 
 	rootCmd.SetVersionTemplate("{{ version }}\n")
 	cobra.AddTemplateFunc("version", common.BuildVersionString)
@@ -40,8 +41,7 @@ func init() {
 	// will be global for your application.
 
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.psu.yaml)")
-	rootCmd.PersistentFlags().BoolP("verbose", "v", false, "verbose mode")
-	rootCmd.PersistentFlags().BoolP("debug", "d", false, "debug mode")
+	rootCmd.PersistentFlags().StringP("log-level", "v", "info", "log level")
 	rootCmd.PersistentFlags().BoolP("insecure", "i", false, "skip Portainer SSL certificate verification")
 	rootCmd.PersistentFlags().StringP("url", "l", "", "Portainer url")
 	rootCmd.PersistentFlags().StringP("user", "u", "", "Portainer user")
@@ -49,8 +49,7 @@ func init() {
 	rootCmd.PersistentFlags().StringP("auth-token", "A", "", "Portainer auth token")
 	rootCmd.PersistentFlags().DurationP("timeout", "t", 0, "waiting time before aborting (like 100ms, 30s, 1h20m)")
 	viper.BindPFlag("config", rootCmd.PersistentFlags().Lookup("config"))
-	viper.BindPFlag("verbose", rootCmd.PersistentFlags().Lookup("verbose"))
-	viper.BindPFlag("debug", rootCmd.PersistentFlags().Lookup("debug"))
+	viper.BindPFlag("log-level", rootCmd.PersistentFlags().Lookup("log-level"))
 	viper.BindPFlag("insecure", rootCmd.PersistentFlags().Lookup("insecure"))
 	viper.BindPFlag("url", rootCmd.PersistentFlags().Lookup("url"))
 	viper.BindPFlag("timeout", rootCmd.PersistentFlags().Lookup("timeout"))
@@ -84,7 +83,17 @@ func initConfig() {
 	viper.SetEnvKeyReplacer(replacer)
 
 	// If a config file is found, read it in.
-	if err := viper.ReadInConfig(); err == nil {
-		util.PrintVerbose("Using config file:", viper.ConfigFileUsed())
+	viper.ReadInConfig()
+}
+
+func initLogger() {
+	logLevelName := viper.GetString("log-level")
+	logLevel, err := logrus.ParseLevel(logLevelName)
+	if err != nil {
+		logrus.WithFields(logrus.Fields{
+			"level": logLevelName,
+		}).Error("Unknown log level. Default \"info\" level will be used instead.")
+		logrus.SetLevel(logrus.InfoLevel)
 	}
+	logrus.SetLevel(logLevel)
 }

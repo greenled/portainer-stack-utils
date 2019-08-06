@@ -1,13 +1,10 @@
 package cmd
 
 import (
-	"fmt"
 	"io/ioutil"
-	"log"
-
-	"github.com/greenled/portainer-stack-utils/util"
 
 	"github.com/greenled/portainer-stack-utils/client"
+	"github.com/sirupsen/logrus"
 
 	"github.com/greenled/portainer-stack-utils/common"
 	"github.com/joho/godotenv"
@@ -34,11 +31,16 @@ var stackDeployCmd = &cobra.Command{
 		common.CheckError(clientRetrievalErr)
 
 		stackName := args[0]
+		logrus.WithFields(logrus.Fields{
+			"stack": stackName,
+		}).Debug("Getting stack")
 		retrievedStack, stackRetrievalErr := common.GetStackByName(stackName)
 		switch stackRetrievalErr.(type) {
 		case nil:
 			// We are updating an existing stack
-			util.PrintVerbose(fmt.Sprintf("Stack %s found. Updating...", retrievedStack.Name))
+			logrus.WithFields(logrus.Fields{
+				"stack": retrievedStack.Name,
+			}).Debug("Stack found")
 
 			var stackFileContent string
 			if viper.GetString("stack.deploy.stack-file") != "" {
@@ -47,7 +49,9 @@ var stackDeployCmd = &cobra.Command{
 				common.CheckError(loadingErr)
 			} else {
 				var stackFileContentRetrievalErr error
-				util.PrintVerbose("Getting stack file content...")
+				logrus.WithFields(logrus.Fields{
+					"stack": retrievedStack.Name,
+				}).Debug("Getting stack file content")
 				stackFileContent, stackFileContentRetrievalErr = portainerClient.GetStackFileContent(retrievedStack.Id)
 				common.CheckError(stackFileContentRetrievalErr)
 			}
@@ -73,32 +77,44 @@ var stackDeployCmd = &cobra.Command{
 				}
 			}
 
-			util.PrintVerbose("Updating stack...")
+			logrus.WithFields(logrus.Fields{
+				"stack": retrievedStack.Name,
+			}).Info("Updating stack")
 			err := portainerClient.UpdateStack(retrievedStack, newEnvironmentVariables, stackFileContent, viper.GetBool("stack.deploy.prune"), viper.GetString("stack.deploy.endpoint"))
 			common.CheckError(err)
 		case *common.StackNotFoundError:
 			// We are deploying a new stack
-			util.PrintVerbose(fmt.Sprintf("Stack %s not found. Deploying...", stackName))
+			logrus.WithFields(logrus.Fields{
+				"stack": stackName,
+			}).Debug("Stack not found")
 
 			if viper.GetString("stack.deploy.stack-file") == "" {
-				log.Fatalln("Specify a docker-compose file with --stack-file")
+				logrus.WithFields(logrus.Fields{
+					"flag": "--stack-file",
+				}).Fatal("Provide required flag")
 			}
 			stackFileContent, loadingErr := loadStackFile(viper.GetString("stack.deploy.stack-file"))
 			common.CheckError(loadingErr)
 
 			swarmClusterId, selectionErr := getSwarmClusterId()
+			endpointId := viper.GetString("stack.deploy.endpoint")
 			switch selectionErr.(type) {
 			case nil:
 				// It's a swarm cluster
-				util.PrintVerbose(fmt.Sprintf("Swarm cluster found with id %s", swarmClusterId))
-				util.PrintVerbose("Deploying stack...")
-				deploymentErr := portainerClient.CreateSwarmStack(stackName, loadedEnvironmentVariables, stackFileContent, swarmClusterId, viper.GetString("stack.deploy.endpoint"))
+				logrus.WithFields(logrus.Fields{
+					"stack":    stackName,
+					"endpoint": endpointId,
+					"cluster":  swarmClusterId,
+				}).Info("Creating stack")
+				deploymentErr := portainerClient.CreateSwarmStack(stackName, loadedEnvironmentVariables, stackFileContent, swarmClusterId, endpointId)
 				common.CheckError(deploymentErr)
 			case *valueNotFoundError:
 				// It's not a swarm cluster
-				util.PrintVerbose("Swarm cluster not found")
-				util.PrintVerbose("Deploying stack...")
-				deploymentErr := portainerClient.CreateComposeStack(stackName, loadedEnvironmentVariables, stackFileContent, viper.GetString("stack.deploy.endpoint"))
+				logrus.WithFields(logrus.Fields{
+					"stack":    stackName,
+					"endpoint": endpointId,
+				}).Info("Creating stack")
+				deploymentErr := portainerClient.CreateComposeStack(stackName, loadedEnvironmentVariables, stackFileContent, endpointId)
 				common.CheckError(deploymentErr)
 			default:
 				// Something else happened
@@ -133,8 +149,11 @@ func getSwarmClusterId() (id string, err error) {
 		return
 	}
 
-	util.PrintVerbose("Getting endpoint Docker info...")
-	result, err := client.GetEndpointDockerInfo(viper.GetString("stack.deploy.endpoint"))
+	endpointId := viper.GetString("stack.deploy.endpoint")
+	logrus.WithFields(logrus.Fields{
+		"endpoint": endpointId,
+	}).Debug("Getting endpoint's Docker info")
+	result, err := client.GetEndpointDockerInfo(endpointId)
 	if err != nil {
 		return
 	}

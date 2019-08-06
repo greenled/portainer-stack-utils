@@ -3,13 +3,11 @@ package common
 import (
 	"bytes"
 	"crypto/tls"
-	"fmt"
 	"io/ioutil"
 	"net/http"
 
-	"github.com/greenled/portainer-stack-utils/util"
-
 	"github.com/greenled/portainer-stack-utils/client"
+	"github.com/sirupsen/logrus"
 
 	"github.com/spf13/viper"
 )
@@ -46,13 +44,11 @@ func GetDefaultClient() (c client.PortainerClient, err error) {
 			req.Body = ioutil.NopCloser(bytes.NewReader(bodyBytes))
 		}
 
-		util.PrintDebug(fmt.Sprintf(`Request
----
-Method: %s
-URL: %s
-Body:
-%s
----`, req.Method, req.URL.String(), string(bodyString)))
+		logrus.WithFields(logrus.Fields{
+			"method": req.Method,
+			"url":    req.URL.String(),
+			"body":   string(bodyString),
+		}).Trace("Request to Portainer")
 
 		return
 	})
@@ -69,12 +65,10 @@ Body:
 			resp.Body = ioutil.NopCloser(bytes.NewReader(bodyBytes))
 		}
 
-		util.PrintDebug(fmt.Sprintf(`Response
----
-Status: %s
-Body:
-%s
----`, resp.Status, bodyString))
+		logrus.WithFields(logrus.Fields{
+			"status": resp.Status,
+			"body":   string(bodyString),
+		}).Trace("Response from Portainer")
 
 		return
 	})

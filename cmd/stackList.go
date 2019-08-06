@@ -5,9 +5,8 @@ import (
 	"os"
 	"text/template"
 
-	"github.com/greenled/portainer-stack-utils/util"
-
 	"github.com/greenled/portainer-stack-utils/common"
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -22,8 +21,13 @@ var stackListCmd = &cobra.Command{
 		client, err := common.GetClient()
 		common.CheckError(err)
 
-		util.PrintVerbose("Getting stacks...")
-		stacks, err := client.GetStacks(viper.GetString("stack.list.swarm"), viper.GetUint32("stack.list.endpoint"))
+		swarmId := viper.GetString("stack.list.swarm")
+		endpointId := viper.GetUint32("stack.list.endpoint")
+		logrus.WithFields(logrus.Fields{
+			"swarm":    swarmId,
+			"endpoint": endpointId,
+		}).Debug("Getting stacks")
+		stacks, err := client.GetStacks(swarmId, endpointId)
 		common.CheckError(err)
 
 		if viper.GetBool("stack.list.quiet") {
