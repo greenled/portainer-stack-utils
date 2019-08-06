@@ -5,8 +5,6 @@ import (
 	"os"
 	"text/template"
 
-	"github.com/greenled/portainer-stack-utils/util"
-
 	"github.com/greenled/portainer-stack-utils/common"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -32,7 +30,7 @@ var statusCmd = &cobra.Command{
 			fmt.Println()
 		} else {
 			// Print status fields as a table
-			writer, newTabWriterErr := util.NewTabWriter([]string{
+			writer, newTabWriterErr := common.NewTabWriter([]string{
 				"VERSION",
 				"AUTHENTICATION",
 				"ENDPOINT MANAGEMENT",

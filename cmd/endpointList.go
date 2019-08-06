@@ -53,7 +53,7 @@ var endpointListCmd = &cobra.Command{
 			}
 		} else {
 			// Print all endpoint fields as a table
-			writer, err := util.NewTabWriter([]string{
+			writer, err := common.NewTabWriter([]string{
 				"ENDPOINT ID",
 				"NAME",
 				"TYPE",

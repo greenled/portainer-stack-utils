@@ -43,7 +43,7 @@ var stackListCmd = &cobra.Command{
 			}
 		} else {
 			// Print all stack fields as a table
-			writer, err := util.NewTabWriter([]string{
+			writer, err := common.NewTabWriter([]string{
 				"STACK ID",
 				"NAME",
 				"TYPE",
