@@ -4,6 +4,8 @@ import (
 	"crypto/tls"
 	"net/http"
 
+	"github.com/greenled/portainer-stack-utils/util"
+
 	"github.com/greenled/portainer-stack-utils/client"
 
 	"github.com/spf13/viper"
@@ -24,7 +26,22 @@ func GetClient() (c client.PortainerClient, err error) {
 
 // Get the default client
 func GetDefaultClient() (c client.PortainerClient, err error) {
-	return client.NewClient(GetDefaultHttpClient(), GetDefaultClientConfig())
+	c, err = client.NewClient(GetDefaultHttpClient(), GetDefaultClientConfig())
+	if err != nil {
+		return
+	}
+
+	c.BeforeRequest(func(req *http.Request) (err error) {
+		util.PrintDebugRequest("Request", req)
+		return
+	})
+
+	c.AfterResponse(func(resp *http.Response) (err error) {
+		util.PrintDebugResponse("Response", resp)
+		return
+	})
+
+	return
 }
 
 // Get the default config for a client

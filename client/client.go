@@ -113,8 +113,6 @@ func (n *portainerClientImp) do(uri, method string, request io.Reader, requestTy
 		}
 	}
 
-	util.PrintDebugRequest("Request", req)
-
 	resp, err = n.httpClient.Do(req)
 	if err != nil {
 		return
@@ -132,8 +130,6 @@ func (n *portainerClientImp) do(uri, method string, request io.Reader, requestTy
 	if err != nil {
 		return
 	}
-
-	util.PrintDebugResponse("Response", resp)
 
 	return
 }
