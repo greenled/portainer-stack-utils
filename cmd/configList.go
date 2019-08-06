@@ -2,8 +2,9 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/spf13/viper"
 	"sort"
+
+	"github.com/spf13/viper"
 
 	"github.com/spf13/cobra"
 )
@@ -35,6 +36,6 @@ var configListCmd = &cobra.Command{
 func init() {
 	configCmd.AddCommand(configListCmd)
 
-	configListCmd.Flags().Bool("keys", false, "list only keys")
+	configListCmd.Flags().Bool("keys", false, "Only list keys.")
 	viper.BindPFlag("config.list.keys", configListCmd.Flags().Lookup("keys"))
 }

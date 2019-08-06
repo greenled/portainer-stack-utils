@@ -40,14 +40,14 @@ func init() {
 	// Cobra supports persistent flags, which, if defined here,
 	// will be global for your application.
 
-	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.psu.yaml)")
-	rootCmd.PersistentFlags().StringP("log-level", "v", "info", "log level")
-	rootCmd.PersistentFlags().BoolP("insecure", "i", false, "skip Portainer SSL certificate verification")
-	rootCmd.PersistentFlags().StringP("url", "l", "", "Portainer url")
-	rootCmd.PersistentFlags().StringP("user", "u", "", "Portainer user")
-	rootCmd.PersistentFlags().StringP("password", "p", "", "Portainer password")
-	rootCmd.PersistentFlags().StringP("auth-token", "A", "", "Portainer auth token")
-	rootCmd.PersistentFlags().DurationP("timeout", "t", 0, "waiting time before aborting (like 100ms, 30s, 1h20m)")
+	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "Config file. (default \"$HOME/.psu.yaml)\"")
+	rootCmd.PersistentFlags().StringP("log-level", "v", "info", "Log level. One of trace, debug, info, warning, error, fatal or panic.")
+	rootCmd.PersistentFlags().BoolP("insecure", "i", false, "Skip Portainer SSL certificate verification.")
+	rootCmd.PersistentFlags().StringP("url", "l", "", "Portainer url.")
+	rootCmd.PersistentFlags().StringP("user", "u", "", "Portainer user.")
+	rootCmd.PersistentFlags().StringP("password", "p", "", "Portainer password.")
+	rootCmd.PersistentFlags().StringP("auth-token", "A", "", "Portainer auth token.")
+	rootCmd.PersistentFlags().DurationP("timeout", "t", 0, "Waiting time before aborting (like 100ms, 30s, 1h20m).")
 	viper.BindPFlag("config", rootCmd.PersistentFlags().Lookup("config"))
 	viper.BindPFlag("log-level", rootCmd.PersistentFlags().Lookup("log-level"))
 	viper.BindPFlag("insecure", rootCmd.PersistentFlags().Lookup("insecure"))

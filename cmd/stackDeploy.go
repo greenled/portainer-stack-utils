@@ -130,11 +130,11 @@ var stackDeployCmd = &cobra.Command{
 func init() {
 	stackCmd.AddCommand(stackDeployCmd)
 
-	stackDeployCmd.Flags().StringP("stack-file", "c", "", "path to a file with the content of the stack")
-	stackDeployCmd.Flags().String("endpoint", "1", "endpoint ID")
-	stackDeployCmd.Flags().StringP("env-file", "e", "", "path to a file with environment variables used during stack deployment")
-	stackDeployCmd.Flags().Bool("replace-env", false, "replace environment variables instead of merging them")
-	stackDeployCmd.Flags().BoolP("prune", "r", false, "prune services that are no longer referenced (only available for Swarm stacks)")
+	stackDeployCmd.Flags().StringP("stack-file", "c", "", "Path to a file with the content of the stack.")
+	stackDeployCmd.Flags().String("endpoint", "1", "Endpoint ID.")
+	stackDeployCmd.Flags().StringP("env-file", "e", "", "Path to a file with environment variables used during stack deployment.")
+	stackDeployCmd.Flags().Bool("replace-env", false, "Replace environment variables instead of merging them.")
+	stackDeployCmd.Flags().BoolP("prune", "r", false, "Prune services that are no longer referenced (only available for Swarm stacks).")
 	viper.BindPFlag("stack.deploy.stack-file", stackDeployCmd.Flags().Lookup("stack-file"))
 	viper.BindPFlag("stack.deploy.endpoint", stackDeployCmd.Flags().Lookup("endpoint"))
 	viper.BindPFlag("stack.deploy.env-file", stackDeployCmd.Flags().Lookup("env-file"))

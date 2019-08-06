@@ -56,6 +56,6 @@ var statusCmd = &cobra.Command{
 func init() {
 	rootCmd.AddCommand(statusCmd)
 
-	statusCmd.Flags().String("format", "", "format output using a Go template")
+	statusCmd.Flags().String("format", "", "Format output using a Go template.")
 	viper.BindPFlag("status.format", statusCmd.Flags().Lookup("format"))
 }

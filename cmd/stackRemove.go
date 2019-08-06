@@ -51,6 +51,6 @@ var stackRemoveCmd = &cobra.Command{
 func init() {
 	stackCmd.AddCommand(stackRemoveCmd)
 
-	stackRemoveCmd.Flags().Bool("strict", false, "fail if stack does not exist")
+	stackRemoveCmd.Flags().Bool("strict", false, "Fail if stack does not exist.")
 	viper.BindPFlag("stack.remove.strict", stackRemoveCmd.Flags().Lookup("strict"))
 }

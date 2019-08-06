@@ -79,10 +79,10 @@ var stackListCmd = &cobra.Command{
 func init() {
 	stackCmd.AddCommand(stackListCmd)
 
-	stackListCmd.Flags().String("swarm", "", "filter by swarm ID")
-	stackListCmd.Flags().String("endpoint", "", "filter by endpoint ID")
-	stackListCmd.Flags().BoolP("quiet", "q", false, "only display stack names")
-	stackListCmd.Flags().String("format", "", "format output using a Go template")
+	stackListCmd.Flags().String("swarm", "", "Filter by swarm ID.")
+	stackListCmd.Flags().String("endpoint", "", "Filter by endpoint ID.")
+	stackListCmd.Flags().BoolP("quiet", "q", false, "Only display stack names.")
+	stackListCmd.Flags().String("format", "", "Format output using a Go template.")
 	viper.BindPFlag("stack.list.swarm", stackListCmd.Flags().Lookup("swarm"))
 	viper.BindPFlag("stack.list.endpoint", stackListCmd.Flags().Lookup("endpoint"))
 	viper.BindPFlag("stack.list.quiet", stackListCmd.Flags().Lookup("quiet"))

@@ -38,6 +38,6 @@ var loginCmd = &cobra.Command{
 func init() {
 	rootCmd.AddCommand(loginCmd)
 
-	loginCmd.Flags().Bool("print", false, "prints retrieved auth token")
+	loginCmd.Flags().Bool("print", false, "Print retrieved auth token.")
 	viper.BindPFlag("login.print", loginCmd.Flags().Lookup("print"))
 }

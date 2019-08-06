@@ -88,6 +88,6 @@ var endpointListCmd = &cobra.Command{
 func init() {
 	endpointCmd.AddCommand(endpointListCmd)
 
-	endpointListCmd.Flags().String("format", "", "format output using a Go template")
+	endpointListCmd.Flags().String("format", "", "Format output using a Go template.")
 	viper.BindPFlag("endpoint.list.format", endpointListCmd.Flags().Lookup("format"))
 }
