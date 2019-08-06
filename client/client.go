@@ -26,17 +26,40 @@ type Config struct {
 }
 
 type PortainerClient interface {
+	// Authenticate a user to get an auth token
 	Authenticate() (token string, err error)
+
+	// Get endpoints
 	GetEndpoints() ([]EndpointSubset, error)
+
+	// Get stacks, optionally filtered by swarmId and endpointId
 	GetStacks(swarmId string, endpointId uint32) ([]Stack, error)
+
+	// Create swarm stack
 	CreateSwarmStack(stackName string, environmentVariables []StackEnv, stackFileContent string, swarmClusterId string, endpointId string) error
+
+	// Create compose stack
 	CreateComposeStack(stackName string, environmentVariables []StackEnv, stackFileContent string, endpointId string) error
+
+	// Update stack
 	UpdateStack(stack Stack, environmentVariables []StackEnv, stackFileContent string, prune bool, endpointId string) error
+
+	// Delete stack
 	DeleteStack(stackId uint32) error
+
+	// Get stack file content
 	GetStackFileContent(stackId uint32) (content string, err error)
+
+	// Get endpoint Docker info
 	GetEndpointDockerInfo(endpointId string) (info map[string]interface{}, err error)
+
+	// Get Portainer status info
 	GetStatus() (Status, error)
+
+	// Run a function before sending a request to Portainer
 	BeforeRequest(hook func(req *http.Request) (err error))
+
+	// Run a function after receiving a response from Portainer
 	AfterResponse(hook func(resp *http.Response) (err error))
 }
 
@@ -167,7 +190,6 @@ func (n *portainerClientImp) AfterResponse(hook func(resp *http.Response) (err e
 	n.afterResponseHooks = append(n.afterResponseHooks, hook)
 }
 
-// Authenticate a user to get an auth token
 func (n *portainerClientImp) Authenticate() (token string, err error) {
 	reqBody := AuthenticateUserRequest{
 		Username: n.user,
@@ -191,13 +213,11 @@ func (n *portainerClientImp) Authenticate() (token string, err error) {
 	return
 }
 
-// Get endpoints
 func (n *portainerClientImp) GetEndpoints() (endpoints []EndpointSubset, err error) {
 	err = n.doJSON("endpoints", http.MethodGet, nil, &endpoints)
 	return
 }
 
-// Get stacks, optionally filtered by swarmId and endpointId
 func (n *portainerClientImp) GetStacks(swarmId string, endpointId uint32) (stacks []Stack, err error) {
 	filter := StackListFilter{
 		SwarmId:    swarmId,
@@ -211,7 +231,6 @@ func (n *portainerClientImp) GetStacks(swarmId string, endpointId uint32) (stack
 	return
 }
 
-// Create swarm stack
 func (n *portainerClientImp) CreateSwarmStack(stackName string, environmentVariables []StackEnv, stackFileContent string, swarmClusterId string, endpointId string) (err error) {
 	reqBody := StackCreateRequest{
 		Name:             stackName,
@@ -224,7 +243,6 @@ func (n *portainerClientImp) CreateSwarmStack(stackName string, environmentVaria
 	return
 }
 
-// Create compose stack
 func (n *portainerClientImp) CreateComposeStack(stackName string, environmentVariables []StackEnv, stackFileContent string, endpointId string) (err error) {
 	reqBody := StackCreateRequest{
 		Name:             stackName,
@@ -236,7 +254,6 @@ func (n *portainerClientImp) CreateComposeStack(stackName string, environmentVar
 	return
 }
 
-// Update stack
 func (n *portainerClientImp) UpdateStack(stack Stack, environmentVariables []StackEnv, stackFileContent string, prune bool, endpointId string) (err error) {
 	reqBody := StackUpdateRequest{
 		Env:              environmentVariables,
@@ -248,13 +265,11 @@ func (n *portainerClientImp) UpdateStack(stack Stack, environmentVariables []Sta
 	return
 }
 
-// Delete stack
 func (n *portainerClientImp) DeleteStack(stackId uint32) (err error) {
 	err = n.doJSON(fmt.Sprintf("stacks/%d", stackId), http.MethodDelete, nil, nil)
 	return
 }
 
-// Get stack file content
 func (n *portainerClientImp) GetStackFileContent(stackId uint32) (content string, err error) {
 	var respBody StackFileInspectResponse
 
@@ -268,13 +283,11 @@ func (n *portainerClientImp) GetStackFileContent(stackId uint32) (content string
 	return
 }
 
-// Get endpoint Docker info
 func (n *portainerClientImp) GetEndpointDockerInfo(endpointId string) (info map[string]interface{}, err error) {
 	err = n.doJSON(fmt.Sprintf("endpoints/%v/docker/info", endpointId), http.MethodGet, nil, &info)
 	return
 }
 
-// Get Portainer status info
 func (n *portainerClientImp) GetStatus() (status Status, err error) {
 	err = n.doJSON("status", http.MethodGet, nil, &status)
 	return
