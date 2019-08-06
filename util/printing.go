@@ -1,11 +1,8 @@
 package util
 
 import (
-	"bytes"
 	"fmt"
-	"io/ioutil"
 	"log"
-	"net/http"
 	"os"
 	"strings"
 	"text/tabwriter"
@@ -32,53 +29,4 @@ func NewTabWriter(headers []string) (*tabwriter.Writer, error) {
 		return &tabwriter.Writer{}, err
 	}
 	return writer, nil
-}
-
-func PrintDebugRequest(title string, req *http.Request) error {
-	if viper.GetBool("debug") {
-		var bodyString string
-		if req.Body != nil {
-			bodyBytes, err := ioutil.ReadAll(req.Body)
-			defer req.Body.Close()
-			if err != nil {
-				return err
-			}
-			bodyString = string(bodyBytes)
-			req.Body = ioutil.NopCloser(bytes.NewReader(bodyBytes))
-		}
-
-		PrintDebug(fmt.Sprintf(`%s
----
-Method: %s
-URL: %s
-Body:
-%s
----`, title, req.Method, req.URL.String(), string(bodyString)))
-	}
-
-	return nil
-}
-
-func PrintDebugResponse(title string, resp *http.Response) error {
-	if viper.GetBool("debug") {
-		var bodyString string
-		if resp.Body != nil {
-			bodyBytes, err := ioutil.ReadAll(resp.Body)
-			defer resp.Body.Close()
-			if err != nil {
-				return err
-			}
-			bodyString = string(bodyBytes)
-			resp.Body = ioutil.NopCloser(bytes.NewReader(bodyBytes))
-		}
-
-		PrintDebug(fmt.Sprintf(`%s
----
-Status: %s
-Body:
-%s
----`, title, resp.Status, bodyString))
-	}
-
-	return nil
 }

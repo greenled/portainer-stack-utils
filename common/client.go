@@ -1,7 +1,10 @@
 package common
 
 import (
+	"bytes"
 	"crypto/tls"
+	"fmt"
+	"io/ioutil"
 	"net/http"
 
 	"github.com/greenled/portainer-stack-utils/util"
@@ -32,12 +35,47 @@ func GetDefaultClient() (c client.PortainerClient, err error) {
 	}
 
 	c.BeforeRequest(func(req *http.Request) (err error) {
-		util.PrintDebugRequest("Request", req)
+		var bodyString string
+		if req.Body != nil {
+			bodyBytes, readErr := ioutil.ReadAll(req.Body)
+			defer req.Body.Close()
+			if readErr != nil {
+				return readErr
+			}
+			bodyString = string(bodyBytes)
+			req.Body = ioutil.NopCloser(bytes.NewReader(bodyBytes))
+		}
+
+		util.PrintDebug(fmt.Sprintf(`Request
+---
+Method: %s
+URL: %s
+Body:
+%s
+---`, req.Method, req.URL.String(), string(bodyString)))
+
 		return
 	})
 
 	c.AfterResponse(func(resp *http.Response) (err error) {
-		util.PrintDebugResponse("Response", resp)
+		var bodyString string
+		if resp.Body != nil {
+			bodyBytes, readErr := ioutil.ReadAll(resp.Body)
+			defer resp.Body.Close()
+			if readErr != nil {
+				return readErr
+			}
+			bodyString = string(bodyBytes)
+			resp.Body = ioutil.NopCloser(bytes.NewReader(bodyBytes))
+		}
+
+		util.PrintDebug(fmt.Sprintf(`Response
+---
+Status: %s
+Body:
+%s
+---`, resp.Status, bodyString))
+
 		return
 	})
 
