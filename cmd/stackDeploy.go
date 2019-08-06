@@ -47,6 +47,7 @@ var stackDeployCmd = &cobra.Command{
 				common.CheckError(loadingErr)
 			} else {
 				var stackFileContentRetrievalErr error
+				util.PrintVerbose("Getting stack file content...")
 				stackFileContent, stackFileContentRetrievalErr = portainerClient.GetStackFileContent(retrievedStack.Id)
 				common.CheckError(stackFileContentRetrievalErr)
 			}
@@ -72,6 +73,7 @@ var stackDeployCmd = &cobra.Command{
 				}
 			}
 
+			util.PrintVerbose("Updating stack...")
 			err := portainerClient.UpdateStack(retrievedStack, newEnvironmentVariables, stackFileContent, viper.GetBool("stack.deploy.prune"), viper.GetString("stack.deploy.endpoint"))
 			common.CheckError(err)
 		case *common.StackNotFoundError:
@@ -89,11 +91,13 @@ var stackDeployCmd = &cobra.Command{
 			case nil:
 				// It's a swarm cluster
 				util.PrintVerbose(fmt.Sprintf("Swarm cluster found with id %s", swarmClusterId))
+				util.PrintVerbose("Deploying stack...")
 				deploymentErr := portainerClient.CreateSwarmStack(stackName, loadedEnvironmentVariables, stackFileContent, swarmClusterId, viper.GetString("stack.deploy.endpoint"))
 				common.CheckError(deploymentErr)
 			case *valueNotFoundError:
 				// It's not a swarm cluster
 				util.PrintVerbose("Swarm cluster not found")
+				util.PrintVerbose("Deploying stack...")
 				deploymentErr := portainerClient.CreateComposeStack(stackName, loadedEnvironmentVariables, stackFileContent, viper.GetString("stack.deploy.endpoint"))
 				common.CheckError(deploymentErr)
 			default:
@@ -129,6 +133,7 @@ func getSwarmClusterId() (id string, err error) {
 		return
 	}
 
+	util.PrintVerbose("Getting endpoint Docker info...")
 	result, err := client.GetEndpointDockerInfo(viper.GetString("stack.deploy.endpoint"))
 	if err != nil {
 		return

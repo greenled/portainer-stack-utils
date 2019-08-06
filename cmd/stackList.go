@@ -22,6 +22,7 @@ var stackListCmd = &cobra.Command{
 		client, err := common.GetClient()
 		common.CheckError(err)
 
+		util.PrintVerbose("Getting stacks...")
 		stacks, err := client.GetStacks(viper.GetString("stack.list.swarm"), viper.GetUint32("stack.list.endpoint"))
 		common.CheckError(err)
 

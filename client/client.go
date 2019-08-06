@@ -10,8 +10,6 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
-
-	"github.com/greenled/portainer-stack-utils/util"
 )
 
 type StackListFilter struct {
@@ -171,8 +169,6 @@ func (n *portainerClientImp) AfterResponse(hook func(resp *http.Response) (err e
 
 // Authenticate a user to get an auth token
 func (n *portainerClientImp) Authenticate() (token string, err error) {
-	util.PrintVerbose("Getting auth token...")
-
 	reqBody := AuthenticateUserRequest{
 		Username: n.user,
 		Password: n.password,
@@ -197,15 +193,12 @@ func (n *portainerClientImp) Authenticate() (token string, err error) {
 
 // Get endpoints
 func (n *portainerClientImp) GetEndpoints() (endpoints []EndpointSubset, err error) {
-	util.PrintVerbose("Getting endpoints...")
 	err = n.doJSON("endpoints", http.MethodGet, nil, &endpoints)
 	return
 }
 
 // Get stacks, optionally filtered by swarmId and endpointId
 func (n *portainerClientImp) GetStacks(swarmId string, endpointId uint32) (stacks []Stack, err error) {
-	util.PrintVerbose("Getting stacks...")
-
 	filter := StackListFilter{
 		SwarmId:    swarmId,
 		EndpointId: endpointId,
@@ -220,8 +213,6 @@ func (n *portainerClientImp) GetStacks(swarmId string, endpointId uint32) (stack
 
 // Create swarm stack
 func (n *portainerClientImp) CreateSwarmStack(stackName string, environmentVariables []StackEnv, stackFileContent string, swarmClusterId string, endpointId string) (err error) {
-	util.PrintVerbose("Deploying stack...")
-
 	reqBody := StackCreateRequest{
 		Name:             stackName,
 		Env:              environmentVariables,
@@ -235,8 +226,6 @@ func (n *portainerClientImp) CreateSwarmStack(stackName string, environmentVaria
 
 // Create compose stack
 func (n *portainerClientImp) CreateComposeStack(stackName string, environmentVariables []StackEnv, stackFileContent string, endpointId string) (err error) {
-	util.PrintVerbose("Deploying stack...")
-
 	reqBody := StackCreateRequest{
 		Name:             stackName,
 		Env:              environmentVariables,
@@ -249,8 +238,6 @@ func (n *portainerClientImp) CreateComposeStack(stackName string, environmentVar
 
 // Update stack
 func (n *portainerClientImp) UpdateStack(stack Stack, environmentVariables []StackEnv, stackFileContent string, prune bool, endpointId string) (err error) {
-	util.PrintVerbose("Updating stack...")
-
 	reqBody := StackUpdateRequest{
 		Env:              environmentVariables,
 		StackFileContent: stackFileContent,
@@ -263,16 +250,12 @@ func (n *portainerClientImp) UpdateStack(stack Stack, environmentVariables []Sta
 
 // Delete stack
 func (n *portainerClientImp) DeleteStack(stackId uint32) (err error) {
-	util.PrintVerbose("Deleting stack...")
-
 	err = n.doJSON(fmt.Sprintf("stacks/%d", stackId), http.MethodDelete, nil, nil)
 	return
 }
 
 // Get stack file content
 func (n *portainerClientImp) GetStackFileContent(stackId uint32) (content string, err error) {
-	util.PrintVerbose("Getting stack file content...")
-
 	var respBody StackFileInspectResponse
 
 	err = n.doJSON(fmt.Sprintf("stacks/%v/file", stackId), http.MethodGet, nil, &respBody)
@@ -287,8 +270,6 @@ func (n *portainerClientImp) GetStackFileContent(stackId uint32) (content string
 
 // Get endpoint Docker info
 func (n *portainerClientImp) GetEndpointDockerInfo(endpointId string) (info map[string]interface{}, err error) {
-	util.PrintVerbose("Getting endpoint Docker info...")
-
 	err = n.doJSON(fmt.Sprintf("endpoints/%v/docker/info", endpointId), http.MethodGet, nil, &info)
 	return
 }

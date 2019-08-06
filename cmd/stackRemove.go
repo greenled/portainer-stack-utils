@@ -34,6 +34,7 @@ var stackRemoveCmd = &cobra.Command{
 			client, err := common.GetClient()
 			common.CheckError(err)
 
+			util.PrintVerbose("Deleting stack...")
 			err = client.DeleteStack(stackId)
 			common.CheckError(err)
 		case *common.StackNotFoundError:

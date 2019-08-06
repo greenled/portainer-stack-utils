@@ -38,6 +38,7 @@ var endpointListCmd = &cobra.Command{
 		client, err := common.GetClient()
 		common.CheckError(err)
 
+		util.PrintVerbose("Getting endpoints...")
 		endpoints, err := client.GetEndpoints()
 		common.CheckError(err)
 
