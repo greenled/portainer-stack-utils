@@ -100,7 +100,6 @@ func (n *portainerClientImp) do(uri, method string, request io.Reader, requestTy
 			if err != nil {
 				return
 			}
-			util.PrintDebug(fmt.Sprintf("Auth token: %s", n.token))
 		}
 		req.Header.Set("Authorization", "Bearer "+n.token)
 	}
