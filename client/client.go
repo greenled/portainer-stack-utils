@@ -38,15 +38,19 @@ type PortainerClient interface {
 	GetStackFileContent(stackId uint32) (content string, err error)
 	GetEndpointDockerInfo(endpointId string) (info map[string]interface{}, err error)
 	GetStatus() (Status, error)
+	BeforeRequest(hook func(req *http.Request) (err error))
+	AfterResponse(hook func(resp *http.Response) (err error))
 }
 
 type portainerClientImp struct {
-	httpClient    *http.Client
-	url           *url.URL
-	user          string
-	password      string
-	token         string
-	doNotUseToken bool
+	httpClient         *http.Client
+	url                *url.URL
+	user               string
+	password           string
+	token              string
+	doNotUseToken      bool
+	beforeRequestHooks []func(req *http.Request) (err error)
+	afterResponseHooks []func(resp *http.Response) (err error)
 }
 
 // Check if an http.Response object has errors
@@ -101,11 +105,27 @@ func (n *portainerClientImp) do(uri, method string, request io.Reader, requestTy
 		req.Header.Set("Authorization", "Bearer "+n.token)
 	}
 
+	// Run all "before request" hooks
+	for i := 0; i < len(n.beforeRequestHooks); i++ {
+		err = n.beforeRequestHooks[i](req)
+		if err != nil {
+			return
+		}
+	}
+
 	util.PrintDebugRequest("Request", req)
 
 	resp, err = n.httpClient.Do(req)
 	if err != nil {
 		return
+	}
+
+	// Run all "after response" hooks
+	for i := 0; i < len(n.afterResponseHooks); i++ {
+		err = n.afterResponseHooks[i](resp)
+		if err != nil {
+			return
+		}
 	}
 
 	err = checkResponseForErrors(resp)
@@ -144,6 +164,14 @@ func (n *portainerClientImp) doJSON(uri, method string, request interface{}, res
 	}
 
 	return nil
+}
+
+func (n *portainerClientImp) BeforeRequest(hook func(req *http.Request) (err error)) {
+	n.beforeRequestHooks = append(n.beforeRequestHooks, hook)
+}
+
+func (n *portainerClientImp) AfterResponse(hook func(resp *http.Response) (err error)) {
+	n.afterResponseHooks = append(n.afterResponseHooks, hook)
 }
 
 // Authenticate a user to get an auth token
