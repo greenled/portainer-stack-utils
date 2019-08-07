@@ -16,6 +16,9 @@ var stackRemoveCmd = &cobra.Command{
 	Args:    cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		stackName := args[0]
+		logrus.WithFields(logrus.Fields{
+			"stack": stackName,
+		}).Debug("Getting stack")
 		stack, err := common.GetStackByName(stackName, "", 0)
 
 		switch err.(type) {

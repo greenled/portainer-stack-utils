@@ -44,7 +44,9 @@ var stackDeployCmd = &cobra.Command{
 		}
 
 		logrus.WithFields(logrus.Fields{
-			"stack": stackName,
+			"stack":    stackName,
+			"endpoint": endpointId,
+			"swarm":    endpointSwarmClusterId,
 		}).Debug("Getting stack")
 		retrievedStack, stackRetrievalErr := common.GetStackByName(stackName, endpointSwarmClusterId, endpointId)
 		switch stackRetrievalErr.(type) {
