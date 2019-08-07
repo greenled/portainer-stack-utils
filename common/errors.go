@@ -7,6 +7,8 @@ import (
 // CheckError checks if an error occurred (it's not nil)
 func CheckError(err error) {
 	if err != nil {
-		logrus.Fatal(err.Error())
+		logrus.WithFields(logrus.Fields{
+			"message": err.Error(),
+		}).Fatal("Error")
 	}
 }
