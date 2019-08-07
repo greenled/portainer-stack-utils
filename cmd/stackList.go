@@ -5,8 +5,11 @@ import (
 	"os"
 	"text/template"
 
-	"github.com/greenled/portainer-stack-utils/common"
+	"github.com/greenled/portainer-stack-utils/client"
+
 	"github.com/sirupsen/logrus"
+
+	"github.com/greenled/portainer-stack-utils/common"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -18,17 +21,40 @@ var stackListCmd = &cobra.Command{
 	Aliases: []string{"ls"},
 	Example: "psu stack list --endpoint 1",
 	Run: func(cmd *cobra.Command, args []string) {
-		client, err := common.GetClient()
+		portainerClient, err := common.GetClient()
 		common.CheckError(err)
 
-		swarmId := viper.GetString("stack.list.swarm")
 		endpointId := viper.GetUint32("stack.list.endpoint")
-		logrus.WithFields(logrus.Fields{
-			"swarm":    swarmId,
-			"endpoint": endpointId,
-		}).Debug("Getting stacks")
-		stacks, err := client.GetStacks(swarmId, endpointId)
-		common.CheckError(err)
+		var endpointSwarmClusterId string
+		var stacks []client.Stack
+		if endpointId != 0 {
+			var selectionErr error
+			endpointSwarmClusterId, selectionErr = common.GetEndpointSwarmClusterId(endpointId)
+			switch selectionErr.(type) {
+			case nil:
+				// It's a swarm cluster
+				logrus.WithFields(logrus.Fields{
+					"endpoint": endpointId,
+					"swarm":    endpointSwarmClusterId,
+				}).Debug("Getting stacks")
+				stacks, err = portainerClient.GetStacks(endpointSwarmClusterId, endpointId)
+				common.CheckError(err)
+			case *common.StackClusterNotFoundError:
+				// It's not a swarm cluster
+				logrus.WithFields(logrus.Fields{
+					"endpoint": endpointId,
+				}).Debug("Getting stacks")
+				stacks, err = portainerClient.GetStacks("", endpointId)
+				common.CheckError(err)
+			default:
+				// Something else happened
+				common.CheckError(selectionErr)
+			}
+		} else {
+			logrus.Debug("Getting stacks")
+			stacks, err = portainerClient.GetStacks("", 0)
+			common.CheckError(err)
+		}
 
 		if viper.GetBool("stack.list.quiet") {
 			// Print only stack names
@@ -79,11 +105,9 @@ var stackListCmd = &cobra.Command{
 func init() {
 	stackCmd.AddCommand(stackListCmd)
 
-	stackListCmd.Flags().String("swarm", "", "Filter by swarm ID.")
-	stackListCmd.Flags().String("endpoint", "", "Filter by endpoint ID.")
+	stackListCmd.Flags().Uint32("endpoint", 0, "Filter by endpoint ID.")
 	stackListCmd.Flags().BoolP("quiet", "q", false, "Only display stack names.")
 	stackListCmd.Flags().String("format", "", "Format output using a Go template.")
-	viper.BindPFlag("stack.list.swarm", stackListCmd.Flags().Lookup("swarm"))
 	viper.BindPFlag("stack.list.endpoint", stackListCmd.Flags().Lookup("endpoint"))
 	viper.BindPFlag("stack.list.quiet", stackListCmd.Flags().Lookup("quiet"))
 	viper.BindPFlag("stack.list.format", stackListCmd.Flags().Lookup("format"))

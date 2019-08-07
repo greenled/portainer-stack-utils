@@ -36,13 +36,13 @@ type PortainerClient interface {
 	GetStacks(swarmId string, endpointId uint32) ([]Stack, error)
 
 	// Create swarm stack
-	CreateSwarmStack(stackName string, environmentVariables []StackEnv, stackFileContent string, swarmClusterId string, endpointId string) error
+	CreateSwarmStack(stackName string, environmentVariables []StackEnv, stackFileContent string, swarmClusterId string, endpointId uint32) error
 
 	// Create compose stack
-	CreateComposeStack(stackName string, environmentVariables []StackEnv, stackFileContent string, endpointId string) error
+	CreateComposeStack(stackName string, environmentVariables []StackEnv, stackFileContent string, endpointId uint32) error
 
 	// Update stack
-	UpdateStack(stack Stack, environmentVariables []StackEnv, stackFileContent string, prune bool, endpointId string) error
+	UpdateStack(stack Stack, environmentVariables []StackEnv, stackFileContent string, prune bool, endpointId uint32) error
 
 	// Delete stack
 	DeleteStack(stackId uint32) error
@@ -51,7 +51,7 @@ type PortainerClient interface {
 	GetStackFileContent(stackId uint32) (content string, err error)
 
 	// Get endpoint Docker info
-	GetEndpointDockerInfo(endpointId string) (info map[string]interface{}, err error)
+	GetEndpointDockerInfo(endpointId uint32) (info map[string]interface{}, err error)
 
 	// Get Portainer status info
 	GetStatus() (Status, error)
@@ -231,7 +231,7 @@ func (n *portainerClientImp) GetStacks(swarmId string, endpointId uint32) (stack
 	return
 }
 
-func (n *portainerClientImp) CreateSwarmStack(stackName string, environmentVariables []StackEnv, stackFileContent string, swarmClusterId string, endpointId string) (err error) {
+func (n *portainerClientImp) CreateSwarmStack(stackName string, environmentVariables []StackEnv, stackFileContent string, swarmClusterId string, endpointId uint32) (err error) {
 	reqBody := StackCreateRequest{
 		Name:             stackName,
 		Env:              environmentVariables,
@@ -239,29 +239,29 @@ func (n *portainerClientImp) CreateSwarmStack(stackName string, environmentVaria
 		StackFileContent: stackFileContent,
 	}
 
-	err = n.doJSON(fmt.Sprintf("stacks?type=%v&method=%s&endpointId=%s", 1, "string", endpointId), http.MethodPost, &reqBody, nil)
+	err = n.doJSON(fmt.Sprintf("stacks?type=%v&method=%s&endpointId=%v", 1, "string", endpointId), http.MethodPost, &reqBody, nil)
 	return
 }
 
-func (n *portainerClientImp) CreateComposeStack(stackName string, environmentVariables []StackEnv, stackFileContent string, endpointId string) (err error) {
+func (n *portainerClientImp) CreateComposeStack(stackName string, environmentVariables []StackEnv, stackFileContent string, endpointId uint32) (err error) {
 	reqBody := StackCreateRequest{
 		Name:             stackName,
 		Env:              environmentVariables,
 		StackFileContent: stackFileContent,
 	}
 
-	err = n.doJSON(fmt.Sprintf("stacks?type=%v&method=%s&endpointId=%s", 2, "string", endpointId), http.MethodPost, &reqBody, nil)
+	err = n.doJSON(fmt.Sprintf("stacks?type=%v&method=%s&endpointId=%v", 2, "string", endpointId), http.MethodPost, &reqBody, nil)
 	return
 }
 
-func (n *portainerClientImp) UpdateStack(stack Stack, environmentVariables []StackEnv, stackFileContent string, prune bool, endpointId string) (err error) {
+func (n *portainerClientImp) UpdateStack(stack Stack, environmentVariables []StackEnv, stackFileContent string, prune bool, endpointId uint32) (err error) {
 	reqBody := StackUpdateRequest{
 		Env:              environmentVariables,
 		StackFileContent: stackFileContent,
 		Prune:            prune,
 	}
 
-	err = n.doJSON(fmt.Sprintf("stacks/%v?endpointId=%s", stack.Id, endpointId), http.MethodPut, &reqBody, nil)
+	err = n.doJSON(fmt.Sprintf("stacks/%v?endpointId=%v", stack.Id, endpointId), http.MethodPut, &reqBody, nil)
 	return
 }
 
@@ -283,7 +283,7 @@ func (n *portainerClientImp) GetStackFileContent(stackId uint32) (content string
 	return
 }
 
-func (n *portainerClientImp) GetEndpointDockerInfo(endpointId string) (info map[string]interface{}, err error) {
+func (n *portainerClientImp) GetEndpointDockerInfo(endpointId uint32) (info map[string]interface{}, err error) {
 	err = n.doJSON(fmt.Sprintf("endpoints/%v/docker/info", endpointId), http.MethodGet, nil, &info)
 	return
 }

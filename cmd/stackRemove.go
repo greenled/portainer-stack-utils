@@ -16,7 +16,7 @@ var stackRemoveCmd = &cobra.Command{
 	Args:    cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		stackName := args[0]
-		stack, err := common.GetStackByName(stackName)
+		stack, err := common.GetStackByName(stackName, "", 0)
 
 		switch err.(type) {
 		case nil:

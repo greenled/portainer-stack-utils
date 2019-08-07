@@ -31,10 +31,22 @@ var stackDeployCmd = &cobra.Command{
 		common.CheckError(clientRetrievalErr)
 
 		stackName := args[0]
+		endpointId := viper.GetUint32("stack.deploy.endpoint")
+		endpointSwarmClusterId, selectionErr := common.GetEndpointSwarmClusterId(endpointId)
+		switch selectionErr.(type) {
+		case nil:
+			// It's a swarm cluster
+		case *common.StackClusterNotFoundError:
+			// It's not a swarm cluster
+		default:
+			// Something else happened
+			common.CheckError(selectionErr)
+		}
+
 		logrus.WithFields(logrus.Fields{
 			"stack": stackName,
 		}).Debug("Getting stack")
-		retrievedStack, stackRetrievalErr := common.GetStackByName(stackName)
+		retrievedStack, stackRetrievalErr := common.GetStackByName(stackName, endpointSwarmClusterId, endpointId)
 		switch stackRetrievalErr.(type) {
 		case nil:
 			// We are updating an existing stack
@@ -80,7 +92,7 @@ var stackDeployCmd = &cobra.Command{
 			logrus.WithFields(logrus.Fields{
 				"stack": retrievedStack.Name,
 			}).Info("Updating stack")
-			err := portainerClient.UpdateStack(retrievedStack, newEnvironmentVariables, stackFileContent, viper.GetBool("stack.deploy.prune"), viper.GetString("stack.deploy.endpoint"))
+			err := portainerClient.UpdateStack(retrievedStack, newEnvironmentVariables, stackFileContent, viper.GetBool("stack.deploy.prune"), endpointId)
 			common.CheckError(err)
 		case *common.StackNotFoundError:
 			// We are deploying a new stack
@@ -96,19 +108,16 @@ var stackDeployCmd = &cobra.Command{
 			stackFileContent, loadingErr := loadStackFile(viper.GetString("stack.deploy.stack-file"))
 			common.CheckError(loadingErr)
 
-			swarmClusterId, selectionErr := getSwarmClusterId()
-			endpointId := viper.GetString("stack.deploy.endpoint")
-			switch selectionErr.(type) {
-			case nil:
+			if endpointSwarmClusterId != "" {
 				// It's a swarm cluster
 				logrus.WithFields(logrus.Fields{
 					"stack":    stackName,
 					"endpoint": endpointId,
-					"cluster":  swarmClusterId,
+					"cluster":  endpointSwarmClusterId,
 				}).Info("Creating stack")
-				deploymentErr := portainerClient.CreateSwarmStack(stackName, loadedEnvironmentVariables, stackFileContent, swarmClusterId, endpointId)
+				deploymentErr := portainerClient.CreateSwarmStack(stackName, loadedEnvironmentVariables, stackFileContent, endpointSwarmClusterId, endpointId)
 				common.CheckError(deploymentErr)
-			case *valueNotFoundError:
+			} else {
 				// It's not a swarm cluster
 				logrus.WithFields(logrus.Fields{
 					"stack":    stackName,
@@ -116,9 +125,6 @@ var stackDeployCmd = &cobra.Command{
 				}).Info("Creating stack")
 				deploymentErr := portainerClient.CreateComposeStack(stackName, loadedEnvironmentVariables, stackFileContent, endpointId)
 				common.CheckError(deploymentErr)
-			default:
-				// Something else happened
-				common.CheckError(stackRetrievalErr)
 			}
 		default:
 			// Something else happened
@@ -131,7 +137,7 @@ func init() {
 	stackCmd.AddCommand(stackDeployCmd)
 
 	stackDeployCmd.Flags().StringP("stack-file", "c", "", "Path to a file with the content of the stack.")
-	stackDeployCmd.Flags().String("endpoint", "1", "Endpoint ID.")
+	stackDeployCmd.Flags().Uint32("endpoint", 1, "Endpoint ID.")
 	stackDeployCmd.Flags().StringP("env-file", "e", "", "Path to a file with environment variables used during stack deployment.")
 	stackDeployCmd.Flags().Bool("replace-env", false, "Replace environment variables instead of merging them.")
 	stackDeployCmd.Flags().BoolP("prune", "r", false, "Prune services that are no longer referenced (only available for Swarm stacks).")
@@ -140,43 +146,6 @@ func init() {
 	viper.BindPFlag("stack.deploy.env-file", stackDeployCmd.Flags().Lookup("env-file"))
 	viper.BindPFlag("stack.deploy.replace-env", stackDeployCmd.Flags().Lookup("replace-env"))
 	viper.BindPFlag("stack.deploy.prune", stackDeployCmd.Flags().Lookup("prune"))
-}
-
-func getSwarmClusterId() (id string, err error) {
-	// Get docker information for endpoint
-	client, err := common.GetClient()
-	if err != nil {
-		return
-	}
-
-	endpointId := viper.GetString("stack.deploy.endpoint")
-	logrus.WithFields(logrus.Fields{
-		"endpoint": endpointId,
-	}).Debug("Getting endpoint's Docker info")
-	result, err := client.GetEndpointDockerInfo(endpointId)
-	if err != nil {
-		return
-	}
-
-	// Get swarm (if any) information for endpoint
-	swarmClusterId, err := selectValue(result, []string{"Swarm", "Cluster", "ID"})
-	if err != nil {
-		return
-	}
-	id = swarmClusterId.(string)
-
-	return
-}
-
-func selectValue(jsonMap map[string]interface{}, jsonPath []string) (interface{}, error) {
-	value := jsonMap[jsonPath[0]]
-	if value == nil {
-		return nil, &valueNotFoundError{}
-	} else if len(jsonPath) > 1 {
-		return selectValue(value.(map[string]interface{}), jsonPath[1:])
-	} else {
-		return value, nil
-	}
 }
 
 func loadStackFile(path string) (string, error) {
@@ -203,10 +172,4 @@ func loadEnvironmentVariablesFile(path string) ([]client.StackEnv, error) {
 	}
 
 	return variables, nil
-}
-
-type valueNotFoundError struct{}
-
-func (e *valueNotFoundError) Error() string {
-	return "Value not found"
 }
