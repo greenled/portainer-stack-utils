@@ -24,6 +24,14 @@ func writeResponseBodyAsJson(w http.ResponseWriter, body map[string]interface{})
 	return
 }
 
+func TestNewClient(t *testing.T) {
+	validClient, err := NewClient(http.DefaultClient, Config{
+		Url: "http://validurl.com",
+	})
+	assert.NotNil(t, validClient)
+	assert.Nil(t, err)
+}
+
 func TestClientAuthenticates(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 		var body map[string]interface{}
