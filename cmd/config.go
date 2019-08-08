@@ -29,7 +29,7 @@ var configCmd = &cobra.Command{
 		if !keyExists {
 			logrus.WithFields(logrus.Fields{
 				"key": args[0],
-			}).Fatal("Unkonwn configuration key")
+			}).Fatal("Unknown configuration key")
 		}
 
 		if len(args) == 1 {
