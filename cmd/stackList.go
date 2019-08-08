@@ -24,12 +24,12 @@ var stackListCmd = &cobra.Command{
 		portainerClient, err := common.GetClient()
 		common.CheckError(err)
 
-		endpointId := viper.GetUint32("stack.list.endpoint")
+		endpointId := viper.GetInt32("stack.list.endpoint")
 		var endpointSwarmClusterId string
 		var stacks []client.Stack
 		if endpointId != 0 {
 			var selectionErr error
-			endpointSwarmClusterId, selectionErr = common.GetEndpointSwarmClusterId(endpointId)
+			endpointSwarmClusterId, selectionErr = common.GetEndpointSwarmClusterId(uint32(endpointId))
 			switch selectionErr.(type) {
 			case nil:
 				// It's a swarm cluster
@@ -37,14 +37,14 @@ var stackListCmd = &cobra.Command{
 					"endpoint": endpointId,
 					"swarm":    endpointSwarmClusterId,
 				}).Debug("Getting stacks")
-				stacks, err = portainerClient.GetStacks(endpointSwarmClusterId, endpointId)
+				stacks, err = portainerClient.GetStacks(endpointSwarmClusterId, uint32(endpointId))
 				common.CheckError(err)
 			case *common.StackClusterNotFoundError:
 				// It's not a swarm cluster
 				logrus.WithFields(logrus.Fields{
 					"endpoint": endpointId,
 				}).Debug("Getting stacks")
-				stacks, err = portainerClient.GetStacks("", endpointId)
+				stacks, err = portainerClient.GetStacks("", uint32(endpointId))
 				common.CheckError(err)
 			default:
 				// Something else happened

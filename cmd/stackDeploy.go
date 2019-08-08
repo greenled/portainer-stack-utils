@@ -31,8 +31,8 @@ var stackDeployCmd = &cobra.Command{
 		common.CheckError(clientRetrievalErr)
 
 		stackName := args[0]
-		endpointId := viper.GetUint32("stack.deploy.endpoint")
-		endpointSwarmClusterId, selectionErr := common.GetEndpointSwarmClusterId(endpointId)
+		endpointId := viper.GetInt32("stack.deploy.endpoint")
+		endpointSwarmClusterId, selectionErr := common.GetEndpointSwarmClusterId(uint32(endpointId))
 		switch selectionErr.(type) {
 		case nil:
 			// It's a swarm cluster
@@ -48,7 +48,7 @@ var stackDeployCmd = &cobra.Command{
 			"endpoint": endpointId,
 			"swarm":    endpointSwarmClusterId,
 		}).Debug("Getting stack")
-		retrievedStack, stackRetrievalErr := common.GetStackByName(stackName, endpointSwarmClusterId, endpointId)
+		retrievedStack, stackRetrievalErr := common.GetStackByName(stackName, endpointSwarmClusterId, uint32(endpointId))
 		switch stackRetrievalErr.(type) {
 		case nil:
 			// We are updating an existing stack
@@ -94,7 +94,7 @@ var stackDeployCmd = &cobra.Command{
 			logrus.WithFields(logrus.Fields{
 				"stack": retrievedStack.Name,
 			}).Info("Updating stack")
-			err := portainerClient.UpdateStack(retrievedStack, newEnvironmentVariables, stackFileContent, viper.GetBool("stack.deploy.prune"), endpointId)
+			err := portainerClient.UpdateStack(retrievedStack, newEnvironmentVariables, stackFileContent, viper.GetBool("stack.deploy.prune"), uint32(endpointId))
 			common.CheckError(err)
 		case *common.StackNotFoundError:
 			// We are deploying a new stack
@@ -117,7 +117,7 @@ var stackDeployCmd = &cobra.Command{
 					"endpoint": endpointId,
 					"cluster":  endpointSwarmClusterId,
 				}).Info("Creating stack")
-				deploymentErr := portainerClient.CreateSwarmStack(stackName, loadedEnvironmentVariables, stackFileContent, endpointSwarmClusterId, endpointId)
+				deploymentErr := portainerClient.CreateSwarmStack(stackName, loadedEnvironmentVariables, stackFileContent, endpointSwarmClusterId, uint32(endpointId))
 				common.CheckError(deploymentErr)
 			} else {
 				// It's not a swarm cluster
@@ -125,7 +125,7 @@ var stackDeployCmd = &cobra.Command{
 					"stack":    stackName,
 					"endpoint": endpointId,
 				}).Info("Creating stack")
-				deploymentErr := portainerClient.CreateComposeStack(stackName, loadedEnvironmentVariables, stackFileContent, endpointId)
+				deploymentErr := portainerClient.CreateComposeStack(stackName, loadedEnvironmentVariables, stackFileContent, uint32(endpointId))
 				common.CheckError(deploymentErr)
 			}
 		default:

@@ -17,7 +17,7 @@ var stackRemoveCmd = &cobra.Command{
 	Args:    cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		stackName := args[0]
-		endpointId := viper.GetUint32("stack.remove.endpoint")
+		endpointId := viper.GetInt32("stack.remove.endpoint")
 		var endpointSwarmClusterId string
 		var stack client.Stack
 		if endpointId == 0 {
@@ -26,7 +26,7 @@ var stackRemoveCmd = &cobra.Command{
 			}).Fatal("Provide required flag")
 		} else {
 			var selectionErr, stackRetrievalErr error
-			endpointSwarmClusterId, selectionErr = common.GetEndpointSwarmClusterId(endpointId)
+			endpointSwarmClusterId, selectionErr = common.GetEndpointSwarmClusterId(uint32(endpointId))
 			switch selectionErr.(type) {
 			case nil:
 				// It's a swarm cluster
@@ -35,7 +35,7 @@ var stackRemoveCmd = &cobra.Command{
 					"endpoint": endpointId,
 					"swarm":    endpointSwarmClusterId,
 				}).Debug("Getting stack")
-				stack, stackRetrievalErr = common.GetStackByName(stackName, endpointSwarmClusterId, endpointId)
+				stack, stackRetrievalErr = common.GetStackByName(stackName, endpointSwarmClusterId, uint32(endpointId))
 				common.CheckError(stackRetrievalErr)
 			case *common.StackClusterNotFoundError:
 				// It's not a swarm cluster
@@ -43,7 +43,7 @@ var stackRemoveCmd = &cobra.Command{
 					"stack":    stackName,
 					"endpoint": endpointId,
 				}).Debug("Getting stack")
-				stack, stackRetrievalErr = common.GetStackByName(stackName, "", endpointId)
+				stack, stackRetrievalErr = common.GetStackByName(stackName, "", uint32(endpointId))
 				common.CheckError(stackRetrievalErr)
 			default:
 				// Something else happened
