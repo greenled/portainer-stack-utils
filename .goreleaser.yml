@@ -35,6 +35,11 @@ archives:
       darwin: macOS
       linux: Linux
       windows: Windows
+release:
+  github:
+    owner: greenled
+    name: portainer-stack-utils
+  prerelease: auto
 dockers:
   - image_templates:
       - "greenled/portainer-stack-utils:{{ .Major }}"
