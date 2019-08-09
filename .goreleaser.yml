@@ -1,4 +1,4 @@
-project_name: psu
+project_name: portainer-stack-utils
 env:
   - GO111MODULE=on
 before:
