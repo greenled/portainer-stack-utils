@@ -1,6 +1,8 @@
 package cmd
 
 import (
+	"fmt"
+
 	"github.com/greenled/portainer-stack-utils/client"
 	"github.com/greenled/portainer-stack-utils/common"
 	"github.com/sirupsen/logrus"
@@ -82,8 +84,9 @@ var stackRemoveCmd = &cobra.Command{
 			}).Debug("Stack not found")
 			if viper.GetBool("stack.remove.strict") {
 				logrus.WithFields(logrus.Fields{
-					"stack":    stackName,
-					"endpoint": endpointId,
+					"stack":       stackName,
+					"endpoint":    endpointId,
+					"suggestions": fmt.Sprintf("Try with a different endpoint: psu stack rm %s --endpoint ENDPOINT_ID", stackName),
 				}).Fatal("Stack does not exist")
 			}
 		default:

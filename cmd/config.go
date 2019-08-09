@@ -28,7 +28,8 @@ var configCmd = &cobra.Command{
 		}
 		if !keyExists {
 			logrus.WithFields(logrus.Fields{
-				"key": args[0],
+				"key":         args[0],
+				"suggestions": "Try looking up the available configuration keys: psu config ls --keys",
 			}).Fatal("Unknown configuration key")
 		}
 
