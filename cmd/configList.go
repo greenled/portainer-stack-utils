@@ -19,6 +19,20 @@ var configListCmd = &cobra.Command{
 	Use:     "list",
 	Short:   "List configs",
 	Aliases: []string{"ls"},
+	Example: `  Print configs in a table format:
+  psu config ls
+
+  Print available config keys:
+  psu config ls --format "{{ .Key }}"
+
+  Print configs in a yaml|properties format:
+  psu config ls --format "{{ .Key }}:{{ if .CurrentValue }} {{ .CurrentValue }}{{ end }}"
+
+  Print available environment variables:
+  psu config ls --format "{{ .EnvironmentVariable }}"  
+
+  Print configs in a dotenv format:
+  psu config ls --format "{{ .EnvironmentVariable }}={{ if .CurrentValue }}{{ .CurrentValue }}{{ end }}"`,
 	Run: func(cmd *cobra.Command, args []string) {
 		// Get alphabetically ordered list of config keys
 		keys := viper.AllKeys()
@@ -77,6 +91,17 @@ func init() {
 
 	configListCmd.Flags().String("format", "", "Format output using a Go template.")
 	viper.BindPFlag("config.list.format", configListCmd.Flags().Lookup("format"))
+
+	configListCmd.SetUsageTemplate(configListCmd.UsageTemplate() + `
+Format:
+  The --format flag accepts a Go template, which is executed in an object with this structure:
+
+  {
+    Key string
+    EnvironmentVariable string
+    CurrentValue string
+  }
+`)
 }
 
 type config struct {
