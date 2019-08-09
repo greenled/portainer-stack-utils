@@ -77,20 +77,16 @@ var stackListCmd = &cobra.Command{
 				"STACK ID",
 				"NAME",
 				"TYPE",
-				"ENTRY POINT",
-				"PROJECT PATH",
 				"ENDPOINT ID",
 				"SWARM ID",
 			})
 			common.CheckError(err)
 			for _, s := range stacks {
 				_, err := fmt.Fprintln(writer, fmt.Sprintf(
-					"%v\t%s\t%v\t%s\t%s\t%v\t%s",
+					"%v\t%s\t%v\t%v\t%s",
 					s.Id,
 					s.Name,
 					s.GetTranslatedStackType(),
-					s.EntryPoint,
-					s.ProjectPath,
 					s.EndpointID,
 					s.SwarmID,
 				))
