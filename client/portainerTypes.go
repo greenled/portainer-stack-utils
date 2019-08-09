@@ -37,6 +37,12 @@ type EndpointSubset struct {
 	GroupID   uint32
 }
 
+type EndpointGroup struct {
+	Id          uint32
+	Name        string
+	Description string
+}
+
 type StackCreateRequest struct {
 	Name             string
 	SwarmID          string
