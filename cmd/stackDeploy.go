@@ -129,16 +129,27 @@ var stackDeployCmd = &cobra.Command{
 					"endpoint": endpointId,
 					"cluster":  endpointSwarmClusterId,
 				}).Info("Creating stack")
-				deploymentErr := portainerClient.CreateSwarmStack(stackName, loadedEnvironmentVariables, stackFileContent, endpointSwarmClusterId, uint32(endpointId))
+				stack, deploymentErr := portainerClient.CreateSwarmStack(stackName, loadedEnvironmentVariables, stackFileContent, endpointSwarmClusterId, uint32(endpointId))
 				common.CheckError(deploymentErr)
+				logrus.WithFields(logrus.Fields{
+					"stack":    stack.Name,
+					"endpoint": stack.EndpointID,
+					"cluster":  stack.SwarmID,
+					"id":       stack.Id,
+				}).Info("Stack created")
 			} else {
 				// It's not a swarm cluster
 				logrus.WithFields(logrus.Fields{
 					"stack":    stackName,
 					"endpoint": endpointId,
 				}).Info("Creating stack")
-				deploymentErr := portainerClient.CreateComposeStack(stackName, loadedEnvironmentVariables, stackFileContent, uint32(endpointId))
+				stack, deploymentErr := portainerClient.CreateComposeStack(stackName, loadedEnvironmentVariables, stackFileContent, uint32(endpointId))
 				common.CheckError(deploymentErr)
+				logrus.WithFields(logrus.Fields{
+					"stack":    stack.Name,
+					"endpoint": stack.EndpointID,
+					"id":       stack.Id,
+				}).Info("Stack created")
 			}
 		default:
 			// Something else happened

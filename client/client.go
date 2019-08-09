@@ -36,10 +36,10 @@ type PortainerClient interface {
 	GetStacks(swarmId string, endpointId uint32) ([]Stack, error)
 
 	// Create swarm stack
-	CreateSwarmStack(stackName string, environmentVariables []StackEnv, stackFileContent string, swarmClusterId string, endpointId uint32) error
+	CreateSwarmStack(stackName string, environmentVariables []StackEnv, stackFileContent string, swarmClusterId string, endpointId uint32) (stack Stack, err error)
 
 	// Create compose stack
-	CreateComposeStack(stackName string, environmentVariables []StackEnv, stackFileContent string, endpointId uint32) error
+	CreateComposeStack(stackName string, environmentVariables []StackEnv, stackFileContent string, endpointId uint32) (stack Stack, err error)
 
 	// Update stack
 	UpdateStack(stack Stack, environmentVariables []StackEnv, stackFileContent string, prune bool, endpointId uint32) error
@@ -231,7 +231,7 @@ func (n *portainerClientImp) GetStacks(swarmId string, endpointId uint32) (stack
 	return
 }
 
-func (n *portainerClientImp) CreateSwarmStack(stackName string, environmentVariables []StackEnv, stackFileContent string, swarmClusterId string, endpointId uint32) (err error) {
+func (n *portainerClientImp) CreateSwarmStack(stackName string, environmentVariables []StackEnv, stackFileContent string, swarmClusterId string, endpointId uint32) (stack Stack, err error) {
 	reqBody := StackCreateRequest{
 		Name:             stackName,
 		Env:              environmentVariables,
@@ -239,18 +239,18 @@ func (n *portainerClientImp) CreateSwarmStack(stackName string, environmentVaria
 		StackFileContent: stackFileContent,
 	}
 
-	err = n.doJSON(fmt.Sprintf("stacks?type=%v&method=%s&endpointId=%v", 1, "string", endpointId), http.MethodPost, &reqBody, nil)
+	err = n.doJSON(fmt.Sprintf("stacks?type=%v&method=%s&endpointId=%v", 1, "string", endpointId), http.MethodPost, &reqBody, &stack)
 	return
 }
 
-func (n *portainerClientImp) CreateComposeStack(stackName string, environmentVariables []StackEnv, stackFileContent string, endpointId uint32) (err error) {
+func (n *portainerClientImp) CreateComposeStack(stackName string, environmentVariables []StackEnv, stackFileContent string, endpointId uint32) (stack Stack, err error) {
 	reqBody := StackCreateRequest{
 		Name:             stackName,
 		Env:              environmentVariables,
 		StackFileContent: stackFileContent,
 	}
 
-	err = n.doJSON(fmt.Sprintf("stacks?type=%v&method=%s&endpointId=%v", 2, "string", endpointId), http.MethodPost, &reqBody, nil)
+	err = n.doJSON(fmt.Sprintf("stacks?type=%v&method=%s&endpointId=%v", 2, "string", endpointId), http.MethodPost, &reqBody, &stack)
 	return
 }
 
