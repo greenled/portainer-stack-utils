@@ -21,6 +21,7 @@ type Config struct {
 	User          string
 	Password      string
 	Token         string
+	UserAgent     string
 	DoNotUseToken bool
 }
 
@@ -71,6 +72,7 @@ type portainerClientImp struct {
 	user               string
 	password           string
 	token              string
+	userAgent          string
 	doNotUseToken      bool
 	beforeRequestHooks []func(req *http.Request) (err error)
 	afterResponseHooks []func(resp *http.Response) (err error)
@@ -115,6 +117,7 @@ func (n *portainerClientImp) do(uri, method string, request io.Reader, requestTy
 
 	if request != nil {
 		req.Header.Set("Content-Type", requestType)
+		req.Header.Set("User-Agent", n.userAgent)
 	}
 
 	if !n.doNotUseToken {
@@ -308,5 +311,6 @@ func NewClient(httpClient *http.Client, config Config) PortainerClient {
 		user:       config.User,
 		password:   config.Password,
 		token:      config.Token,
+		userAgent:  config.UserAgent,
 	}
 }

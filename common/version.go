@@ -33,3 +33,15 @@ func BuildVersionString() string {
 
 	return fmt.Sprintf("%s %s %s BuildDate: %s", programName, version, osArch, buildDate)
 }
+
+func BuildUseAgentString() string {
+	var theVersion = version
+	if theVersion == "" {
+		theVersion = "SNAPSHOT"
+	}
+	if commitHash != "" {
+		theVersion += "+" + strings.ToUpper(commitHash)
+	}
+
+	return fmt.Sprintf("%s %s (%s/%s)", programName, theVersion, runtime.GOOS, runtime.GOARCH)
+}

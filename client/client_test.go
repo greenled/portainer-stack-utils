@@ -44,6 +44,9 @@ func TestClientAuthenticates(t *testing.T) {
 		assert.NotNil(t, req.Header["Content-Type"])
 		assert.NotNil(t, req.Header["Content-Type"][0])
 		assert.Equal(t, req.Header["Content-Type"][0], "application/json")
+		assert.NotNil(t, req.Header["User-Agent"])
+		assert.NotNil(t, req.Header["User-Agent"][0])
+		assert.Equal(t, req.Header["User-Agent"][0], "GE007")
 		assert.Nil(t, err)
 		assert.NotNil(t, body["Username"])
 		assert.Equal(t, body["Username"], "admin")
@@ -59,9 +62,10 @@ func TestClientAuthenticates(t *testing.T) {
 	apiUrl, _ := url.Parse(ts.URL + "/api/")
 
 	customClient := NewClient(ts.Client(), Config{
-		Url:      apiUrl,
-		User:     "admin",
-		Password: "a",
+		Url:       apiUrl,
+		User:      "admin",
+		Password:  "a",
+		UserAgent: "GE007",
 	})
 	token, err := customClient.Authenticate()
 	assert.Nil(t, err)

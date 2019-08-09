@@ -92,6 +92,7 @@ func GetDefaultClientConfig() (config client.Config, err error) {
 		User:          viper.GetString("user"),
 		Password:      viper.GetString("password"),
 		Token:         viper.GetString("auth-token"),
+		UserAgent:     BuildUseAgentString(),
 		DoNotUseToken: false,
 	}
 
