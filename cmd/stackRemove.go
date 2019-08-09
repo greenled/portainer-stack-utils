@@ -26,7 +26,9 @@ var stackRemoveCmd = &cobra.Command{
 
 		// Guess EndpointID if not set
 		if endpointId == 0 {
-			logrus.Warning("Endpoint ID not set")
+			logrus.WithFields(logrus.Fields{
+				"implications": "Command will fail if there is not exactly one endpoint available",
+			}).Warning("Endpoint ID not set")
 			endpoint, err := common.GetDefaultEndpoint()
 			common.CheckError(err)
 			endpointId = int32(endpoint.Id)
