@@ -37,7 +37,7 @@ var endpointGroupListCmd = &cobra.Command{
 		} else {
 			// Print all endpoint group fields as a table
 			writer, err := common.NewTabWriter([]string{
-				"ENDPOINT GROUP ID",
+				"ID",
 				"NAME",
 				"DESCRIPTION",
 			})
