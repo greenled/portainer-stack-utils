@@ -8,7 +8,7 @@ builds:
   - main: main.go
     binary: psu
     ldflags:
-      - -X github.com/greenled/portainer-stack-utils/common.commitHash={{ .ShortCommit }} -X github.com/greenled/portainer-stack-utils/common.buildDate={{ .Date }}
+      - -X github.com/greenled/portainer-stack-utils/common.version={{ .Version }} -X github.com/greenled/portainer-stack-utils/common.commitHash={{ .ShortCommit }} -X github.com/greenled/portainer-stack-utils/common.buildDate={{ .Date }}
     env:
       - CGO_ENABLED=0
     goos:

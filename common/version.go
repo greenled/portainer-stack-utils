@@ -7,13 +7,8 @@ import (
 )
 
 var (
-	// This is the current version of the client
-	CurrentVersion = Version{
-		Major:  0,
-		Minor:  1,
-		Patch:  1,
-		Suffix: "",
-	}
+	// This is the current version of the client. It is set by goreleaser.
+	version string
 
 	// The program name
 	programName = "Portainer Stack Utils"
@@ -25,32 +20,7 @@ var (
 	buildDate string
 )
 
-type Version struct {
-	// Major version
-	Major uint32
-
-	// Minor version
-	Minor uint32
-
-	// Patch version
-	Patch uint32
-
-	// Suffix used in version string
-	// Will be blank for release versions
-	Suffix string
-}
-
-func (v Version) String() string {
-	if v.Suffix != "" {
-		return fmt.Sprintf("%d.%d.%d-%s", v.Major, v.Minor, v.Patch, v.Suffix)
-	} else {
-		return fmt.Sprintf("%d.%d.%d", v.Major, v.Minor, v.Patch)
-	}
-}
-
 func BuildVersionString() string {
-	version := "v" + CurrentVersion.String()
-
 	if commitHash != "" {
 		version += "-" + strings.ToUpper(commitHash)
 	}
