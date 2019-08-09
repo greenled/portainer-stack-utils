@@ -3,7 +3,6 @@ package common
 import (
 	"fmt"
 	"runtime"
-	"strings"
 )
 
 var (
@@ -28,7 +27,7 @@ func BuildVersionString() string {
 	}
 
 	if commitHash != "" {
-		version += "+" + strings.ToUpper(commitHash)
+		version += "+" + commitHash
 	}
 
 	return fmt.Sprintf("%s %s %s BuildDate: %s", programName, version, osArch, buildDate)
@@ -40,7 +39,7 @@ func BuildUseAgentString() string {
 		theVersion = "SNAPSHOT"
 	}
 	if commitHash != "" {
-		theVersion += "+" + strings.ToUpper(commitHash)
+		theVersion += "+" + commitHash
 	}
 
 	return fmt.Sprintf("%s %s (%s/%s)", programName, theVersion, runtime.GOOS, runtime.GOARCH)
