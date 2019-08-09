@@ -53,3 +53,5 @@ dockers:
     dockerfile: Dockerfile
 checksum:
   name_template: 'checksums.txt'
+snapshot:
+  name_template: SNAPSHOT
