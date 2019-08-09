@@ -58,7 +58,6 @@ var stackDeployCmd = &cobra.Command{
 		logrus.WithFields(logrus.Fields{
 			"stack":    stackName,
 			"endpoint": endpointId,
-			"swarm":    endpointSwarmClusterId,
 		}).Debug("Getting stack")
 		retrievedStack, stackRetrievalErr := common.GetStackByName(stackName, endpointSwarmClusterId, uint32(endpointId))
 		switch stackRetrievalErr.(type) {
@@ -127,14 +126,12 @@ var stackDeployCmd = &cobra.Command{
 				logrus.WithFields(logrus.Fields{
 					"stack":    stackName,
 					"endpoint": endpointId,
-					"swarm":    endpointSwarmClusterId,
 				}).Info("Creating stack")
 				stack, deploymentErr := portainerClient.CreateSwarmStack(stackName, loadedEnvironmentVariables, stackFileContent, endpointSwarmClusterId, uint32(endpointId))
 				common.CheckError(deploymentErr)
 				logrus.WithFields(logrus.Fields{
 					"stack":    stack.Name,
 					"endpoint": stack.EndpointID,
-					"swarm":    stack.SwarmID,
 					"id":       stack.Id,
 				}).Info("Stack created")
 			} else {

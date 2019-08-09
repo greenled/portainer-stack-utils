@@ -43,7 +43,6 @@ var stackRemoveCmd = &cobra.Command{
 			logrus.WithFields(logrus.Fields{
 				"stack":    stackName,
 				"endpoint": endpointId,
-				"swarm":    endpointSwarmClusterId,
 			}).Debug("Getting stack")
 			stack, stackRetrievalErr = common.GetStackByName(stackName, endpointSwarmClusterId, uint32(endpointId))
 		case *common.StackClusterNotFoundError:

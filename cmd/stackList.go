@@ -35,7 +35,6 @@ var stackListCmd = &cobra.Command{
 				// It's a swarm cluster
 				logrus.WithFields(logrus.Fields{
 					"endpoint": endpointId,
-					"swarm":    endpointSwarmClusterId,
 				}).Debug("Getting stacks")
 				stacks, err = portainerClient.GetStacks(endpointSwarmClusterId, uint32(endpointId))
 				common.CheckError(err)
@@ -78,17 +77,15 @@ var stackListCmd = &cobra.Command{
 				"NAME",
 				"TYPE",
 				"ENDPOINT ID",
-				"SWARM ID",
 			})
 			common.CheckError(err)
 			for _, s := range stacks {
 				_, err := fmt.Fprintln(writer, fmt.Sprintf(
-					"%v\t%s\t%v\t%v\t%s",
+					"%v\t%s\t%v\t%v",
 					s.Id,
 					s.Name,
 					s.GetTranslatedStackType(),
 					s.EndpointID,
-					s.SwarmID,
 				))
 				common.CheckError(err)
 			}
