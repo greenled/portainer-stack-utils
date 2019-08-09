@@ -21,16 +21,15 @@ var (
 )
 
 func BuildVersionString() string {
+	osArch := runtime.GOOS + "/" + runtime.GOARCH
+
+	if version == "" {
+		return fmt.Sprintf("%s SNAPSHOT %s", programName, osArch)
+	}
+
 	if commitHash != "" {
 		version += "+" + strings.ToUpper(commitHash)
 	}
 
-	osArch := runtime.GOOS + "/" + runtime.GOARCH
-
-	date := buildDate
-	if date == "" {
-		date = "unknown"
-	}
-
-	return fmt.Sprintf("%s %s %s BuildDate: %s", programName, version, osArch, date)
+	return fmt.Sprintf("%s %s %s BuildDate: %s", programName, version, osArch, buildDate)
 }
