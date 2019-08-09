@@ -64,7 +64,8 @@ var stackRemoveCmd = &cobra.Command{
 			stackId := stack.Id
 
 			logrus.WithFields(logrus.Fields{
-				"stack": stackName,
+				"stack":    stackName,
+				"endpoint": endpointId,
 			}).Info("Removing stack")
 			err := portainerClient.DeleteStack(stackId)
 			common.CheckError(err)
@@ -75,11 +76,13 @@ var stackRemoveCmd = &cobra.Command{
 		case *common.StackNotFoundError:
 			// The stack does not exist
 			logrus.WithFields(logrus.Fields{
-				"stack": stackName,
+				"stack":    stackName,
+				"endpoint": endpointId,
 			}).Debug("Stack not found")
 			if viper.GetBool("stack.remove.strict") {
 				logrus.WithFields(logrus.Fields{
-					"stack": stackName,
+					"stack":    stackName,
+					"endpoint": endpointId,
 				}).Fatal("Stack does not exist")
 			}
 		default:
