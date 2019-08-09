@@ -114,9 +114,7 @@ var stackDeployCmd = &cobra.Command{
 			}).Debug("Stack not found")
 
 			if viper.GetString("stack.deploy.stack-file") == "" {
-				logrus.WithFields(logrus.Fields{
-					"flag": "--stack-file",
-				}).Fatal("Provide required flag")
+				logrus.Fatal(`required flag(s) "stack-file" not set`)
 			}
 			stackFileContent, loadingErr := loadStackFile(viper.GetString("stack.deploy.stack-file"))
 			common.CheckError(loadingErr)
