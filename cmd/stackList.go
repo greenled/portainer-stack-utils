@@ -55,13 +55,7 @@ var stackListCmd = &cobra.Command{
 			common.CheckError(err)
 		}
 
-		if viper.GetBool("stack.list.quiet") {
-			// Print only stack names
-			for _, s := range stacks {
-				_, err := fmt.Println(s.Name)
-				common.CheckError(err)
-			}
-		} else if viper.GetString("stack.list.format") != "" {
+		if viper.GetString("stack.list.format") != "" {
 			// Print stack fields formatted
 			template, templateParsingErr := template.New("stackTpl").Parse(viper.GetString("stack.list.format"))
 			common.CheckError(templateParsingErr)
@@ -99,9 +93,7 @@ func init() {
 	stackCmd.AddCommand(stackListCmd)
 
 	stackListCmd.Flags().Uint32("endpoint", 0, "Filter by endpoint ID.")
-	stackListCmd.Flags().BoolP("quiet", "q", false, "Only display stack names.")
 	stackListCmd.Flags().String("format", "", "Format output using a Go template.")
 	viper.BindPFlag("stack.list.endpoint", stackListCmd.Flags().Lookup("endpoint"))
-	viper.BindPFlag("stack.list.quiet", stackListCmd.Flags().Lookup("quiet"))
 	viper.BindPFlag("stack.list.format", stackListCmd.Flags().Lookup("format"))
 }
