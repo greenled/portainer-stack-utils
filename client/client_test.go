@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -25,11 +26,12 @@ func writeResponseBodyAsJson(w http.ResponseWriter, body map[string]interface{})
 }
 
 func TestNewClient(t *testing.T) {
-	validClient, err := NewClient(http.DefaultClient, Config{
-		Url: "http://validurl.com",
+	apiUrl, _ := url.Parse("http://validurl.com/api")
+
+	validClient := NewClient(http.DefaultClient, Config{
+		Url: apiUrl,
 	})
 	assert.NotNil(t, validClient)
-	assert.Nil(t, err)
 }
 
 func TestClientAuthenticates(t *testing.T) {
@@ -54,12 +56,13 @@ func TestClientAuthenticates(t *testing.T) {
 	}))
 	defer ts.Close()
 
-	customClient, err := NewClient(ts.Client(), Config{
-		Url:      ts.URL,
+	apiUrl, _ := url.Parse(ts.URL + "/api/")
+
+	customClient := NewClient(ts.Client(), Config{
+		Url:      apiUrl,
 		User:     "admin",
 		Password: "a",
 	})
-	assert.Nil(t, err)
 	token, err := customClient.Authenticate()
 	assert.Nil(t, err)
 	assert.Equal(t, token, "somerandomtoken")

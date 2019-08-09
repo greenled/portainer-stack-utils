@@ -5,6 +5,8 @@ import (
 	"crypto/tls"
 	"io/ioutil"
 	"net/http"
+	"net/url"
+	"strings"
 
 	"github.com/greenled/portainer-stack-utils/client"
 	"github.com/sirupsen/logrus"
@@ -27,10 +29,12 @@ func GetClient() (c client.PortainerClient, err error) {
 
 // Get the default client
 func GetDefaultClient() (c client.PortainerClient, err error) {
-	c, err = client.NewClient(GetDefaultHttpClient(), GetDefaultClientConfig())
+	config, err := GetDefaultClientConfig()
 	if err != nil {
 		return
 	}
+
+	c = client.NewClient(GetDefaultHttpClient(), config)
 
 	c.BeforeRequest(func(req *http.Request) (err error) {
 		var bodyString string
@@ -77,14 +81,21 @@ func GetDefaultClient() (c client.PortainerClient, err error) {
 }
 
 // Get the default config for a client
-func GetDefaultClientConfig() client.Config {
-	return client.Config{
-		Url:           viper.GetString("url"),
+func GetDefaultClientConfig() (config client.Config, err error) {
+	apiUrl, err := url.Parse(strings.TrimRight(viper.GetString("url"), "/") + "/api/")
+	if err != nil {
+		return
+	}
+
+	config = client.Config{
+		Url:           apiUrl,
 		User:          viper.GetString("user"),
 		Password:      viper.GetString("password"),
 		Token:         viper.GetString("auth-token"),
 		DoNotUseToken: false,
 	}
+
+	return
 }
 
 // Get the default http client for a Portainer client

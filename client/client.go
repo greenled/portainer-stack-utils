@@ -9,7 +9,6 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
-	"strings"
 )
 
 type StackListFilter struct {
@@ -18,7 +17,7 @@ type StackListFilter struct {
 }
 
 type Config struct {
-	Url           string
+	Url           *url.URL
 	User          string
 	Password      string
 	Token         string
@@ -294,19 +293,12 @@ func (n *portainerClientImp) GetStatus() (status Status, err error) {
 }
 
 // Create a new client
-func NewClient(httpClient *http.Client, config Config) (c PortainerClient, err error) {
-	apiUrl, err := url.Parse(strings.TrimRight(config.Url, "/") + "/api/")
-	if err != nil {
-		return
-	}
-
-	c = &portainerClientImp{
+func NewClient(httpClient *http.Client, config Config) PortainerClient {
+	return &portainerClientImp{
 		httpClient: httpClient,
-		url:        apiUrl,
+		url:        config.Url,
 		user:       config.User,
 		password:   config.Password,
 		token:      config.Token,
 	}
-
-	return
 }
