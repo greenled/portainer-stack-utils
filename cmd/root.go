@@ -91,8 +91,9 @@ func initLogger() {
 	logLevel, err := logrus.ParseLevel(logLevelName)
 	if err != nil {
 		logrus.WithFields(logrus.Fields{
-			"level": logLevelName,
-		}).Error("Unknown log level. Default \"info\" level will be used instead.")
+			"level":        logLevelName,
+			"implications": `Default "info" level will be used instead`,
+		}).Warning("Unknown log level")
 		logrus.SetLevel(logrus.InfoLevel)
 	}
 	logrus.SetLevel(logLevel)
