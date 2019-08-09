@@ -60,13 +60,13 @@ var stackRemoveCmd = &cobra.Command{
 			// The stack exists
 			stackId := stack.Id
 
-			client, err := common.GetClient()
+			portainerClient, err := common.GetClient()
 			common.CheckError(err)
 
 			logrus.WithFields(logrus.Fields{
 				"stack": stackName,
 			}).Info("Removing stack")
-			err = client.DeleteStack(stackId)
+			err = portainerClient.DeleteStack(stackId)
 			common.CheckError(err)
 		case *common.StackNotFoundError:
 			// The stack does not exist
