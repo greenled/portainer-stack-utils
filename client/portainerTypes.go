@@ -5,14 +5,11 @@ import "fmt"
 type Stack struct {
 	// In the API documentation this field is a String,
 	// but it's returned as a number
-	Id          uint32
-	Name        string
-	Type        uint8 // 1 for a Swarm stack, 2 for a Compose stack
-	EndpointID  uint
-	EntryPoint  string
-	SwarmID     string
-	ProjectPath string
-	Env         []StackEnv
+	Id         uint32
+	Name       string
+	Type       uint8 // 1 for a Swarm stack, 2 for a Compose stack
+	EndpointID uint
+	Env        []StackEnv
 }
 
 func (s *Stack) GetTranslatedStackType() string {
