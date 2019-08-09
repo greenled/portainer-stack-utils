@@ -22,7 +22,7 @@ var (
 
 func BuildVersionString() string {
 	if commitHash != "" {
-		version += "-" + strings.ToUpper(commitHash)
+		version += "+" + strings.ToUpper(commitHash)
 	}
 
 	osArch := runtime.GOOS + "/" + runtime.GOARCH
