@@ -16,39 +16,48 @@ var stackRemoveCmd = &cobra.Command{
 	Example: "psu stack rm mystack",
 	Args:    cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
+		portainerClient, clientRetrievalErr := common.GetClient()
+		common.CheckError(clientRetrievalErr)
+
 		stackName := args[0]
 		endpointId := viper.GetInt32("stack.remove.endpoint")
 		var endpointSwarmClusterId string
 		var stack client.Stack
+
+		// Guess EndpointID if not set
 		if endpointId == 0 {
+			logrus.Warning("Endpoint ID not set")
+			endpoint, err := common.GetDefaultEndpoint()
+			common.CheckError(err)
+			endpointId = int32(endpoint.Id)
 			logrus.WithFields(logrus.Fields{
-				"flag": "--endpoint",
-			}).Fatal("Provide required flag")
-		} else {
-			var selectionErr, stackRetrievalErr error
-			endpointSwarmClusterId, selectionErr = common.GetEndpointSwarmClusterId(uint32(endpointId))
-			switch selectionErr.(type) {
-			case nil:
-				// It's a swarm cluster
-				logrus.WithFields(logrus.Fields{
-					"stack":    stackName,
-					"endpoint": endpointId,
-					"swarm":    endpointSwarmClusterId,
-				}).Debug("Getting stack")
-				stack, stackRetrievalErr = common.GetStackByName(stackName, endpointSwarmClusterId, uint32(endpointId))
-				common.CheckError(stackRetrievalErr)
-			case *common.StackClusterNotFoundError:
-				// It's not a swarm cluster
-				logrus.WithFields(logrus.Fields{
-					"stack":    stackName,
-					"endpoint": endpointId,
-				}).Debug("Getting stack")
-				stack, stackRetrievalErr = common.GetStackByName(stackName, "", uint32(endpointId))
-				common.CheckError(stackRetrievalErr)
-			default:
-				// Something else happened
-				common.CheckError(selectionErr)
-			}
+				"endpoint": endpointId,
+			}).Debug("Using the only available endpoint")
+		}
+
+		var selectionErr, stackRetrievalErr error
+		endpointSwarmClusterId, selectionErr = common.GetEndpointSwarmClusterId(uint32(endpointId))
+		switch selectionErr.(type) {
+		case nil:
+			// It's a swarm cluster
+			logrus.WithFields(logrus.Fields{
+				"stack":    stackName,
+				"endpoint": endpointId,
+				"swarm":    endpointSwarmClusterId,
+			}).Debug("Getting stack")
+			stack, stackRetrievalErr = common.GetStackByName(stackName, endpointSwarmClusterId, uint32(endpointId))
+			common.CheckError(stackRetrievalErr)
+		case *common.StackClusterNotFoundError:
+			// It's not a swarm cluster
+			logrus.WithFields(logrus.Fields{
+				"stack":    stackName,
+				"endpoint": endpointId,
+			}).Debug("Getting stack")
+			stack, stackRetrievalErr = common.GetStackByName(stackName, "", uint32(endpointId))
+			common.CheckError(stackRetrievalErr)
+		default:
+			// Something else happened
+			common.CheckError(selectionErr)
 		}
 		logrus.WithFields(logrus.Fields{
 			"stack": stackName,
@@ -59,9 +68,6 @@ var stackRemoveCmd = &cobra.Command{
 		case nil:
 			// The stack exists
 			stackId := stack.Id
-
-			portainerClient, err := common.GetClient()
-			common.CheckError(err)
 
 			logrus.WithFields(logrus.Fields{
 				"stack": stackName,

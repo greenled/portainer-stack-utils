@@ -1,12 +1,37 @@
 package common
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/sirupsen/logrus"
 
 	"github.com/greenled/portainer-stack-utils/client"
 )
+
+func GetDefaultEndpoint() (endpoint client.EndpointSubset, err error) {
+	portainerClient, err := GetClient()
+	if err != nil {
+		return
+	}
+
+	logrus.Debug("Getting endpoints")
+	endpoints, err := portainerClient.GetEndpoints()
+	if err != nil {
+		return
+	}
+
+	if len(endpoints) == 0 {
+		err = errors.New("No endpoints available")
+		return
+	} else if len(endpoints) > 1 {
+		err = errors.New("Several endpoints available")
+		return
+	}
+	endpoint = endpoints[0]
+
+	return
+}
 
 func GetStackByName(name string, swarmId string, endpointId uint32) (stack client.Stack, err error) {
 	portainerClient, err := GetClient()

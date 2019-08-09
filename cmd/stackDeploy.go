@@ -32,6 +32,18 @@ var stackDeployCmd = &cobra.Command{
 
 		stackName := args[0]
 		endpointId := viper.GetInt32("stack.deploy.endpoint")
+
+		// Guess EndpointID if not set
+		if endpointId == 0 {
+			logrus.Warning("Endpoint ID not set")
+			endpoint, err := common.GetDefaultEndpoint()
+			common.CheckError(err)
+			endpointId = int32(endpoint.Id)
+			logrus.WithFields(logrus.Fields{
+				"endpoint": endpointId,
+			}).Debug("Using the only available endpoint")
+		}
+
 		endpointSwarmClusterId, selectionErr := common.GetEndpointSwarmClusterId(uint32(endpointId))
 		switch selectionErr.(type) {
 		case nil:
@@ -139,7 +151,7 @@ func init() {
 	stackCmd.AddCommand(stackDeployCmd)
 
 	stackDeployCmd.Flags().StringP("stack-file", "c", "", "Path to a file with the content of the stack.")
-	stackDeployCmd.Flags().Uint32("endpoint", 1, "Endpoint ID.")
+	stackDeployCmd.Flags().Uint32("endpoint", 0, "Endpoint ID.")
 	stackDeployCmd.Flags().StringP("env-file", "e", "", "Path to a file with environment variables used during stack deployment.")
 	stackDeployCmd.Flags().Bool("replace-env", false, "Replace environment variables instead of merging them.")
 	stackDeployCmd.Flags().BoolP("prune", "r", false, "Prune services that are no longer referenced (only available for Swarm stacks).")
