@@ -31,6 +31,9 @@ type PortainerClient interface {
 	// Get endpoints
 	GetEndpoints() ([]EndpointSubset, error)
 
+	// Get endpoint groups
+	GetEndpointGroups() ([]EndpointGroup, error)
+
 	// Get stacks, optionally filtered by swarmId and endpointId
 	GetStacks(swarmId string, endpointId uint32) ([]Stack, error)
 
@@ -214,6 +217,11 @@ func (n *portainerClientImp) Authenticate() (token string, err error) {
 
 func (n *portainerClientImp) GetEndpoints() (endpoints []EndpointSubset, err error) {
 	err = n.doJSON("endpoints", http.MethodGet, nil, &endpoints)
+	return
+}
+
+func (n *portainerClientImp) GetEndpointGroups() (endpointGroups []EndpointGroup, err error) {
+	err = n.doJSON("endpoint_groups", http.MethodGet, nil, &endpointGroups)
 	return
 }
 
