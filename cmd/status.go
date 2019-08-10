@@ -5,6 +5,8 @@ import (
 	"os"
 	"text/template"
 
+	portainer "github.com/portainer/portainer/api"
+
 	"github.com/greenled/portainer-stack-utils/common"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -58,4 +60,6 @@ func init() {
 
 	statusCmd.Flags().String("format", "", "Format output using a Go template.")
 	viper.BindPFlag("status.format", statusCmd.Flags().Lookup("format"))
+
+	statusCmd.SetUsageTemplate(statusCmd.UsageTemplate() + common.GetFormatHelp(portainer.Status{}))
 }

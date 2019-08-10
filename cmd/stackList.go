@@ -98,4 +98,6 @@ func init() {
 	stackListCmd.Flags().String("format", "", "Format output using a Go template.")
 	viper.BindPFlag("stack.list.endpoint", stackListCmd.Flags().Lookup("endpoint"))
 	viper.BindPFlag("stack.list.format", stackListCmd.Flags().Lookup("format"))
+
+	stackListCmd.SetUsageTemplate(stackListCmd.UsageTemplate() + common.GetFormatHelp(portainer.Stack{}))
 }
