@@ -35,6 +35,11 @@ var endpointListCmd = &cobra.Command{
 	Use:     "list",
 	Short:   "List endpoints",
 	Aliases: []string{"ls"},
+	Example: `  Print endpoints in a table format:
+  psu endpoint ls
+
+  Print whether an endpoint is a Swarm cluster or not:
+  psu endpoint ls --format "{{ .Name }} ({{ .ID }}): {{ range .Snapshots }}{{ if .Swarm }}yes{{ else }}no{{ end }}{{ end }}"`,
 	Run: func(cmd *cobra.Command, args []string) {
 		client, err := common.GetClient()
 		common.CheckError(err)

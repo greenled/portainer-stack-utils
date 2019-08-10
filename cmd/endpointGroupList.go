@@ -19,6 +19,11 @@ var endpointGroupListCmd = &cobra.Command{
 	Use:     "list",
 	Short:   "List endpoint groups",
 	Aliases: []string{"ls"},
+	Example: `  Print endpoint groups in a table format:
+  psu endpoint group ls
+
+  Print endpoint groups name and description:
+  psu endpoint group ls --format "{{ .Name }}: {{ .Description }}"`,
 	Run: func(cmd *cobra.Command, args []string) {
 		client, err := common.GetClient()
 		common.CheckError(err)

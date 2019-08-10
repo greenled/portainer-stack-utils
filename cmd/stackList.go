@@ -21,7 +21,14 @@ var stackListCmd = &cobra.Command{
 	Use:     "list",
 	Short:   "List stacks",
 	Aliases: []string{"ls"},
-	Example: "psu stack list --endpoint 1",
+	Example: `  Print stacks in endpoint with ID=1 in a table format:
+  psu stack ls --endpoint 1
+
+  Print names of stacks in endpoint with ID=1:
+  psu stack ls --endpoint 1 --format "{{ .Name }}"
+
+  Print environment variables of stacks in endpoint with ID=1:
+  psu stack ls --format "{{ .Name }}: {{ range .Env }}{{ .Name }}=\"{{ .Value }}\" {{ end }}"`,
 	Run: func(cmd *cobra.Command, args []string) {
 		portainerClient, err := common.GetClient()
 		common.CheckError(err)

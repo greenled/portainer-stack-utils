@@ -16,6 +16,11 @@ import (
 var statusCmd = &cobra.Command{
 	Use:   "status",
 	Short: "Check Portainer status",
+	Example: `  Print status in a table format:
+  psu status
+
+  Print version of Portainer server:
+  psu status --format "{{ .Version }}"`,
 	Run: func(cmd *cobra.Command, args []string) {
 		client, err := common.GetClient()
 		common.CheckError(err)
