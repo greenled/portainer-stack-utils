@@ -3,6 +3,7 @@ package common
 import (
 	"errors"
 	"fmt"
+	"reflect"
 
 	portainer "github.com/portainer/portainer/api"
 	"github.com/sirupsen/logrus"
@@ -92,6 +93,34 @@ func selectValue(jsonMap map[string]interface{}, jsonPath []string) (interface{}
 	} else {
 		return value, nil
 	}
+}
+
+func GetFormatHelp(v interface{}) (r string) {
+	typeOfV := reflect.TypeOf(v)
+	r = fmt.Sprintf(`
+Format:
+  The --format flag accepts a Go template, which is passed a %s.%s object:
+
+%s
+`, typeOfV.PkgPath(), typeOfV.Name(), fmt.Sprintf("%s%s", "  ", repr(typeOfV, "  ", "  ")))
+	return
+}
+
+func repr(t reflect.Type, margin, beforeMargin string) (r string) {
+	switch t.Kind() {
+	case reflect.Struct:
+		r = fmt.Sprintln("{")
+		for i := 0; i < t.NumField(); i++ {
+			tField := t.Field(i)
+			r += fmt.Sprintln(fmt.Sprintf("%s%s%s %s", beforeMargin, margin, tField.Name, repr(tField.Type, margin, beforeMargin+margin)))
+		}
+		r += fmt.Sprintf("%s}", beforeMargin)
+	case reflect.Array, reflect.Slice:
+		r = fmt.Sprintf("[]%s", repr(t.Elem(), margin, beforeMargin))
+	default:
+		r = fmt.Sprintf("%s", t.Name())
+	}
+	return
 }
 
 // Custom customerrors

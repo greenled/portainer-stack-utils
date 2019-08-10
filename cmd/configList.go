@@ -92,16 +92,7 @@ func init() {
 	configListCmd.Flags().String("format", "", "Format output using a Go template.")
 	viper.BindPFlag("config.list.format", configListCmd.Flags().Lookup("format"))
 
-	configListCmd.SetUsageTemplate(configListCmd.UsageTemplate() + `
-Format:
-  The --format flag accepts a Go template, which is executed in an object with this structure:
-
-  {
-    Key string
-    EnvironmentVariable string
-    CurrentValue string
-  }
-`)
+	configListCmd.SetUsageTemplate(configListCmd.UsageTemplate() + common.GetFormatHelp(config{}))
 }
 
 type config struct {

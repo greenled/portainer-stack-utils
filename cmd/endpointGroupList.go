@@ -5,6 +5,8 @@ import (
 	"os"
 	"text/template"
 
+	portainer "github.com/portainer/portainer/api"
+
 	"github.com/greenled/portainer-stack-utils/common"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
@@ -62,4 +64,6 @@ func init() {
 
 	endpointGroupListCmd.Flags().String("format", "", "Format output using a Go template.")
 	viper.BindPFlag("endpoint.group.list.format", endpointGroupListCmd.Flags().Lookup("format"))
+
+	endpointGroupListCmd.SetUsageTemplate(endpointGroupListCmd.UsageTemplate() + common.GetFormatHelp(portainer.EndpointGroup{}))
 }
