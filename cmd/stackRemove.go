@@ -86,8 +86,8 @@ var stackRemoveCmd = &cobra.Command{
 				logrus.WithFields(logrus.Fields{
 					"stack":       stackName,
 					"endpoint":    endpointId,
-					"suggestions": fmt.Sprintf("Try with a different endpoint: psu stack rm %s --endpoint ENDPOINT_ID", stackName),
-				}).Fatal("Stack does not exist")
+					"suggestions": fmt.Sprintf("try with a different endpoint: psu stack rm %s --endpoint ENDPOINT_ID", stackName),
+				}).Fatal("stack does not exist")
 			}
 		default:
 			// Something else happened

@@ -9,6 +9,6 @@ func CheckError(err error) {
 	if err != nil {
 		logrus.WithFields(logrus.Fields{
 			"message": err.Error(),
-		}).Fatal("Error")
+		}).Fatal("error")
 	}
 }

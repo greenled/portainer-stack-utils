@@ -18,8 +18,8 @@ var configGetCmd = &cobra.Command{
 		if !keyExists {
 			logrus.WithFields(logrus.Fields{
 				"key":         args[0],
-				"suggestions": "Try looking up the available configuration keys: psu config ls",
-			}).Fatal("Unknown configuration key")
+				"suggestions": "try looking up the available configuration keys: psu config ls",
+			}).Fatal("unknown configuration key")
 		}
 
 		// Get config
