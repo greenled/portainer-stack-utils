@@ -42,9 +42,9 @@ release:
   prerelease: auto
 dockers:
   - image_templates:
-      - "greenled/portainer-stack-utils:{{ .Major }}"
-      - "greenled/portainer-stack-utils:{{ .Major }}.{{ .Minor }}"
-      - "greenled/portainer-stack-utils:{{ .Major }}.{{ .Minor }}.{{ .Patch }}"
+      - "{{ .Env.CI_REGISTRY_IMAGE }}:{{ .Major }}"
+      - "{{ .Env.CI_REGISTRY_IMAGE }}:{{ .Major }}.{{ .Minor }}"
+      - "{{ .Env.CI_REGISTRY_IMAGE }}:{{ .Major }}.{{ .Minor }}.{{ .Patch }}"
     goos: linux
     goarch: amd64
     binaries:
