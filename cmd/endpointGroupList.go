@@ -45,7 +45,7 @@ var endpointGroupListCmd = &cobra.Command{
 			for _, g := range endpointGroups {
 				_, err := fmt.Fprintln(writer, fmt.Sprintf(
 					"%v\t%s\t%s",
-					g.Id,
+					g.ID,
 					g.Name,
 					g.Description,
 				))

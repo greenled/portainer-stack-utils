@@ -3,7 +3,8 @@ package cmd
 import (
 	"io/ioutil"
 
-	"github.com/greenled/portainer-stack-utils/client"
+	portainer "github.com/portainer/portainer/api"
+
 	"github.com/sirupsen/logrus"
 
 	"github.com/greenled/portainer-stack-utils/common"
@@ -20,7 +21,7 @@ var stackDeployCmd = &cobra.Command{
 	Example: "psu stack deploy mystack --stack-file mystack.yml",
 	Args:    cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		var loadedEnvironmentVariables []client.StackEnv
+		var loadedEnvironmentVariables []portainer.Pair
 		if viper.GetString("stack.deploy.env-file") != "" {
 			var loadingErr error
 			loadedEnvironmentVariables, loadingErr = loadEnvironmentVariablesFile(viper.GetString("stack.deploy.env-file"))
@@ -31,7 +32,7 @@ var stackDeployCmd = &cobra.Command{
 		common.CheckError(clientRetrievalErr)
 
 		stackName := args[0]
-		endpointId := viper.GetInt32("stack.deploy.endpoint")
+		endpointId := portainer.EndpointID(viper.GetInt("stack.deploy.endpoint"))
 
 		// Guess EndpointID if not set
 		if endpointId == 0 {
@@ -40,13 +41,13 @@ var stackDeployCmd = &cobra.Command{
 			}).Warning("Endpoint ID not set")
 			endpoint, err := common.GetDefaultEndpoint()
 			common.CheckError(err)
-			endpointId = int32(endpoint.Id)
+			endpointId = endpoint.ID
 			logrus.WithFields(logrus.Fields{
 				"endpoint": endpointId,
 			}).Debug("Using the only available endpoint")
 		}
 
-		endpointSwarmClusterId, selectionErr := common.GetEndpointSwarmClusterId(uint32(endpointId))
+		endpointSwarmClusterId, selectionErr := common.GetEndpointSwarmClusterId(endpointId)
 		switch selectionErr.(type) {
 		case nil:
 			// It's a swarm cluster
@@ -61,7 +62,7 @@ var stackDeployCmd = &cobra.Command{
 			"stack":    stackName,
 			"endpoint": endpointId,
 		}).Debug("Getting stack")
-		retrievedStack, stackRetrievalErr := common.GetStackByName(stackName, endpointSwarmClusterId, uint32(endpointId))
+		retrievedStack, stackRetrievalErr := common.GetStackByName(stackName, endpointSwarmClusterId, endpointId)
 		switch stackRetrievalErr.(type) {
 		case nil:
 			// We are updating an existing stack
@@ -79,11 +80,11 @@ var stackDeployCmd = &cobra.Command{
 				logrus.WithFields(logrus.Fields{
 					"stack": retrievedStack.Name,
 				}).Debug("Getting stack file content")
-				stackFileContent, stackFileContentRetrievalErr = portainerClient.GetStackFileContent(retrievedStack.Id)
+				stackFileContent, stackFileContentRetrievalErr = portainerClient.GetStackFileContent(retrievedStack.ID)
 				common.CheckError(stackFileContentRetrievalErr)
 			}
 
-			var newEnvironmentVariables []client.StackEnv
+			var newEnvironmentVariables []portainer.Pair
 			if viper.GetBool("stack.deploy.replace-env") {
 				newEnvironmentVariables = loadedEnvironmentVariables
 			} else {
@@ -97,7 +98,7 @@ var stackDeployCmd = &cobra.Command{
 							continue LoadedVariablesLoop
 						}
 					}
-					newEnvironmentVariables = append(newEnvironmentVariables, client.StackEnv{
+					newEnvironmentVariables = append(newEnvironmentVariables, portainer.Pair{
 						Name:  loadedEnvironmentVariable.Name,
 						Value: loadedEnvironmentVariable.Value,
 					})
@@ -107,7 +108,7 @@ var stackDeployCmd = &cobra.Command{
 			logrus.WithFields(logrus.Fields{
 				"stack": retrievedStack.Name,
 			}).Info("Updating stack")
-			err := portainerClient.UpdateStack(retrievedStack, newEnvironmentVariables, stackFileContent, viper.GetBool("stack.deploy.prune"), uint32(endpointId))
+			err := portainerClient.UpdateStack(retrievedStack, newEnvironmentVariables, stackFileContent, viper.GetBool("stack.deploy.prune"), endpointId)
 			common.CheckError(err)
 		case *common.StackNotFoundError:
 			// We are deploying a new stack
@@ -127,12 +128,12 @@ var stackDeployCmd = &cobra.Command{
 					"stack":    stackName,
 					"endpoint": endpointId,
 				}).Info("Creating stack")
-				stack, deploymentErr := portainerClient.CreateSwarmStack(stackName, loadedEnvironmentVariables, stackFileContent, endpointSwarmClusterId, uint32(endpointId))
+				stack, deploymentErr := portainerClient.CreateSwarmStack(stackName, loadedEnvironmentVariables, stackFileContent, endpointSwarmClusterId, endpointId)
 				common.CheckError(deploymentErr)
 				logrus.WithFields(logrus.Fields{
 					"stack":    stack.Name,
 					"endpoint": stack.EndpointID,
-					"id":       stack.Id,
+					"id":       stack.ID,
 				}).Info("Stack created")
 			} else {
 				// It's not a swarm cluster
@@ -140,12 +141,12 @@ var stackDeployCmd = &cobra.Command{
 					"stack":    stackName,
 					"endpoint": endpointId,
 				}).Info("Creating stack")
-				stack, deploymentErr := portainerClient.CreateComposeStack(stackName, loadedEnvironmentVariables, stackFileContent, uint32(endpointId))
+				stack, deploymentErr := portainerClient.CreateComposeStack(stackName, loadedEnvironmentVariables, stackFileContent, endpointId)
 				common.CheckError(deploymentErr)
 				logrus.WithFields(logrus.Fields{
 					"stack":    stack.Name,
 					"endpoint": stack.EndpointID,
-					"id":       stack.Id,
+					"id":       stack.ID,
 				}).Info("Stack created")
 			}
 		default:
@@ -159,7 +160,7 @@ func init() {
 	stackCmd.AddCommand(stackDeployCmd)
 
 	stackDeployCmd.Flags().StringP("stack-file", "c", "", "Path to a file with the content of the stack.")
-	stackDeployCmd.Flags().Uint32("endpoint", 0, "Endpoint ID.")
+	stackDeployCmd.Flags().Int("endpoint", 0, "Endpoint ID.")
 	stackDeployCmd.Flags().StringP("env-file", "e", "", "Path to a file with environment variables used during stack deployment.")
 	stackDeployCmd.Flags().Bool("replace-env", false, "Replace environment variables instead of merging them.")
 	stackDeployCmd.Flags().BoolP("prune", "r", false, "Prune services that are no longer referenced (only available for Swarm stacks).")
@@ -179,15 +180,15 @@ func loadStackFile(path string) (string, error) {
 }
 
 // Load environment variables
-func loadEnvironmentVariablesFile(path string) ([]client.StackEnv, error) {
-	var variables []client.StackEnv
+func loadEnvironmentVariablesFile(path string) ([]portainer.Pair, error) {
+	var variables []portainer.Pair
 	variablesMap, readingErr := godotenv.Read(path)
 	if readingErr != nil {
-		return []client.StackEnv{}, readingErr
+		return []portainer.Pair{}, readingErr
 	}
 
 	for key, value := range variablesMap {
-		variables = append(variables, client.StackEnv{
+		variables = append(variables, portainer.Pair{
 			Name:  key,
 			Value: value,
 		})

@@ -1,18 +1,12 @@
 package client
 
-import "fmt"
+import (
+	"fmt"
 
-type Stack struct {
-	// In the API documentation this field is a String,
-	// but it's returned as a number
-	Id         uint32
-	Name       string
-	Type       uint8 // 1 for a Swarm stack, 2 for a Compose stack
-	EndpointID uint
-	Env        []StackEnv
-}
+	portainer "github.com/portainer/portainer/api"
+)
 
-func (s *Stack) GetTranslatedStackType() string {
+func GetTranslatedStackType(s portainer.Stack) string {
 	switch s.Type {
 	case 1:
 		return "swarm"
@@ -23,48 +17,21 @@ func (s *Stack) GetTranslatedStackType() string {
 	}
 }
 
-type StackEnv struct {
-	Name  string `json:"name"`
-	Value string `json:"value"`
-}
-
-type EndpointSubset struct {
-	Id        uint32
-	Name      string
-	Type      uint8
-	URL       string
-	PublicURL string
-	GroupID   uint32
-}
-
-type EndpointGroup struct {
-	Id          uint32
-	Name        string
-	Description string
-}
-
 type StackCreateRequest struct {
 	Name             string
 	SwarmID          string
 	StackFileContent string
-	Env              []StackEnv `json:",omitempty"`
+	Env              []portainer.Pair `json:",omitempty"`
 }
 
 type StackUpdateRequest struct {
 	StackFileContent string
-	Env              []StackEnv `json:",omitempty"`
+	Env              []portainer.Pair `json:",omitempty"`
 	Prune            bool
 }
 
 type StackFileInspectResponse struct {
 	StackFileContent string
-}
-
-type Status struct {
-	Authentication     bool
-	EndpointManagement bool
-	Analytics          bool
-	Version            string
 }
 
 type GenericError struct {

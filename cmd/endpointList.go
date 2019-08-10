@@ -70,7 +70,7 @@ var endpointListCmd = &cobra.Command{
 				}
 				_, err := fmt.Fprintln(writer, fmt.Sprintf(
 					"%v\t%s\t%v\t%s\t%s\t%v",
-					e.Id,
+					e.ID,
 					e.Name,
 					endpointType,
 					e.URL,

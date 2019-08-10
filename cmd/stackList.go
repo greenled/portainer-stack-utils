@@ -7,6 +7,8 @@ import (
 
 	"github.com/greenled/portainer-stack-utils/client"
 
+	portainer "github.com/portainer/portainer/api"
+
 	"github.com/sirupsen/logrus"
 
 	"github.com/greenled/portainer-stack-utils/common"
@@ -24,26 +26,26 @@ var stackListCmd = &cobra.Command{
 		portainerClient, err := common.GetClient()
 		common.CheckError(err)
 
-		endpointId := viper.GetInt32("stack.list.endpoint")
+		endpointId := portainer.EndpointID(viper.GetInt("stack.list.endpoint"))
 		var endpointSwarmClusterId string
-		var stacks []client.Stack
+		var stacks []portainer.Stack
 		if endpointId != 0 {
 			var selectionErr error
-			endpointSwarmClusterId, selectionErr = common.GetEndpointSwarmClusterId(uint32(endpointId))
+			endpointSwarmClusterId, selectionErr = common.GetEndpointSwarmClusterId(endpointId)
 			switch selectionErr.(type) {
 			case nil:
 				// It's a swarm cluster
 				logrus.WithFields(logrus.Fields{
 					"endpoint": endpointId,
 				}).Debug("Getting stacks")
-				stacks, err = portainerClient.GetStacks(endpointSwarmClusterId, uint32(endpointId))
+				stacks, err = portainerClient.GetStacks(endpointSwarmClusterId, endpointId)
 				common.CheckError(err)
 			case *common.StackClusterNotFoundError:
 				// It's not a swarm cluster
 				logrus.WithFields(logrus.Fields{
 					"endpoint": endpointId,
 				}).Debug("Getting stacks")
-				stacks, err = portainerClient.GetStacks("", uint32(endpointId))
+				stacks, err = portainerClient.GetStacks("", endpointId)
 				common.CheckError(err)
 			default:
 				// Something else happened
@@ -76,9 +78,9 @@ var stackListCmd = &cobra.Command{
 			for _, s := range stacks {
 				_, err := fmt.Fprintln(writer, fmt.Sprintf(
 					"%v\t%s\t%v\t%v",
-					s.Id,
+					s.ID,
 					s.Name,
-					s.GetTranslatedStackType(),
+					client.GetTranslatedStackType(s),
 					s.EndpointID,
 				))
 				common.CheckError(err)
@@ -92,7 +94,7 @@ var stackListCmd = &cobra.Command{
 func init() {
 	stackCmd.AddCommand(stackListCmd)
 
-	stackListCmd.Flags().Uint32("endpoint", 0, "Filter by endpoint ID.")
+	stackListCmd.Flags().Int("endpoint", 0, "Filter by endpoint ID.")
 	stackListCmd.Flags().String("format", "", "Format output using a Go template.")
 	viper.BindPFlag("stack.list.endpoint", stackListCmd.Flags().Lookup("endpoint"))
 	viper.BindPFlag("stack.list.format", stackListCmd.Flags().Lookup("format"))

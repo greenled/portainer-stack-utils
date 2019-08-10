@@ -3,8 +3,8 @@ package cmd
 import (
 	"fmt"
 
-	"github.com/greenled/portainer-stack-utils/client"
 	"github.com/greenled/portainer-stack-utils/common"
+	portainer "github.com/portainer/portainer/api"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -22,9 +22,9 @@ var stackRemoveCmd = &cobra.Command{
 		common.CheckError(clientRetrievalErr)
 
 		stackName := args[0]
-		endpointId := viper.GetInt32("stack.remove.endpoint")
+		endpointId := portainer.EndpointID(viper.GetInt("stack.remove.endpoint"))
 		var endpointSwarmClusterId string
-		var stack client.Stack
+		var stack portainer.Stack
 
 		// Guess EndpointID if not set
 		if endpointId == 0 {
@@ -33,14 +33,14 @@ var stackRemoveCmd = &cobra.Command{
 			}).Warning("Endpoint ID not set")
 			endpoint, err := common.GetDefaultEndpoint()
 			common.CheckError(err)
-			endpointId = int32(endpoint.Id)
+			endpointId = endpoint.ID
 			logrus.WithFields(logrus.Fields{
 				"endpoint": endpointId,
 			}).Debug("Using the only available endpoint")
 		}
 
 		var selectionErr, stackRetrievalErr error
-		endpointSwarmClusterId, selectionErr = common.GetEndpointSwarmClusterId(uint32(endpointId))
+		endpointSwarmClusterId, selectionErr = common.GetEndpointSwarmClusterId(endpointId)
 		switch selectionErr.(type) {
 		case nil:
 			// It's a swarm cluster
@@ -48,14 +48,14 @@ var stackRemoveCmd = &cobra.Command{
 				"stack":    stackName,
 				"endpoint": endpointId,
 			}).Debug("Getting stack")
-			stack, stackRetrievalErr = common.GetStackByName(stackName, endpointSwarmClusterId, uint32(endpointId))
+			stack, stackRetrievalErr = common.GetStackByName(stackName, endpointSwarmClusterId, endpointId)
 		case *common.StackClusterNotFoundError:
 			// It's not a swarm cluster
 			logrus.WithFields(logrus.Fields{
 				"stack":    stackName,
 				"endpoint": endpointId,
 			}).Debug("Getting stack")
-			stack, stackRetrievalErr = common.GetStackByName(stackName, "", uint32(endpointId))
+			stack, stackRetrievalErr = common.GetStackByName(stackName, "", endpointId)
 		default:
 			// Something else happened
 			common.CheckError(selectionErr)
@@ -64,7 +64,7 @@ var stackRemoveCmd = &cobra.Command{
 		switch stackRetrievalErr.(type) {
 		case nil:
 			// The stack exists
-			stackId := stack.Id
+			stackId := stack.ID
 
 			logrus.WithFields(logrus.Fields{
 				"stack":    stackName,
@@ -100,7 +100,7 @@ func init() {
 	stackCmd.AddCommand(stackRemoveCmd)
 
 	stackRemoveCmd.Flags().Bool("strict", false, "Fail if stack does not exist.")
-	stackRemoveCmd.Flags().Uint32("endpoint", 0, "Endpoint ID.")
+	stackRemoveCmd.Flags().Int("endpoint", 0, "Endpoint ID.")
 	viper.BindPFlag("stack.remove.strict", stackRemoveCmd.Flags().Lookup("strict"))
 	viper.BindPFlag("stack.remove.endpoint", stackRemoveCmd.Flags().Lookup("endpoint"))
 }

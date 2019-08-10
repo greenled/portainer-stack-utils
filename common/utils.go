@@ -4,12 +4,11 @@ import (
 	"errors"
 	"fmt"
 
+	portainer "github.com/portainer/portainer/api"
 	"github.com/sirupsen/logrus"
-
-	"github.com/greenled/portainer-stack-utils/client"
 )
 
-func GetDefaultEndpoint() (endpoint client.EndpointSubset, err error) {
+func GetDefaultEndpoint() (endpoint portainer.Endpoint, err error) {
 	portainerClient, err := GetClient()
 	if err != nil {
 		return
@@ -33,7 +32,7 @@ func GetDefaultEndpoint() (endpoint client.EndpointSubset, err error) {
 	return
 }
 
-func GetStackByName(name string, swarmId string, endpointId uint32) (stack client.Stack, err error) {
+func GetStackByName(name string, swarmId string, endpointId portainer.EndpointID) (stack portainer.Stack, err error) {
 	portainerClient, err := GetClient()
 	if err != nil {
 		return
@@ -55,7 +54,7 @@ func GetStackByName(name string, swarmId string, endpointId uint32) (stack clien
 	return
 }
 
-func GetEndpointSwarmClusterId(endpointId uint32) (endpointSwarmClusterId string, err error) {
+func GetEndpointSwarmClusterId(endpointId portainer.EndpointID) (endpointSwarmClusterId string, err error) {
 	// Get docker information for endpoint
 	portainerClient, err := GetClient()
 	if err != nil {
