@@ -37,9 +37,6 @@ func init() {
 	rootCmd.SetVersionTemplate("{{ version }}\n")
 	cobra.AddTemplateFunc("version", common.BuildVersionString)
 
-	// Cobra supports persistent flags, which, if defined here,
-	// will be global for your application.
-
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "Config file. (default \"$HOME/.psu.yaml)\"")
 	rootCmd.PersistentFlags().StringP("log-level", "v", "info", "Log level. One of trace, debug, info, warning, error, fatal or panic.")
 	rootCmd.PersistentFlags().BoolP("insecure", "i", false, "Skip Portainer SSL certificate verification.")
