@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #
 # Deploy/update/undeploy/info/status Docker stacks in a Portainer instance.
-# And also list stacks, services and tasks
+# And also list stacks, services, tasks and containers
 
 set -e
 
@@ -27,8 +27,7 @@ set -e
 main() {
   # Set arguments through envvars
   VERSION="0.2.0-alpha1"
-  # TODO: Add a "containers" action, see: https://docs.docker.com/engine/api/v1.30/#operation/ContainerList
-  ACTIONS="deploy undeploy list info services tasks tasks_healthy status help version"
+  ACTIONS="deploy undeploy list info services tasks tasks_healthy containers status help version"
 
   set_globals "$@"
 
@@ -150,6 +149,24 @@ main() {
       exit 0
     fi
     echo_verbose "Error: No tasks or not all tasks are running correctly for the stack \"$PORTAINER_STACK_NAME\""
+    exit 1
+  fi
+
+  if [ $ACTION == "containers" ]; then
+    echo_verbose "List container(s) of stack '$PORTAINER_STACK_NAME'..."
+    local containers
+    containers=$(containers)
+    echo_debug "Containers action response -> $(echo $containers | jq -C .)"
+    if [ -n "$containers" ] && [ ! "$containers" == "[]" ]; then
+      if [ $QUIET_MODE == "false" ]; then
+        # Returns response in JSON format
+        echo "$containers"
+      else
+        # Only display container(s) id in quiet mode
+        echo "$containers" | jq -r '.[] | [.Id] | add'
+      fi
+      exit 0
+    fi
     exit 1
   fi
 
@@ -980,6 +997,30 @@ services() {
   echo "$services"
 }
 
-# TODO: add a "containers" function
+containers() {
+  local containers
+  local filter_stack
+  local filter_task
+  local service_name
+  local filter_service
+  local filters
+
+  filter_stack="\"label\":{\"com.docker.stack.namespace=$PORTAINER_STACK_NAME\":true}"
+  filter_task="\"is-task\":{\"true\":true}"
+  if [ -n "$PORTAINER_SERVICE_NAME" ]; then
+    service_name=${PORTAINER_STACK_NAME}_${PORTAINER_SERVICE_NAME}
+    filter_service="\"label\":{\"com.docker.swarm.service.name=$service_name\":true}"
+  fi
+  filters="{$filter_stack$(if [ -n "$filter_service" ]; then echo ",$filter_service"; fi),$filter_task}"
+  containers=$(http \
+    --check-status \
+    --ignore-stdin \
+    --verify=$HTTPIE_VERIFY_SSL \
+    "$PORTAINER_URL/api/endpoints/$PORTAINER_ENDPOINT/docker/containers/json" \
+    filters=="$filters" \
+    "Authorization: Bearer $AUTH_TOKEN")
+  check_for_errors $? "$containers"
+  echo "$containers"
+}
 
 main "$@"
