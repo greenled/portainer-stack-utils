@@ -464,7 +464,7 @@ Options:
   -g, --env-file                 Path to file with environment variables to be used by the stack (only used when action=deploy or action=update)
   -e, --endpoint=[ENDPOINT_ID]   Which Docker endpoint to use. Defaults to 1
   -r, --prune                    Whether to prune unused containers or not. Defaults to false
-  -T, --timeout=[NUMBER_SECONDS]        Status timeout, number of seconds before thrown an error (only used when action=status). Defaults to 100
+  -T, --timeout=[SECONDS]        Status timeout, number of seconds before thrown an error (only used when action=status). Defaults to 100
   -j, --detect-job=[true|false]  Auto detect services who are jobs in the current stack. Defaults to true
   -S, --service[=SERVICE_NAME]   Filtering by a service name of the current stack
   -i, --insecure                 Skip the host's SSL certificate verification. Defaults to false
