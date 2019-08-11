@@ -22,6 +22,8 @@ cd portainer-stack-utils
 ./psu -a deploy ...
 ```
 
+For detailed instructions, see [How to use](#how-to-use) section.
+
 #### Requirements
 
 You will need these dependencies installed:
