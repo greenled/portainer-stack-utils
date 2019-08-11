@@ -8,10 +8,10 @@ set -e
 ############################
 # Main entrypoint          #
 # Globals:                 #
-#   AUTH_TOKEN             #
 #   HTTPIE_VERIFY_SSL      #
 #   PORTAINER_URL          #
 #   PORTAINER_USER         #
+#   PORTAINER_AUTH_TOKEN   #
 #   PORTAINER_PASSWORD     #
 #   PORTAINER_STACK_NAME   #
 #   PORTAINER_SERVICE_NAME #
@@ -166,7 +166,7 @@ main() {
       --ignore-stdin \
       --verify=$HTTPIE_VERIFY_SSL \
       "$PORTAINER_URL/api/stacks" \
-      "Authorization: Bearer $AUTH_TOKEN")
+      "Authorization: Bearer $PORTAINER_AUTH_TOKEN")
     check_for_errors $? "$STACKS"
     echo_debug_safe_json "Get stacks response -> $(echo $STACKS | jq -C .)" "$STACKS"
 
@@ -345,6 +345,7 @@ main() {
 #   ACTION                     #
 #   PORTAINER_USER             #
 #   PORTAINER_PASSWORD         #
+#   PORTAINER_AUTH_TOKEN       #
 #   PORTAINER_URL              #
 #   PORTAINER_STACK_NAME       #
 #   PORTAINER_SERVICE_NAME     #
@@ -370,6 +371,7 @@ set_globals() {
   VERSION=${VERSION}
   ACTIONS=${ACTIONS}
   ACTION=${ACTION}
+  PORTAINER_AUTH_TOKEN=${PORTAINER_AUTH_TOKEN}
   PORTAINER_USER=${PORTAINER_USER}
   PORTAINER_PASSWORD=${PORTAINER_PASSWORD}
   PORTAINER_URL=${PORTAINER_URL}
@@ -395,6 +397,7 @@ set_globals() {
   echo_debug "ACTION -> $ACTION"
   echo_debug "PORTAINER_USER -> $PORTAINER_USER"
   echo_debug "PORTAINER_PASSWORD -> $PORTAINER_PASSWORD"
+  echo_debug "PORTAINER_AUTH_TOKEN -> $PORTAINER_AUTH_TOKEN"
   echo_debug "PORTAINER_URL -> $PORTAINER_URL"
   echo_debug "PORTAINER_STACK_NAME -> $PORTAINER_STACK_NAME"
   echo_debug "PORTAINER_SERVICE_NAME -> $PORTAINER_SERVICE_NAME"
@@ -869,9 +872,9 @@ mask_variables() {
   local message="$1"
 
   if [ "$MASKED_VARIABLES" == "true" ] && [ -n "$PORTAINER_PASSWORD" ]; then
-    # Mask PORTAINER_PASSWORD and AUTH_TOKEN variable values
+    # Mask PORTAINER_PASSWORD and PORTAINER_AUTH_TOKEN variable values
     local auth_token_masked
-    auth_token_masked="$AUTH_TOKEN"
+    auth_token_masked="$PORTAINER_AUTH_TOKEN"
     if [ -z "$auth_token_masked" ]; then
       auth_token_masked="$PORTAINER_PASSWORD"
     fi
@@ -903,7 +906,7 @@ mask_variables() {
 #   ENVIRONMENT_VARIABLES_FILE #
 #   HTTPIE_VERIFY_SSL          #
 #   PORTAINER_ENDPOINT         #
-#   AUTH_TOKEN                 #
+#   PORTAINER_AUTH_TOKEN       #
 # Arguments:                   #
 #   None                       #
 # Returns:                     #
@@ -964,7 +967,7 @@ deploy() {
         --verify=$HTTPIE_VERIFY_SSL \
         --timeout=300 \
         "$PORTAINER_URL/api/stacks" \
-        "Authorization: Bearer $AUTH_TOKEN" \
+        "Authorization: Bearer $PORTAINER_AUTH_TOKEN" \
         type==2 \
         method==string \
         endpointId==$PORTAINER_ENDPOINT \
@@ -994,7 +997,7 @@ deploy() {
         --verify=$HTTPIE_VERIFY_SSL \
         --timeout=300 \
         "$PORTAINER_URL/api/stacks" \
-        "Authorization: Bearer $AUTH_TOKEN" \
+        "Authorization: Bearer $PORTAINER_AUTH_TOKEN" \
         type==1 \
         method==string \
         endpointId==$PORTAINER_ENDPOINT \
@@ -1035,7 +1038,7 @@ deploy() {
       --verify=$HTTPIE_VERIFY_SSL \
       --timeout=300 \
       PUT "$PORTAINER_URL/api/stacks/$stack_id" \
-      "Authorization: Bearer $AUTH_TOKEN" \
+      "Authorization: Bearer $PORTAINER_AUTH_TOKEN" \
       endpointId==$PORTAINER_ENDPOINT \
       @json.tmp)
     check_for_errors $? "$update"
@@ -1052,7 +1055,7 @@ deploy() {
 #   PORTAINER_STACK_NAME #
 #   PORTAINER_URL        #
 #   HTTPIE_VERIFY_SSL    #
-#   AUTH_TOKEN           #
+#   PORTAINER_AUTH_TOKEN #
 # Arguments:             #
 #   None                 #
 # Returns:               #
@@ -1081,7 +1084,7 @@ undeploy() {
     --ignore-stdin \
     --verify=$HTTPIE_VERIFY_SSL \
     DELETE "$PORTAINER_URL/api/stacks/$stack_id" \
-    "Authorization: Bearer $AUTH_TOKEN")
+    "Authorization: Bearer $PORTAINER_AUTH_TOKEN")
   check_for_errors $? "$delete"
   echo_debug "Delete action response -> $(echo $delete | jq -C .)"
 }
@@ -1107,7 +1110,7 @@ docker_info() {
     --ignore-stdin \
     --verify=$HTTPIE_VERIFY_SSL \
     "$PORTAINER_URL/api/endpoints/$PORTAINER_ENDPOINT/docker/info" \
-    "Authorization: Bearer $AUTH_TOKEN")
+    "Authorization: Bearer $PORTAINER_AUTH_TOKEN")
   check_for_errors $? "$docker_info"
 
   echo "$docker_info"
@@ -1133,7 +1136,7 @@ tasks() {
     --verify=$HTTPIE_VERIFY_SSL \
     "$PORTAINER_URL/api/endpoints/$PORTAINER_ENDPOINT/docker/tasks" \
     filters=="$filters" \
-    "Authorization: Bearer $AUTH_TOKEN")
+    "Authorization: Bearer $PORTAINER_AUTH_TOKEN")
   check_for_errors $? "$tasks"
   if [ -n "$state" ]; then
     local filter_status
@@ -1175,7 +1178,7 @@ services() {
     --verify=$HTTPIE_VERIFY_SSL \
     "$PORTAINER_URL/api/endpoints/$PORTAINER_ENDPOINT/docker/services" \
     filters=="{$filter_service}" \
-    "Authorization: Bearer $AUTH_TOKEN")
+    "Authorization: Bearer $PORTAINER_AUTH_TOKEN")
   check_for_errors $? "$services"
 
   local filter_mode
@@ -1205,7 +1208,7 @@ containers() {
     --verify=$HTTPIE_VERIFY_SSL \
     "$PORTAINER_URL/api/endpoints/$PORTAINER_ENDPOINT/docker/containers/json" \
     filters=="$filters" \
-    "Authorization: Bearer $AUTH_TOKEN")
+    "Authorization: Bearer $PORTAINER_AUTH_TOKEN")
   check_for_errors $? "$containers"
   echo "$containers"
 }
