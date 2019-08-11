@@ -207,7 +207,7 @@ main() {
       # Tasks should not have one of these states:
       # 'failed', 'orphaned', 'remove'
 
-      timeout -t $TIMEOUT bash -c "until (export DEBUG_MODE=false && export VERBOSE_MODE=false && psu -a tasks:healthy -q) >/dev/null 2>&1; do echo -n \$(if [ \"\$VERBOSE_MODE\" == \"true\" ]; then echo -n .; fi) && sleep 1; done;"
+      timeout -t $TIMEOUT bash -c "until (export PORTAINER_SERVICE_NAME=$PORTAINER_SERVICE_NAME && export DEBUG_MODE=false && export VERBOSE_MODE=false && psu -a tasks:healthy -q) >/dev/null 2>&1; do echo -n \$(if [ \"\$VERBOSE_MODE\" == \"true\" ]; then echo -n .; fi) && sleep 1; done;"
       status=$?
 
       if $(exit $status); then
