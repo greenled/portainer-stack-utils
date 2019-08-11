@@ -43,6 +43,7 @@ main() {
     "insecure;-i;--insecure;Skip the host's SSL certificate verification, use at your own risk. Defaults to false"
     "verbose;-v;--verbose;Increase the verbosity of messages. Defaults to false"
     "debug;-d;--debug;Print as much information as possible to help diagnosing a malfunction. Defaults to false"
+    "masked-variables;-m;--masked-variables;In debug and/or verbose mode, the value of sensitive variables will be hidden, useful to avoid leaking passwords or tokens in your logs. Possible values: true|extended|false. Defaults to true"
     "quiet;-q;--quiet;Display the minimum of information or nothing, UNIX/Linux friendly. Defaults to false"
     "strict;-t;--strict;Never updates an existent stack nor removes an inexistent one, and instead exits with an error. Defaults to false"
     "help;-h;--help;Display help message. To display help of a given action, run: 'psu <action> --help'"
@@ -54,17 +55,17 @@ main() {
 
   ACTIONS_TABLE=(
     # action_name;description[;required_option_key1|required_option_key2...][;optional_option_key1|optional_option_key2...]
-    "deploy;Deploy the stack;url|user|password|name|stack-file;endpoint|env-file|prune|insecure|verbose|debug|strict"
-    "undeploy;Undeploy/remove the stack;url|user|password|name;endpoint|insecure|verbose|debug|strict"
-    "list;Lists of the stacks already deployed;url|user|password;endpoint|quiet|insecure|verbose|debug|help"
-    "info;Stack information;url|user|password|name;endpoint|quiet|insecure|verbose|debug"
-    "status;Check if the stack is running/deployed correctly;url|user|password|name;endpoint|service|detect-job|timeout|insecure|verbose|debug"
-    "system;Display Docker system-wide information;url|user|password;endpoint|insecure|verbose|debug"
-    "services;Lists services already deployed for the current stack;url|user|password|name;endpoint|quiet|insecure|verbose|debug"
-    "tasks;Lists tasks for the current stack;url|user|password|name;endpoint|service|detect-job|timeout|quiet|insecure|verbose|debug"
-    "tasks:healthy;Lists tasks who are running correctly for the current stack;url|user|password|name;endpoint|service|detect-job|timeout|quiet|insecure|verbose|debug"
-    "containers;Lists containers running for the current stack;url|user|password|name;endpoint|service|quiet|insecure|verbose|debug"
-    "actions;Lists available actions of this program;;verbose|debug"
+    "deploy;Deploy the stack;url|user|password|name|stack-file;endpoint|env-file|prune|insecure|verbose|debug|masked-variables|strict"
+    "undeploy;Undeploy/remove the stack;url|user|password|name;endpoint|insecure|verbose|debug|masked-variables|strict"
+    "list;Lists of the stacks already deployed;url|user|password;endpoint|quiet|insecure|verbose|debug|masked-variables|help"
+    "info;Stack information;url|user|password|name;endpoint|quiet|insecure|verbose|debug|masked-variables"
+    "status;Check if the stack is running/deployed correctly;url|user|password|name;endpoint|service|detect-job|timeout|insecure|verbose|debug|masked-variables"
+    "system;Display Docker system-wide information;url|user|password;endpoint|insecure|verbose|debug|masked-variables"
+    "services;Lists services already deployed for the current stack;url|user|password|name;endpoint|quiet|insecure|verbose|debug|masked-variables"
+    "tasks;Lists tasks for the current stack;url|user|password|name;endpoint|service|detect-job|timeout|quiet|insecure|verbose|debug|masked-variables"
+    "tasks:healthy;Lists tasks who are running correctly for the current stack;url|user|password|name;endpoint|service|detect-job|timeout|quiet|insecure|verbose|debug|masked-variables"
+    "containers;Lists containers running for the current stack;url|user|password|name;endpoint|service|quiet|insecure|verbose|debug|masked-variables"
+    "actions;Lists available actions of this program;;verbose|debug|masked-variables"
     "help;Display help message"
     "version;Display this program version"
   )
@@ -166,12 +167,12 @@ main() {
       "$PORTAINER_URL/api/stacks" \
       "Authorization: Bearer $AUTH_TOKEN")
     check_for_errors $? "$STACKS"
-    echo_debug "Get stacks response -> $(echo $STACKS | jq -C .)"
+    echo_debug_safe_json "Get stacks response -> $(echo $STACKS | jq -C .)" "$STACKS"
 
     # Get desired stack from stacks list by it's name
     STACK=$(echo "$STACKS" \
       | jq --arg PORTAINER_STACK_NAME "$PORTAINER_STACK_NAME" -jc '.[] | select(.Name == $PORTAINER_STACK_NAME)')
-    echo_debug "Stack ${PORTAINER_STACK_NAME} -> $(echo $STACK | jq -C .)"
+    echo_debug_safe_json "Stack ${PORTAINER_STACK_NAME} -> $(echo $STACK | jq -C .)" "$STACK"
   fi
 
   if [ $ACTION == "deploy" ]; then
@@ -356,6 +357,7 @@ main() {
 #   DEBUG_MODE                 #
 #   QUIET_MODE                 #
 #   STRICT_MODE                #
+#   MASKED_VARIABLES           #
 # Arguments:                   #
 #   None                       #
 # Returns:                     #
@@ -382,6 +384,7 @@ set_globals() {
   DEBUG_MODE=${DEBUG_MODE:-"false"}
   QUIET_MODE=${QUIET_MODE:-"false"}
   STRICT_MODE=${STRICT_MODE:-"false"}
+  MASKED_VARIABLES=${MASKED_VARIABLES:-"true"}
 
   # Set arguments through argument and options (overwrite envvars)
   inputs "$@"
@@ -404,6 +407,7 @@ set_globals() {
   echo_debug "DEBUG_MODE -> $DEBUG_MODE"
   echo_debug "QUIET_MODE -> $QUIET_MODE"
   echo_debug "STRICT_MODE -> $STRICT_MODE"
+  echo_debug "MASKED_VARIABLES -> $MASKED_VARIABLES"
 
   # Check required arguments have been provided
   check_argument "$ACTION" "action" "ACTION" "a" "action"
@@ -521,6 +525,13 @@ inputs() {
         ;;
       -v|--verbose|-v=*|--verbose=*)
         VERBOSE_MODE=$(input_flag "$1" "$2")
+        if [ -n "$2" ] && [[ ! $2 =~ ^-.+$ ]] ; then
+          # When the second argument is the value of the current option
+          shift
+        fi
+        ;;
+      -m|--masked-variables|-m=*|--masked-variables=*)
+        MASKED_VARIABLES=$(input_flag "$1" "$2" "true extended false")
         if [ -n "$2" ] && [[ ! $2 =~ ^-.+$ ]] ; then
           # When the second argument is the value of the current option
           shift
@@ -777,6 +788,42 @@ check_for_errors() {
   fi
 }
 
+echo_debug_safe_json() {
+  echo_safe_json "debug" "$1" "$2"
+}
+
+echo_verbose_safe_json() {
+  echo_safe_json "verbose" "$1" "$2"
+}
+
+echo_safe_json() {
+  local type="$1"
+  local message="$2"
+  local json="$3"
+  local temp_file
+
+  # If the $json variable has an '.Env' entry
+  # We parse its content to mask sensitive values
+  if [ "$MASKED_VARIABLES" == "extended" ] && [ -n "$(echo "$json" | jq -j 'if type == "array" then .[] else . end | .Env // ""')" ]; then
+    temp_file=".stack_envs-$(echo "$(date +%s%3N)")"
+    (
+      echo "$json" | jq -r 'if type == "array" then .[] else . end | .Env | map(.name = .name + "=" + .value) | map (.name) | .[]' | sed "s/\"/\\\\\"/g" | sed "s/^\([^=]\{1,\}=\)\(.* .*\)$/\1\"\2\"/" > $temp_file && \
+      . $temp_file &&  rm -f $temp_file && \
+      if [ "$type" == "debug" ]; then \
+        echo_debug "$message"; \
+      elif [ "$type" == "verbose" ]; then \
+        echo_verbose "$message"; \
+      fi
+    )
+  else
+    if [ "$type" == "debug" ]; then
+      echo_debug "$message"
+    elif [ "$type" == "verbose" ]; then
+      echo_verbose "$message"
+    fi
+  fi
+}
+
 ###########################################
 # Print message if verbose mode is active #
 # Globals:                                #
@@ -791,7 +838,9 @@ echo_verbose() {
   local yellow='\033[1;33m'
   local nc='\033[0m'
   if [ $VERBOSE_MODE == "true" ]; then
-    echo -e "${yellow}${message}${nc}"
+    local verbose_message
+    verbose_message=$(mask_variables "$message")
+    echo -e "${yellow}${verbose_message}${nc}"
   fi
 }
 
@@ -807,8 +856,34 @@ echo_verbose() {
 echo_debug() {
   local message=$1
   if [ $DEBUG_MODE == "true" ]; then
-    echo -e "${message}"
+    local debug_message
+    debug_message=$(mask_variables "$message")
+
+    echo -e "${debug_message}"
   fi
+}
+
+mask_variables() {
+  local message="$1"
+
+  if [ "$MASKED_VARIABLES" == "true" ]; then
+    # Mask PORTAINER_PASSWORD variable value
+    message=$(echo "$message" | sed "s/$PORTAINER_PASSWORD/[MASKED]/g")
+  elif [ "$MASKED_VARIABLES" == "extended" ]; then
+    # Mask all variable values with PASSWORD or TOKEN in their name
+    local masked_vars
+    # Get all declared variable names and filtering by specific terms
+    masked_vars="$(compgen -v | grep -i 'PASSWORD\|TOKEN')"
+    for masked_var in $masked_vars; do
+      if [ -n "$masked_var" ] && [ -n "${!masked_var}" ]; then
+        # Converts multi lines value to one line value
+        masked_value="$(echo ${!masked_var})"
+        message="$(echo "$message" | sed "s/$masked_value/[MASKED]/g")"
+      fi
+    done
+  fi
+
+  echo "$message"
 }
 
 ################################
@@ -871,8 +946,7 @@ deploy() {
       local data_prefix="{\"Name\":\"$PORTAINER_STACK_NAME\",\"StackFileContent\":\""
       local data_suffix="\",\"Env\":"$stack_envvars"}"
       echo "$data_prefix$docker_compose_file_content$data_suffix" > json.tmp
-      # FIXME: Hide any value of variables who ends by 'PASSWORD' or 'TOKEN', for security reasons
-      echo_debug "Stack JSON -> $(echo $data_prefix$docker_compose_file_content$data_suffix | jq -C .)"
+      echo_debug_safe_json "Stack JSON -> $(echo $data_prefix$docker_compose_file_content$data_suffix | jq -C .)" "$data_prefix$docker_compose_file_content$data_suffix"
 
       # Create stack for single Docker instance
       echo_verbose "Creating stack $PORTAINER_STACK_NAME..."
@@ -902,8 +976,7 @@ deploy() {
       local data_prefix="{\"Name\":\"$PORTAINER_STACK_NAME\",\"SwarmID\":\"$swarm_id\",\"StackFileContent\":\""
       local data_suffix="\",\"Env\":"$stack_envvars"}"
       echo "$data_prefix$docker_compose_file_content$data_suffix" > json.tmp
-      # FIXME: Hide any value of variables who ends by 'PASSWORD' or 'TOKEN', for security reasons
-      echo_debug "Stack JSON -> $(echo $data_prefix$docker_compose_file_content$data_suffix | jq -C .)"
+      echo_debug_safe_json "Stack JSON -> $(echo $data_prefix$docker_compose_file_content$data_suffix | jq -C .)" "$data_prefix$docker_compose_file_content$data_suffix"
 
       # Create stack for Docker swarm
       echo_verbose "Creating stack $PORTAINER_STACK_NAME..."
@@ -944,8 +1017,7 @@ deploy() {
     local data_prefix="{\"Id\":\"$stack_id\",\"StackFileContent\":\""
     local data_suffix="\",\"Env\":"$stack_envvars",\"Prune\":$PORTAINER_PRUNE}"
     echo "$data_prefix$docker_compose_file_content$data_suffix" > json.tmp
-    # FIXME: Hide any value of variables who ends by 'PASSWORD' or 'TOKEN', for security reasons
-    echo_debug "Stack JSON -> $(echo $data_prefix$docker_compose_file_content$data_suffix | jq -C .)"
+    echo_debug_safe_json "Stack JSON -> $(echo $data_prefix$docker_compose_file_content$data_suffix | jq -C .)" "$data_prefix$docker_compose_file_content$data_suffix"
 
     # Update stack
     echo_verbose "Updating stack $PORTAINER_STACK_NAME..."
