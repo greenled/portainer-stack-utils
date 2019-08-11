@@ -266,7 +266,7 @@ main() {
           echo_verbose "Error: $scope tasks aren't running correctly for the stack \"$PORTAINER_STACK_NAME\""
           exit 1;
         fi
-        tasks="$(echo -n "${tasks}${new_tasks}" | jq -sjc 'add | unique_by(.ID)')"
+        tasks="$(echo "${tasks}${new_tasks}" | jq -sjc 'add | unique_by(.ID)')"
       done
       echo_debug "Tasks action response -> $(echo $tasks | jq -C .)"
     fi
