@@ -17,7 +17,7 @@ set -e
 #   PORTAINER_SERVICE_NAME #
 #   STACKS                 #
 #   STACK                  #
-#   ROLLOUT_STATUS_TIMEOUT #
+#   TIMEOUT                #
 #   ACTION                 #
 # Arguments:               #
 #   None                   #
@@ -123,7 +123,7 @@ main() {
       # Tasks should not have one of these states:
       # 'failed', 'orphaned', 'remove'
 
-      timeout -t $ROLLOUT_STATUS_TIMEOUT bash -c "until (export DEBUG_MODE=false && export VERBOSE_MODE=false && psu -a tasks:healthy -q) >/dev/null 2>&1; do echo -n \$(if [ \"\$VERBOSE_MODE\" == \"true\" ]; then echo -n .; fi) && sleep 1; done;"
+      timeout -t $TIMEOUT bash -c "until (export DEBUG_MODE=false && export VERBOSE_MODE=false && psu -a tasks:healthy -q) >/dev/null 2>&1; do echo -n \$(if [ \"\$VERBOSE_MODE\" == \"true\" ]; then echo -n .; fi) && sleep 1; done;"
       status=$?
 
       if $(exit $status); then
@@ -147,7 +147,7 @@ main() {
     else
       echo_verbose "List $scope tasks of stack '$PORTAINER_STACK_NAME'..."
       local services
-      services="$(timeout -t $ROLLOUT_STATUS_TIMEOUT bash -c "until (export DEBUG_MODE=false && export VERBOSE_MODE=false && echo \"\$(psu -a services -q)\"); do sleep 1; done;")"
+      services="$(timeout -t $TIMEOUT bash -c "until (export DEBUG_MODE=false && export VERBOSE_MODE=false && echo \"\$(psu -a services -q)\"); do sleep 1; done;")"
       # TODO: Improve performance, find a way to do parallel requests
       for service in $services; do
         export PORTAINER_SERVICE_NAME=${service#"${PORTAINER_STACK_NAME}_"}
@@ -240,7 +240,7 @@ main() {
 #   ENVIRONMENT_VARIABLES_FILE #
 #   PORTAINER_ENDPOINT         #
 #   PORTAINER_PRUNE            #
-#   ROLLOUT_STATUS_TIMEOUT     #
+#   TIMEOUT                    #
 #   AUTO_DETECT_JOB            #
 #   HTTPIE_VERIFY_SSL          #
 #   VERBOSE_MODE               #
@@ -266,7 +266,7 @@ set_globals() {
   ENVIRONMENT_VARIABLES_FILE=${ENVIRONMENT_VARIABLES_FILE}
   PORTAINER_ENDPOINT=${PORTAINER_ENDPOINT:-"1"}
   PORTAINER_PRUNE=${PORTAINER_PRUNE:-"false"}
-  ROLLOUT_STATUS_TIMEOUT=${ROLLOUT_STATUS_TIMEOUT:-100}
+  TIMEOUT=${TIMEOUT:-100}
   AUTO_DETECT_JOB=${AUTO_DETECT_JOB:-"true"}
   HTTPIE_VERIFY_SSL=${HTTPIE_VERIFY_SSL:-"yes"}
   VERBOSE_MODE=${VERBOSE_MODE:-"false"}
@@ -288,7 +288,7 @@ set_globals() {
   echo_debug "ENVIRONMENT_VARIABLES_FILE -> $ENVIRONMENT_VARIABLES_FILE"
   echo_debug "PORTAINER_ENDPOINT -> $PORTAINER_ENDPOINT"
   echo_debug "PORTAINER_PRUNE -> $PORTAINER_PRUNE"
-  echo_debug "ROLLOUT_STATUS_TIMEOUT -> $ROLLOUT_STATUS_TIMEOUT"
+  echo_debug "TIMEOUT -> $TIMEOUT"
   echo_debug "AUTO_DETECT_JOB -> $AUTO_DETECT_JOB"
   echo_debug "HTTPIE_VERIFY_SSL -> $HTTPIE_VERIFY_SSL"
   echo_debug "VERBOSE_MODE -> $VERBOSE_MODE"
@@ -373,7 +373,7 @@ inputs() {
         fi
         ;;
       -T=*|--timeout=*|-T|--timeout)
-        ROLLOUT_STATUS_TIMEOUT=$(input_option "$1" "$2")
+        TIMEOUT=$(input_option "$1" "$2")
         if [ -n "$2" ] && [[ ! $2 =~ ^-.+$ ]] ; then
           # When the second argument is the value of the current option
           shift
