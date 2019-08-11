@@ -146,16 +146,17 @@ main() {
   if [[ ! ${ACTIONS_TEXT_ONLY[*]} =~ $ACTION ]]; then
     # Get Portainer auth token. Will be used on every API request.
     echo_verbose "Getting auth token..."
-    AUTH_TOKEN=$(http \
+    local auth_token_json
+    auth_token_json=$(http \
       --check-status \
       --ignore-stdin \
       --verify=$HTTPIE_VERIFY_SSL \
       $PORTAINER_URL/api/auth \
       username=$PORTAINER_USER \
       password=$PORTAINER_PASSWORD)
-    check_for_errors $? "$AUTH_TOKEN"
-    echo_debug "Get auth token response -> $(echo $AUTH_TOKEN | jq -C .)"
-    AUTH_TOKEN=$(echo $AUTH_TOKEN | jq -r .jwt)
+    check_for_errors $? "$auth_token_json"
+    AUTH_TOKEN=$(echo $auth_token_json | jq -r .jwt)
+    echo_debug "Get auth token response -> $(echo $auth_token_json | jq -C .)"
     echo_debug "Auth token -> $AUTH_TOKEN"
 
     # Get list of all stacks
