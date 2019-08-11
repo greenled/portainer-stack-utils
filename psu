@@ -32,6 +32,7 @@ main() {
     "url;-l;--url=URL;URL of the Portainer instance"
     "user;-u;--user=USERNAME;Username of the Portainer instance"
     "password;-p;--password=PASSWORD;Password of the Portainer instance"
+    "auth-token;-A;--auth-token=[AUTH_TOKEN];Use a Portainer auth token instead of '--user' and '--password' options, you can get it with the 'psu login' command. Defaults to null"
     "name;-n;--name=STACK_NAME;Stack name"
     "compose-file;-c;--compose-file=[FILE_PATH];Path to docker-compose file (required if action=deploy)"
     "stack-file;;--stack-file=[FILE_PATH];Path to docker-stack file. Alias of '--compose-file' option"
@@ -55,16 +56,16 @@ main() {
 
   ACTIONS_TABLE=(
     # action_name;description[;required_option_key1|required_option_key2...][;optional_option_key1|optional_option_key2...]
-    "deploy;Deploy the stack;url|user|password|name|compose-file;endpoint|env-file|prune|insecure|verbose|debug|masked-variables|strict"
-    "undeploy;Undeploy/remove the stack;url|user|password|name;endpoint|insecure|verbose|debug|masked-variables|strict"
-    "list;Lists of the stacks already deployed;url|user|password;endpoint|quiet|insecure|verbose|debug|masked-variables|help"
-    "info;Stack information;url|user|password|name;endpoint|quiet|insecure|verbose|debug|masked-variables"
-    "status;Check if the stack is running/deployed correctly;url|user|password|name;endpoint|service|detect-job|timeout|insecure|verbose|debug|masked-variables"
-    "system:info;Display Docker system-wide information;url|user|password;endpoint|insecure|verbose|debug|masked-variables"
-    "services;Lists services already deployed for the current stack;url|user|password|name;endpoint|quiet|insecure|verbose|debug|masked-variables"
-    "tasks;Lists tasks for the current stack;url|user|password|name;endpoint|service|detect-job|timeout|quiet|insecure|verbose|debug|masked-variables"
-    "tasks:healthy;Lists tasks who are running correctly for the current stack;url|user|password|name;endpoint|service|detect-job|timeout|quiet|insecure|verbose|debug|masked-variables"
-    "containers;Lists containers running for the current stack;url|user|password|name;endpoint|service|quiet|insecure|verbose|debug|masked-variables"
+    "deploy;Deploy the stack;url|user|password|name|compose-file;auth-token|endpoint|env-file|prune|insecure|verbose|debug|masked-variables|strict"
+    "undeploy;Undeploy/remove the stack;url|user|password|name;auth-token|endpoint|insecure|verbose|debug|masked-variables|strict"
+    "list;Lists of the stacks already deployed;url|user|password;auth-token|endpoint|quiet|insecure|verbose|debug|masked-variables|help"
+    "info;Stack information;url|user|password|name;auth-token|endpoint|quiet|insecure|verbose|debug|masked-variables"
+    "status;Check if the stack is running/deployed correctly;url|user|password|name;auth-token|endpoint|service|detect-job|timeout|insecure|verbose|debug|masked-variables"
+    "system:info;Display Docker system-wide information;url|user|password;auth-token|endpoint|insecure|verbose|debug|masked-variables"
+    "services;Lists services already deployed for the current stack;url|user|password|name;auth-token|endpoint|quiet|insecure|verbose|debug|masked-variables"
+    "tasks;Lists tasks for the current stack;url|user|password|name;auth-token|endpoint|service|detect-job|timeout|quiet|insecure|verbose|debug|masked-variables"
+    "tasks:healthy;Lists tasks who are running correctly for the current stack;url|user|password|name;auth-token|endpoint|service|detect-job|timeout|quiet|insecure|verbose|debug|masked-variables"
+    "containers;Lists containers running for the current stack;url|user|password|name;auth-token|endpoint|service|quiet|insecure|verbose|debug|masked-variables"
     "actions;Lists available actions of this program;;verbose|debug|masked-variables"
     "help;Display help message"
     "version;Display this program version"
@@ -141,23 +142,13 @@ main() {
     fi
   done
 
+  export PORTAINER_AUTH_TOKEN
   set_globals "$@"
 
   if [[ ! ${ACTIONS_TEXT_ONLY[*]} =~ $ACTION ]]; then
-    # Get Portainer auth token. Will be used on every API request.
-    echo_verbose "Getting auth token..."
-    local auth_token_json
-    auth_token_json=$(http \
-      --check-status \
-      --ignore-stdin \
-      --verify=$HTTPIE_VERIFY_SSL \
-      $PORTAINER_URL/api/auth \
-      username=$PORTAINER_USER \
-      password=$PORTAINER_PASSWORD)
-    check_for_errors $? "$auth_token_json"
-    AUTH_TOKEN=$(echo $auth_token_json | jq -r .jwt)
-    echo_debug "Get auth token response -> $(echo $auth_token_json | jq -C .)"
-    echo_debug "Auth token -> $AUTH_TOKEN"
+    if [ -z "$PORTAINER_AUTH_TOKEN" ]; then
+      login
+    fi
 
     # Get list of all stacks
     echo_verbose "Getting stack $PORTAINER_STACK_NAME..."
@@ -417,8 +408,10 @@ set_globals() {
   # Check required arguments have been provided
   check_argument "$ACTION" "action" "ACTION" "a" "action"
   if [[ ! ${ACTIONS_TEXT_ONLY[*]} =~ $ACTION ]]; then
-    check_argument "$PORTAINER_USER" "portainer user" "PORTAINER_USER" "u" "user"
-    check_argument "$PORTAINER_PASSWORD" "portainer password" "PORTAINER_PASSWORD" "p" "password"
+    if [ -z "$PORTAINER_AUTH_TOKEN" ]; then
+      check_argument "$PORTAINER_USER" "portainer user" "PORTAINER_USER" "u" "user"
+      check_argument "$PORTAINER_PASSWORD" "portainer password" "PORTAINER_PASSWORD" "p" "password"
+    fi
     check_argument "$PORTAINER_URL" "portainer url" "PORTAINER_URL" "l" "url"
   fi
   if [ "$ACTION" == "deploy" ]; then
@@ -436,6 +429,13 @@ set_globals() {
 inputs() {
   while [ $# -gt 0 ]; do
     case "$1" in
+      -A=*|--auth-token=*|-A|--auth-token)
+        PORTAINER_AUTH_TOKEN=$(input_option "$1" "$2")
+        if [ -n "$2" ] && [[ ! $2 =~ ^-.+$ ]] ; then
+          # When the second argument is the value of the current option
+          shift
+        fi
+        ;;
       -u=*|--user=*|-u|--user)
         PORTAINER_USER=$(input_option "$1" "$2")
         if [ -n "$2" ] && [[ ! $2 =~ ^-.+$ ]] ; then
