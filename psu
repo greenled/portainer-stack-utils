@@ -1290,6 +1290,7 @@ lint() {
     fi
   else
     echo "WARNING: Cannot validate '$DOCKER_COMPOSE_FILE' file, 'docker-compose' is not installed or not executable."
+    echo_verbose "You can run the default Docker image of psu, who bundles 'docker-compose'."
     echo_verbose "For more informations, see: https://docs.docker.com/compose/install/"
   fi || true
 }
