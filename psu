@@ -123,28 +123,9 @@ main() {
     fi
   done
 
-  # TODO: move this stuff in a function
-  # Set the OPTIONS variable
-  # and the OPTIONS_ASSOC variable
-  declare -A OPTIONS_ASSOC
-  local option_table
-  local option_key
-  local flag_text
-  local option_text
-  local option_description
-  for option in "${OPTIONS_TABLE[@]}"; do
-    IFS=';' read -ra option_table <<< "$option"
-    option_key="${option_table[0]}"
-    flag_text="${option_table[1]}"
-    option_text="${option_table[2]}"
-    option_description="${option_table[3]}"
-    OPTIONS_ASSOC["$option_key"]="$flag_text;$option_text;$option_description"
-    if [ -n "$OPTIONS" ]; then
-      OPTIONS+=" $option_key"
-    else
-      OPTIONS="$option_key"
-    fi
-  done
+  transform_options_table
+  # Decode $OPTIONS_ASSOC associative array
+  eval $OPTIONS_ASSOC_ENCODED
 
   export PORTAINER_AUTH_TOKEN
   set_globals "$@"
@@ -1293,6 +1274,34 @@ lint() {
     echo_verbose "You can run the default Docker image of psu, who bundles 'docker-compose'."
     echo_verbose "For more informations, see: https://docs.docker.com/compose/install/"
   fi || true
+}
+
+# Set the OPTIONS variable who's a list of all psu options
+# Set the OPTIONS_ASSOC variable who's an associative array of all psu options
+transform_options_table() {
+  declare -A OPTIONS_ASSOC
+  local option_table
+  local option_key
+  local flag_text
+  local option_text
+  local option_description
+  for option in "${OPTIONS_TABLE[@]}"; do
+    IFS=';' read -ra option_table <<< "$option"
+    option_key="${option_table[0]}"
+    flag_text="${option_table[1]}"
+    option_text="${option_table[2]}"
+    option_description="${option_table[3]}"
+    OPTIONS_ASSOC["$option_key"]="$flag_text;$option_text;$option_description"
+    if [ -n "$OPTIONS" ]; then
+      OPTIONS+=" $option_key"
+    else
+      OPTIONS="$option_key"
+    fi
+  done
+
+  # Bash array variable can't be exported
+  # See: https://stackoverflow.com/questions/5564418/exporting-an-array-in-bash-script
+  OPTIONS_ASSOC_ENCODED=$(declare -p OPTIONS_ASSOC)
 }
 
 display_options_message() {
