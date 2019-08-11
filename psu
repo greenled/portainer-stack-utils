@@ -832,12 +832,7 @@ deploy() {
     # Get Docker info
     echo_verbose "Getting Docker info..."
     local docker_info
-    docker_info=$(http \
-      --check-status \
-      --ignore-stdin \
-      --verify=$HTTPIE_VERIFY_SSL \
-      "$PORTAINER_URL/api/endpoints/$PORTAINER_ENDPOINT/docker/info" \
-      "Authorization: Bearer $AUTH_TOKEN")
+    docker_info=$(docker_info)
     check_for_errors $? "$docker_info"
     echo_debug "Docker info -> $(echo $docker_info | jq -C .)"
 
@@ -1007,6 +1002,20 @@ undeploy() {
 ###################################################
 env_file_to_json() {
   echo "$(env -i sh -c "(unset \$(env | sed 's/=.*//'); set -a; . $(readlink -f $ENVIRONMENT_VARIABLES_FILE); set +a; jq -njc 'env | to_entries | map({name: .key, value: .value})')")"
+}
+
+# Get Docker info
+docker_info() {
+  local docker_info
+  docker_info=$(http \
+    --check-status \
+    --ignore-stdin \
+    --verify=$HTTPIE_VERIFY_SSL \
+    "$PORTAINER_URL/api/endpoints/$PORTAINER_ENDPOINT/docker/info" \
+    "Authorization: Bearer $AUTH_TOKEN")
+  check_for_errors $? "$docker_info"
+
+  echo "$docker_info"
 }
 
 tasks() {
