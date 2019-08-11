@@ -449,47 +449,47 @@ inputs() {
           ACTION="help"
           echo "Portainer Stack Utils, version $VERSION
 
-  Usage:
-    psu <action> [options]
+Usage:
+  psu <action> [options]
 
-  Arguments:
-    action                         The name of the action to execute (possible values: '${ACTIONS// /\', \'}')
+Arguments:
+  action                         The name of the action to execute (possible values: '${ACTIONS// /\', \'}')
 
-  Options:
-    -u, --user=USERNAME            Username
-    -p, --password=PASSWORD        Password
-    -l, --url=URL                  URL to Portainer
-    -n, --name=STACK_NAME          Stack name
-    -c, --compose-file=[FILE_PATH] Path to docker-compose file (required if action=deploy)
-    -g, --env-file                 Path to file with environment variables to be used by the stack (only used when action=deploy or action=update)
-    -e, --endpoint=[ENDPOINT_ID]   Which Docker endpoint to use. Defaults to 1
-    -r, --prune                    Whether to prune unused containers or not. Defaults to false
-    -T, --timeout=[NUMBER_SECONDS] Status timeout, number of seconds before thrown an error (only used when action=status). Defaults to 100
-    -j, --detect-job=[true|false]  Auto detect services who are jobs. Defaults to true
-    -S, --service[=SERVICE_NAME]   Service name
-    -i, --insecure                 Skip the host's SSL certificate verification. Defaults to false
-    -v, --verbose                  Increase the verbosity of messages. Defaults to false
-    -d, --debug                    Print as much information as possible to help diagnosing a malfunction. Defaults to false
-    -q, --quiet                    Display the minimum of information or nothing, UNIX/Linux friendly. Defaults to false
-    -t, --strict                   Never updates an existent stack nor removes an unexistent one, and instead exits with an error. Defaults to false
-    -h, --help                     Display this help message
-    -V, --version                  Display the version of this programm
-    -s, --secure[=yes|no]          DEPRECATED: Use the --insecure option instead. Enable or disable the host's SSL certificate verification. Defaults to 'yes'
-    -a, --action=[ACTION_NAME]     DEPRECATED: Use <action> argument instead. The name of the action to execute
+Options:
+  -u, --user=USERNAME            Username
+  -p, --password=PASSWORD        Password
+  -l, --url=URL                  URL to Portainer
+  -n, --name=STACK_NAME          Stack name
+  -c, --compose-file=[FILE_PATH] Path to docker-compose file (required if action=deploy)
+  -g, --env-file                 Path to file with environment variables to be used by the stack (only used when action=deploy or action=update)
+  -e, --endpoint=[ENDPOINT_ID]   Which Docker endpoint to use. Defaults to 1
+  -r, --prune                    Whether to prune unused containers or not. Defaults to false
+  -T, --timeout=[NUMBER_SECONDS]        Status timeout, number of seconds before thrown an error (only used when action=status). Defaults to 100
+  -j, --detect-job=[true|false]  Auto detect services who are jobs in the current stack. Defaults to true
+  -S, --service[=SERVICE_NAME]   Filtering by a service name of the current stack
+  -i, --insecure                 Skip the host's SSL certificate verification. Defaults to false
+  -v, --verbose                  Increase the verbosity of messages. Defaults to false
+  -d, --debug                    Print as much information as possible to help diagnosing a malfunction. Defaults to false
+  -q, --quiet                    Display the minimum of information or nothing, UNIX/Linux friendly. Defaults to false
+  -t, --strict                   Never updates an existent stack nor removes an inexistent one, and instead exits with an error. Defaults to false
+  -h, --help                     Display this help message
+  -V, --version                  Display the version of this program
+  -s, --secure[=yes|no]          DEPRECATED: Use the --insecure option instead. Enable or disable the host's SSL certificate verification. Defaults to 'yes'
+  -a, --action=[ACTION_NAME]     DEPRECATED: Use <action> argument instead. The name of the action to execute
 
-  Help:
-    You can deploy/update/undeploy/list... stacks in a Portainer instance easily with this tool!"
+Help:
+  You can deploy/update/undeploy/list... stacks in a Portainer instance easily with this tool!"
         else
           if [ "$ACTION" == "list" ]; then
               echo "Usage:
-    psu $ACTION [options]
+  psu $ACTION [options]
 
-  Options:
-    -q, --quiet    Display only the stack names who are deployed
-    -h, --help     Display this help message
+Options:
+  -q, --quiet    Display only the stack names who are deployed
+  -h, --help     Display this help message
 
-  Help:
-    Returns a list of the stacks already deployed"
+Help:
+  Returns a list of the stacks already deployed"
             ACTION="help"
           else
             input_error "Error: no help is available for the '$ACTION' action, run the 'psu help' command for global help"
