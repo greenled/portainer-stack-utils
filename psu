@@ -60,7 +60,7 @@ main() {
     "list;Lists of the stacks already deployed;url|user|password;endpoint|quiet|insecure|verbose|debug|masked-variables|help"
     "info;Stack information;url|user|password|name;endpoint|quiet|insecure|verbose|debug|masked-variables"
     "status;Check if the stack is running/deployed correctly;url|user|password|name;endpoint|service|detect-job|timeout|insecure|verbose|debug|masked-variables"
-    "system;Display Docker system-wide information;url|user|password;endpoint|insecure|verbose|debug|masked-variables"
+    "system:info;Display Docker system-wide information;url|user|password;endpoint|insecure|verbose|debug|masked-variables"
     "services;Lists services already deployed for the current stack;url|user|password|name;endpoint|quiet|insecure|verbose|debug|masked-variables"
     "tasks;Lists tasks for the current stack;url|user|password|name;endpoint|service|detect-job|timeout|quiet|insecure|verbose|debug|masked-variables"
     "tasks:healthy;Lists tasks who are running correctly for the current stack;url|user|password|name;endpoint|service|detect-job|timeout|quiet|insecure|verbose|debug|masked-variables"
@@ -85,8 +85,8 @@ main() {
     ["stacks:list"]="list"
     ["stacks:info"]="info"
     ["stacks:status"]="status"
-    ["system:info"]="system"
-    ["docker:info"]="system"
+    ["system"]="system:info"
+    ["docker:info"]="system:info"
     ["services:list"]="services"
     ["tasks:list"]="tasks"
     ["containers:list"]="containers"
@@ -187,11 +187,12 @@ main() {
   fi
 
   # Returns Docker system info
-  if [ $ACTION == "system" ]; then
+  if [ $ACTION == "system:info" ]; then
     local docker_info
     echo_verbose "Getting Docker info..."
     docker_info="$(docker_info)"
     echo_debug "Docker info -> $(echo $docker_info | jq -C .)"
+
     if [ -n "$docker_info" ]; then
       echo "$docker_info"
       exit 0
@@ -424,7 +425,7 @@ set_globals() {
       exit 1
     fi
   fi
-  if [ "$ACTION" != "list" ] && [ "$ACTION" != "system" ] && [[ ! ${ACTIONS_TEXT_ONLY[*]} =~ $ACTION ]]; then
+  if [ "$ACTION" != "list" ] && [ "$ACTION" != "system:info" ] && [[ ! ${ACTIONS_TEXT_ONLY[*]} =~ $ACTION ]]; then
     check_argument "$PORTAINER_STACK_NAME" "portainer stack name" "PORTAINER_STACK_NAME" "n" "name"
   fi
 }
