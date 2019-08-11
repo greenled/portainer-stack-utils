@@ -59,6 +59,7 @@ main() {
     "list;Lists of the stacks already deployed;url|user|password;endpoint|quiet|insecure|verbose|debug|help"
     "info;Stack information;url|user|password|name;endpoint|quiet|insecure|verbose|debug"
     "status;Check if the stack is running/deployed correctly;url|user|password|name;endpoint|service|detect-job|timeout|insecure|verbose|debug"
+    "system;Display Docker system-wide information;url|user|password;endpoint|insecure|verbose|debug"
     "services;Lists services already deployed for the current stack;url|user|password|name;endpoint|quiet|insecure|verbose|debug"
     "tasks;Lists tasks for the current stack;url|user|password|name;endpoint|service|detect-job|timeout|quiet|insecure|verbose|debug"
     "tasks:healthy;Lists tasks who are running correctly for the current stack;url|user|password|name;endpoint|service|detect-job|timeout|quiet|insecure|verbose|debug"
@@ -83,6 +84,8 @@ main() {
     ["stacks:list"]="list"
     ["stacks:info"]="info"
     ["stacks:status"]="status"
+    ["system:info"]="system"
+    ["docker:info"]="system"
     ["services:list"]="services"
     ["tasks:list"]="tasks"
     ["containers:list"]="containers"
@@ -179,6 +182,19 @@ main() {
   if [ $ACTION == "undeploy" ]; then
     undeploy
     exit 0
+  fi
+
+  # Returns Docker system info
+  if [ $ACTION == "system" ]; then
+    local docker_info
+    echo_verbose "Getting Docker info..."
+    docker_info="$(docker_info)"
+    echo_debug "Docker info -> $(echo $docker_info | jq -C .)"
+    if [ -n "$docker_info" ]; then
+      echo "$docker_info"
+      exit 0
+    fi
+    exit 1
   fi
 
   if [ $ACTION == "services" ]; then
@@ -403,7 +419,7 @@ set_globals() {
       exit 1
     fi
   fi
-  if [ "$ACTION" != "list" ] && [[ ! ${ACTIONS_TEXT_ONLY[*]} =~ $ACTION ]]; then
+  if [ "$ACTION" != "list" ] && [ "$ACTION" != "system" ] && [[ ! ${ACTIONS_TEXT_ONLY[*]} =~ $ACTION ]]; then
     check_argument "$PORTAINER_STACK_NAME" "portainer stack name" "PORTAINER_STACK_NAME" "n" "name"
   fi
 }
