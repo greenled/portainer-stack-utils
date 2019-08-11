@@ -1,5 +1,14 @@
 FROM alpine:3.10
 
+RUN apk add --no-cache \
+  bash ca-certificates gettext httpie jq \
+  py3-pip python3-dev libc-dev libffi-dev openssl-dev gcc make; \
+  \
+  pip3 --no-cache-dir install docker-compose; \
+  \
+  apk del python3-dev libc-dev libffi-dev openssl-dev gcc make; \
+  rm -rf /tmp/src
+
 ENV LANG="en_US.UTF-8" \
     LC_ALL="C.UTF-8" \
     LANGUAGE="en_US.UTF-8" \
@@ -24,15 +33,6 @@ ENV LANG="en_US.UTF-8" \
     QUIET_MODE="false" \
     STRICT_MODE="false" \
     MASKED_VARIABLES="false"
-
-RUN apk add --no-cache \
-  bash ca-certificates gettext httpie jq \
-  py3-pip python3-dev libc-dev libffi-dev openssl-dev gcc make; \
-  \
-  pip3 --no-cache-dir install docker-compose; \
-  \
-  apk del python3-dev libc-dev libffi-dev openssl-dev gcc make; \
-  rm -rf /tmp/src
 
 COPY psu /usr/local/bin/
 
