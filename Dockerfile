@@ -36,6 +36,6 @@ ENV LANG="en_US.UTF-8" \
 
 COPY psu /usr/local/bin/
 
-RUN chmod +x /usr/local/bin/*
+RUN chmod +x /usr/local/bin/psu
 
 ENTRYPOINT ["/usr/local/bin/psu"]
