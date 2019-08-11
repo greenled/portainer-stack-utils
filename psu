@@ -25,7 +25,7 @@ set -e
 #   None                   #
 ############################
 main() {
-  VERSION="0.2.0-alpha.2"
+  VERSION="0.2.0-alpha.4"
   ACTIONS="deploy undeploy list info status services tasks tasks:healthy containers actions help version"
 
   set_globals "$@"
