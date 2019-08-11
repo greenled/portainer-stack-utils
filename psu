@@ -98,30 +98,9 @@ main() {
     ["actions:list"]="actions"
   )
 
-  # TODO: move this stuff in a function
-  # Set the ACTIONS variable
-  # and the ACTIONS_ASSOC variable
-  declare -A ACTIONS_ASSOC
-  local action_table
-  local action_name
-  local action_description
-  local required_options
-  local optional_options
-  for action in "${ACTIONS_TABLE[@]}"; do
-    IFS=';' read -ra action_table <<< "$action"
-    action_name="${action_table[0]}"
-    action_description="${action_table[1]}"
-    required_options="${action_table[2]}"
-    optional_options="${action_table[3]}"
-    ACTIONS_ASSOC["$action_name"]="$action_description;$required_options;$optional_options"
-    if [ -n "$action_description" ]; then
-      if [ -n "$ACTIONS" ]; then
-        ACTIONS+=" $action_name"
-      else
-        ACTIONS="$action_name"
-      fi
-    fi
-  done
+  transform_actions_table
+  # Decode $ACTIONS_ASSOC associative array
+  eval $ACTIONS_ASSOC_ENCODED
 
   transform_options_table
   # Decode $OPTIONS_ASSOC associative array
@@ -1274,6 +1253,36 @@ lint() {
     echo_verbose "You can run the default Docker image of psu, who bundles 'docker-compose'."
     echo_verbose "For more informations, see: https://docs.docker.com/compose/install/"
   fi || true
+}
+
+# Set the ACTIONS variable who's a list of all psu actions
+# Set the ACTIONS_ASSOC variable who's an associative array of all psu actions
+transform_actions_table() {
+  declare -A ACTIONS_ASSOC
+  local action_table
+  local action_name
+  local action_description
+  local required_options
+  local optional_options
+  for action in "${ACTIONS_TABLE[@]}"; do
+    IFS=';' read -ra action_table <<< "$action"
+    action_name="${action_table[0]}"
+    action_description="${action_table[1]}"
+    required_options="${action_table[2]}"
+    optional_options="${action_table[3]}"
+    ACTIONS_ASSOC["$action_name"]="$action_description;$required_options;$optional_options"
+    if [ -n "$action_description" ]; then
+      if [ -n "$ACTIONS" ]; then
+        ACTIONS+=" $action_name"
+      else
+        ACTIONS="$action_name"
+      fi
+    fi
+  done
+
+  # Bash array variable can't be exported
+  # See: https://stackoverflow.com/questions/5564418/exporting-an-array-in-bash-script
+  ACTIONS_ASSOC_ENCODED=$(declare -p ACTIONS_ASSOC)
 }
 
 # Set the OPTIONS variable who's a list of all psu options
