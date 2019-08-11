@@ -25,15 +25,14 @@ ENV LANG="en_US.UTF-8" \
     STRICT_MODE="false" \
     MASKED_VARIABLES="false"
 
-RUN apk --update add \
-  bash \
-  ca-certificates \
-  httpie \
-  jq \
-  gettext \
-  && \
-  rm -rf /tmp/src && \
-  rm -rf /var/cache/apk/*
+RUN apk add --no-cache \
+  bash ca-certificates gettext httpie jq \
+  py3-pip python3-dev libc-dev libffi-dev openssl-dev gcc make; \
+  \
+  pip3 --no-cache-dir install docker-compose; \
+  \
+  apk del python3-dev libc-dev libffi-dev openssl-dev gcc make; \
+  rm -rf /tmp/src
 
 COPY psu /usr/local/bin/
 
