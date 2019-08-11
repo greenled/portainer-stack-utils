@@ -255,6 +255,9 @@ main() {
       local services
       services="$(timeout $TIMEOUT bash -c "until (export DEBUG_MODE=false && export VERBOSE_MODE=false && echo \"\$(psu -a services -q)\"); do sleep 1; done;")"
       # TODO: Improve performance, find a way to do parallel requests
+      # See: https://stackoverflow.com/questions/8634109/parallel-download-using-curl-command-line-utility#comment51239188_24276040
+      # Try and tweaks these command:
+      # psu services -u admin -p password -l http://portainer.local -n $PORTAINER_STACK_NAME -q | sed "s/^${PORTAINER_STACK_NAME}_\(.*\)$/\1/" | xargs -I {} -P 10 -- psu tasks -u admin -p password -l http://portainer.local -n $PORTAINER_STACK_NAME -S {} -q
       for service in $services; do
         export PORTAINER_SERVICE_NAME=${service#"${PORTAINER_STACK_NAME}_"}
         local new_tasks
