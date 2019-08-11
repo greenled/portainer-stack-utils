@@ -47,7 +47,7 @@ main() {
     "strict;-t;--strict;Never updates an existent stack nor removes an inexistent one, and instead exits with an error. Defaults to false"
     "help;-h;--help;Display help message. To display help of a given action, run: 'psu <action> --help'"
     "version;-V;--version;Display the version of this program"
-    "secure;-s;--secure[=yes|no];DEPRECATED: Use the --insecure option instead. Enable or disable the host's SSL certificate verification. Defaults to 'yes'"
+    "secure;-s;--secure[=yes|no];DEPRECATED: Use the '--insecure' option instead. Enable or disable the host's SSL certificate verification. Defaults to 'yes'"
     "action;-a;--action=[ACTION_NAME];DEPRECATED: Use <action> argument instead. The name of the action to execute"
     "compose-file;-c;--compose-file=[FILE_PATH];DEPRECATED: Use '--stack-file' option instead. Path to docker-compose file (required if action=deploy)"
   )
@@ -542,7 +542,7 @@ inputs() {
         fi
         ;;
       -s|--secure|-s=*|--secure=*)
-        echo_verbose "DEPRECATED: use 'insecure' action, instead of this '$1' option"
+        echo_verbose "DEPRECATED: Use '--insecure' option, instead of this '$1' option"
         HTTPIE_VERIFY_SSL=$(input_flag "$1" "$2" "yes no" "no")
         if [ "$HTTPIE_VERIFY_SSL" == "no" ] && [ -z "$PYTHONWARNINGS" ]; then
           # Fix httpie with Ubuntu 16.04
