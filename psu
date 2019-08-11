@@ -33,7 +33,8 @@ main() {
     "user;-u;--user=USERNAME;Username of the Portainer instance"
     "password;-p;--password=PASSWORD;Password of the Portainer instance"
     "name;-n;--name=STACK_NAME;Stack name"
-    "stack-file;-f;--stack-file=[FILE_PATH];Path to docker-stack file (required if action=deploy)"
+    "compose-file;-c;--compose-file=[FILE_PATH];Path to docker-compose file (required if action=deploy)"
+    "stack-file;;--stack-file=[FILE_PATH];Path to docker-stack file. Alias of '--compose-file' option"
     "env-file;-g;--env-file;Path to file with environment variables to be used by the stack (only used when action=deploy|update)"
     "endpoint;-e;--endpoint=[ENDPOINT_ID];Which Docker endpoint to use. Defaults to 1"
     "prune;-r;--prune;Whether to prune unused containers or not (only used when action=deploy). Defaults to false"
@@ -50,12 +51,11 @@ main() {
     "version;-V;--version;Display the version of this program"
     "secure;-s;--secure[=yes|no];DEPRECATED: Use the '--insecure' option instead. Enable or disable the host's SSL certificate verification. Defaults to 'yes'"
     "action;-a;--action=[ACTION_NAME];DEPRECATED: Use <action> argument instead. The name of the action to execute"
-    "compose-file;-c;--compose-file=[FILE_PATH];DEPRECATED: Use '--stack-file' option instead. Path to docker-compose file (required if action=deploy)"
   )
 
   ACTIONS_TABLE=(
     # action_name;description[;required_option_key1|required_option_key2...][;optional_option_key1|optional_option_key2...]
-    "deploy;Deploy the stack;url|user|password|name|stack-file;endpoint|env-file|prune|insecure|verbose|debug|masked-variables|strict"
+    "deploy;Deploy the stack;url|user|password|name|compose-file;endpoint|env-file|prune|insecure|verbose|debug|masked-variables|strict"
     "undeploy;Undeploy/remove the stack;url|user|password|name;endpoint|insecure|verbose|debug|masked-variables|strict"
     "list;Lists of the stacks already deployed;url|user|password;endpoint|quiet|insecure|verbose|debug|masked-variables|help"
     "info;Stack information;url|user|password|name;endpoint|quiet|insecure|verbose|debug|masked-variables"
@@ -460,15 +460,15 @@ inputs() {
           shift
         fi
         ;;
-      -f=*|--stack-file=*|-f|--stack-file)
+      -c=*|--compose-file=*|-c|--compose-file)
         DOCKER_COMPOSE_FILE=$(input_option "$1" "$2")
         if [ -n "$2" ] && [[ ! $2 =~ ^-.+$ ]] ; then
           # When the second argument is the value of the current option
           shift
         fi
         ;;
-      -c=*|--compose-file=*|-c|--compose-file)
-        echo_verbose "DEPRECATED: Use '--stack-file' option, instead of this '$1' option"
+      --stack-file=*|--stack-file)
+        # Alias of the '--compose-file' option
         DOCKER_COMPOSE_FILE=$(input_option "$1" "$2")
         if [ -n "$2" ] && [[ ! $2 =~ ^-.+$ ]] ; then
           # When the second argument is the value of the current option
