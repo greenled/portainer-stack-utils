@@ -175,4 +175,6 @@ Strict mode can be enabled through [STRICT_MODE envvar](#with-envvars) or [-t fl
 
 ## License
 
-Source code contained by this project is licensed under the [GNU General Public License version 3](https://www.gnu.org/licenses/gpl-3.0.en.html). See [LICENSE](LICENSE) file for reference.
+Source code contained by this project is licensed under the [GNU General Public License version 3](https://www.gnu.org/licenses/gpl-3.0.en.html).
+
+See [LICENSE](LICENSE) file for reference.
