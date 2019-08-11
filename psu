@@ -860,6 +860,7 @@ deploy() {
       local data_prefix="{\"Name\":\"$PORTAINER_STACK_NAME\",\"StackFileContent\":\""
       local data_suffix="\",\"Env\":"$stack_envvars"}"
       echo "$data_prefix$docker_compose_file_content$data_suffix" > json.tmp
+      # FIXME: Hide any value of variables who end by 'PASSWORD' or 'TOKEN', for security reasons
       echo_debug "Stack JSON -> $(echo $data_prefix$docker_compose_file_content$data_suffix | jq -C .)"
 
       # Create stack for single Docker instance
@@ -890,6 +891,7 @@ deploy() {
       local data_prefix="{\"Name\":\"$PORTAINER_STACK_NAME\",\"SwarmID\":\"$swarm_id\",\"StackFileContent\":\""
       local data_suffix="\",\"Env\":"$stack_envvars"}"
       echo "$data_prefix$docker_compose_file_content$data_suffix" > json.tmp
+      # FIXME: Hide any value of variables who end by 'PASSWORD' or 'TOKEN', for security reasons
       echo_debug "Stack JSON -> $(echo $data_prefix$docker_compose_file_content$data_suffix | jq -C .)"
 
       # Create stack for Docker swarm
@@ -931,6 +933,7 @@ deploy() {
     local data_prefix="{\"Id\":\"$stack_id\",\"StackFileContent\":\""
     local data_suffix="\",\"Env\":"$stack_envvars",\"Prune\":$PORTAINER_PRUNE}"
     echo "$data_prefix$docker_compose_file_content$data_suffix" > json.tmp
+    # FIXME: Hide any value of variables who end by 'PASSWORD' or 'TOKEN', for security reasons
     echo_debug "Stack JSON -> $(echo $data_prefix$docker_compose_file_content$data_suffix | jq -C .)"
 
     # Update stack
