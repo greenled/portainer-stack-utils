@@ -1458,7 +1458,7 @@ $(display_options_message)
 $(display_actions_message)
 
 Help:
-You can deploy/update/undeploy/list... stacks in a Portainer instance easily with this tool!"
+You can deploy/update/remove/list... stacks in a Portainer instance easily with this tool!"
 }
 
 main "$@"
