@@ -79,7 +79,8 @@ main() {
   ACTIONS_TEXT_ONLY="actions lint help version"
 
   # Aliases of default actions
-  # NOTICE: This is an experimental feature
+  # NOTICE: This is not a long term supported feature
+  # Please, avoid to use these action aliases in production
   declare -A ACTIONS_ALIASES
   ACTIONS_ALIASES=(
     ["update"]="deploy"
