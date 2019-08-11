@@ -24,7 +24,7 @@ cd portainer-stack-utils
 
 #### Requirements
 
-You will need these dependecies installed:
+You will need these dependencies installed:
 
 - [bash](https://www.gnu.org/software/bash/)
 - [httpie](https://httpie.org/)
