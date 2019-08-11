@@ -456,9 +456,9 @@ Arguments:
   action                         The name of the action to execute (possible values: '${ACTIONS// /\', \'}')
 
 Options:
-  -u, --user=USERNAME            Username
-  -p, --password=PASSWORD        Password
   -l, --url=URL                  URL to Portainer
+  -u, --user=USERNAME            Username of Portainer
+  -p, --password=PASSWORD        Password of Portainer
   -n, --name=STACK_NAME          Stack name
   -c, --compose-file=[FILE_PATH] Path to docker-compose file (required if action=deploy)
   -g, --env-file                 Path to file with environment variables to be used by the stack (only used when action=deploy or action=update)
