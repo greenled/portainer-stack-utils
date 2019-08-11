@@ -1102,7 +1102,7 @@ undeploy() {
       echo_error "Error: Stack $PORTAINER_STACK_NAME does not exist."
       exit 1
     else
-      echo_verbose "Stack $PORTAINER_STACK_NAME does not exist. No need to undeploy it."
+      echo_verbose "Stack $PORTAINER_STACK_NAME does not exist. No need to remove it."
       exit 0
     fi
   fi
