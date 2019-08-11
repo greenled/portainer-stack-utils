@@ -27,7 +27,7 @@ set -e
 #   None                   #
 ############################
 main() {
-  VERSION="0.2.0-alpha.20"
+  VERSION="1.0.0-alpha.11"
 
   OPTIONS_TABLE=(
     # option_key;flag_text;option_text;description
