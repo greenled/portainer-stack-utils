@@ -5,6 +5,7 @@
 # And more!
 
 set -e
+[[ "$PSU_TRACE" ]] && set -x
 
 ############################
 # Main entrypoint          #
