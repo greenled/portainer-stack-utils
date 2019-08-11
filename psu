@@ -868,9 +868,14 @@ echo_debug() {
 mask_variables() {
   local message="$1"
 
-  if [ "$MASKED_VARIABLES" == "true" ]; then
-    # Mask PORTAINER_PASSWORD variable value
-    message=$(echo "$message" | sed "s/$PORTAINER_PASSWORD/[MASKED]/g")
+  if [ "$MASKED_VARIABLES" == "true" ] && [ -n "$PORTAINER_PASSWORD" ]; then
+    # Mask PORTAINER_PASSWORD and AUTH_TOKEN variable values
+    local auth_token_masked
+    auth_token_masked="$AUTH_TOKEN"
+    if [ -z "$auth_token_masked" ]; then
+      auth_token_masked="$PORTAINER_PASSWORD"
+    fi
+    message=$(echo "$message" | sed "s/\($PORTAINER_PASSWORD\|$auth_token_masked\)/[MASKED]/g")
   elif [ "$MASKED_VARIABLES" == "extended" ]; then
     # Mask all variable values with PASSWORD or TOKEN in their name
     local masked_vars
