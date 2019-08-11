@@ -41,7 +41,7 @@ main() {
     "prune;-r;--prune;Whether to prune unused containers or not (only used when action=deploy). Defaults to false"
     "timeout;-T;--timeout=[SECONDS];Timeout, number of seconds before thrown an error (only used when action=status|tasks|tasks:healthy). Defaults to 100"
     "detect-job;-j;--detect-job=[true|false];Auto detect services who are jobs in the current stack. Defaults to true"
-    "service;-S;--service[=SERVICE_NAME];Filtering by a service name of the current stack (only used when action=status|tasks|tasks:healthy|containers)"
+    "service;-S;--service=[SERVICE_NAME];Filtering by a service name of the current stack (only used when action=status|tasks|tasks:healthy|containers)"
     "insecure;-i;--insecure;Skip the host's SSL certificate verification, use at your own risk. Defaults to false"
     "verbose;-v;--verbose;Increase the verbosity of messages. Defaults to false"
     "debug;-d;--debug;Print as much information as possible to help diagnosing a malfunction. Defaults to false"
