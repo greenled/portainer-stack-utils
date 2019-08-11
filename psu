@@ -27,64 +27,148 @@ set -e
 main() {
   VERSION="0.2.0-alpha.5"
 
-  ACTIONS_TABLE=(
-    "deploy|Deploy the stack"
-    "undeploy|Undeploy/remove the stack"
-    "list|Lists of the stacks already deployed"
-    "info|Stack information"
-    "status|Check if the stack is running/deployed correctly"
-    "services|Lists services already deployed for the current stack"
-    "tasks|Lists tasks for the current stack"
-    "tasks:healthy|Lists tasks who are running correctly for the current stack"
-    "containers|Lists containers running for the current stack"
-    "actions|Lists available actions of this program"
-    "help|Display help message"
-    "version|Display this program version"
+  OPTIONS_TABLE=(
+    # option_key;flag_text;option_text;description
+    "url;-l;--url=URL;URL of the Portainer instance"
+    "user;-u;--user=USERNAME;Username of the Portainer instance"
+    "password;-p;--password=PASSWORD;Password of the Portainer instance"
+    "name;-n;--name=STACK_NAME;Stack name"
+    "compose-file;-c;--compose-file=[FILE_PATH];Path to docker-compose file (required if action=deploy)"
+    "env-file;-g;--env-file;Path to file with environment variables to be used by the stack (only used when action=deploy|update)"
+    "endpoint;-e;--endpoint=[ENDPOINT_ID];Which Docker endpoint to use. Defaults to 1"
+    "prune;-r;--prune;Whether to prune unused containers or not (only used when action=deploy). Defaults to false"
+    "timeout;-T;--timeout=[SECONDS];Timeout, number of seconds before thrown an error (only used when action=status|tasks|tasks:healthy). Defaults to 100"
+    "detect-job;-j;--detect-job=[true|false];Auto detect services who are jobs in the current stack. Defaults to true"
+    "service;-S;--service[=SERVICE_NAME];Filtering by a service name of the current stack (only used when action=status|tasks|tasks:healthy|containers)"
+    "insecure;-i;--insecure;Skip the host's SSL certificate verification, use at your own risk. Defaults to false"
+    "verbose;-v;--verbose;Increase the verbosity of messages. Defaults to false"
+    "debug;-d;--debug;Print as much information as possible to help diagnosing a malfunction. Defaults to false"
+    "quiet;-q;--quiet;Display the minimum of information or nothing, UNIX/Linux friendly. Defaults to false"
+    "strict;-t;--strict;Never updates an existent stack nor removes an inexistent one, and instead exits with an error. Defaults to false"
+    "help;-h;--help;Display help message. To display help of a given action, run: 'psu <action> --help'"
+    "version;-V;--version;Display the version of this program"
+    "secure;-s;--secure[=yes|no];DEPRECATED: Use the --insecure option instead. Enable or disable the host's SSL certificate verification. Defaults to 'yes'"
+    "action;-a;--action=[ACTION_NAME];DEPRECATED: Use <action> argument instead. The name of the action to execute"
   )
 
+  ACTIONS_TABLE=(
+    # action_name;description[;required_option_key1|required_option_key2...][;optional_option_key1|optional_option_key2...]
+    "deploy;Deploy the stack;url|user|password|name|compose-file;endpoint|env-file|prune|insecure|verbose|debug|strict"
+    "undeploy;Undeploy/remove the stack;url|user|password|name;endpoint|insecure|verbose|debug|strict"
+    "list;Lists of the stacks already deployed;url|user|password;endpoint|quiet|insecure|verbose|debug|help"
+    "info;Stack information;url|user|password|name;endpoint|quiet|insecure|verbose|debug"
+    "status;Check if the stack is running/deployed correctly;url|user|password|name;endpoint|service|timeout|insecure|verbose|debug"
+    "services;Lists services already deployed for the current stack;url|user|password|name;endpoint|quiet|insecure|verbose|debug"
+    "tasks;Lists tasks for the current stack;url|user|password|name;endpoint|service|timeout|quiet|insecure|verbose|debug"
+    "tasks:healthy;Lists tasks who are running correctly for the current stack;url|user|password|name;endpoint|service|timeout|quiet|insecure|verbose|debug"
+    "containers;Lists containers running for the current stack;url|user|password|name;endpoint|service|quiet|insecure|verbose|debug"
+    "actions;Lists available actions of this program;;verbose|debug"
+    "help;Display help message"
+    "version;Display this program version"
+  )
+
+  # Special actions who display text only
+  # No HTTP requests are done
+  ACTIONS_TEXT_ONLY="actions help version"
+
+  # Aliases of default actions
+  # NOTICE: This is an experimental feature
+  declare -A ACTIONS_ALIASES
+  ACTIONS_ALIASES=(
+    ["update"]="deploy"
+    ["remove"]="undeploy"
+    ["stacks:deploy"]="deploy"
+    ["stacks:undeploy"]="undeploy"
+    ["stacks:list"]="list"
+    ["stacks:info"]="info"
+    ["stacks:status"]="status"
+    ["services:list"]="services"
+    ["tasks:list"]="tasks"
+    ["containers:list"]="containers"
+    ["actions:list"]="actions"
+  )
+
+  # TODO: move this stuff in a function
+  # Set the ACTIONS variable
+  # and the ACTIONS_ASSOC variable
+  declare -A ACTIONS_ASSOC
   local action_table
   local action_name
+  local action_description
+  local required_options
+  local optional_options
   for action in "${ACTIONS_TABLE[@]}"; do
-    IFS='|' read -ra action_table <<< "$action"
+    IFS=';' read -ra action_table <<< "$action"
     action_name="${action_table[0]}"
-    if [ -n "$ACTIONS" ]; then
-      ACTIONS="$ACTIONS $action_name"
+    action_description="${action_table[1]}"
+    required_options="${action_table[2]}"
+    optional_options="${action_table[3]}"
+    ACTIONS_ASSOC["$action_name"]="$action_description;$required_options;$optional_options"
+    if [ -n "$action_description" ]; then
+      if [ -n "$ACTIONS" ]; then
+        ACTIONS+=" $action_name"
+      else
+        ACTIONS="$action_name"
+      fi
+    fi
+  done
+
+  # TODO: move this stuff in a function
+  # Set the OPTIONS variable
+  # and the OPTIONS_ASSOC variable
+  declare -A OPTIONS_ASSOC
+  local option_table
+  local option_key
+  local flag_text
+  local option_text
+  local option_description
+  for option in "${OPTIONS_TABLE[@]}"; do
+    IFS=';' read -ra option_table <<< "$option"
+    option_key="${option_table[0]}"
+    flag_text="${option_table[1]}"
+    option_text="${option_table[2]}"
+    option_description="${option_table[3]}"
+    OPTIONS_ASSOC["$option_key"]="$flag_text;$option_text;$option_description"
+    if [ -n "$OPTIONS" ]; then
+      OPTIONS+=" $option_key"
     else
-      ACTIONS="$action_name"
+      OPTIONS="$option_key"
     fi
   done
 
   set_globals "$@"
 
-  # Get Portainer auth token. Will be used on every API request.
-  echo_verbose "Getting auth token..."
-  AUTH_TOKEN=$(http \
-    --check-status \
-    --ignore-stdin \
-    --verify=$HTTPIE_VERIFY_SSL \
-    $PORTAINER_URL/api/auth \
-    username=$PORTAINER_USER \
-    password=$PORTAINER_PASSWORD)
-  check_for_errors $? "$AUTH_TOKEN"
-  echo_debug "Get auth token response -> $(echo $AUTH_TOKEN | jq -C .)"
-  AUTH_TOKEN=$(echo $AUTH_TOKEN | jq -r .jwt)
-  echo_debug "Auth token -> $AUTH_TOKEN"
+  if [[ ! ${ACTIONS_TEXT_ONLY[*]} =~ $ACTION ]]; then
+    # Get Portainer auth token. Will be used on every API request.
+    echo_verbose "Getting auth token..."
+    AUTH_TOKEN=$(http \
+      --check-status \
+      --ignore-stdin \
+      --verify=$HTTPIE_VERIFY_SSL \
+      $PORTAINER_URL/api/auth \
+      username=$PORTAINER_USER \
+      password=$PORTAINER_PASSWORD)
+    check_for_errors $? "$AUTH_TOKEN"
+    echo_debug "Get auth token response -> $(echo $AUTH_TOKEN | jq -C .)"
+    AUTH_TOKEN=$(echo $AUTH_TOKEN | jq -r .jwt)
+    echo_debug "Auth token -> $AUTH_TOKEN"
 
-  # Get list of all stacks
-  echo_verbose "Getting stack $PORTAINER_STACK_NAME..."
-  STACKS=$(http \
-    --check-status \
-    --ignore-stdin \
-    --verify=$HTTPIE_VERIFY_SSL \
-    "$PORTAINER_URL/api/stacks" \
-    "Authorization: Bearer $AUTH_TOKEN")
-  check_for_errors $? "$STACKS"
-  echo_debug "Get stacks response -> $(echo $STACKS | jq -C .)"
+    # Get list of all stacks
+    echo_verbose "Getting stack $PORTAINER_STACK_NAME..."
+    STACKS=$(http \
+      --check-status \
+      --ignore-stdin \
+      --verify=$HTTPIE_VERIFY_SSL \
+      "$PORTAINER_URL/api/stacks" \
+      "Authorization: Bearer $AUTH_TOKEN")
+    check_for_errors $? "$STACKS"
+    echo_debug "Get stacks response -> $(echo $STACKS | jq -C .)"
 
-  # Get desired stack from stacks list by it's name
-  STACK=$(echo "$STACKS" \
-    | jq --arg PORTAINER_STACK_NAME "$PORTAINER_STACK_NAME" -jc '.[] | select(.Name == $PORTAINER_STACK_NAME)')
-  echo_debug "Stack ${PORTAINER_STACK_NAME} -> $(echo $STACK | jq -C .)"
+    # Get desired stack from stacks list by it's name
+    STACK=$(echo "$STACKS" \
+      | jq --arg PORTAINER_STACK_NAME "$PORTAINER_STACK_NAME" -jc '.[] | select(.Name == $PORTAINER_STACK_NAME)')
+    echo_debug "Stack ${PORTAINER_STACK_NAME} -> $(echo $STACK | jq -C .)"
+  fi
 
   if [ $ACTION == "deploy" ]; then
     deploy
@@ -221,6 +305,14 @@ main() {
     exit 0
   fi
 
+  # Get list of all actions who can be used for this program
+  if [ $ACTION == "actions" ]; then
+    echo "Portainer Stack Utils, version $VERSION"
+    echo ""
+    display_actions_message
+    exit 0
+  fi
+
   if [[ ! ${ACTIONS[*]} =~ $ACTION ]]; then
     echo_error "Error: Unknown action \"$ACTION\"."
     exit 1
@@ -298,9 +390,11 @@ set_globals() {
 
   # Check required arguments have been provided
   check_argument "$ACTION" "action" "ACTION" "a" "action"
-  check_argument "$PORTAINER_USER" "portainer user" "PORTAINER_USER" "u" "user"
-  check_argument "$PORTAINER_PASSWORD" "portainer password" "PORTAINER_PASSWORD" "p" "password"
-  check_argument "$PORTAINER_URL" "portainer url" "PORTAINER_URL" "l" "url"
+  if [[ ! ${ACTIONS_TEXT_ONLY[*]} =~ $ACTION ]]; then
+    check_argument "$PORTAINER_USER" "portainer user" "PORTAINER_USER" "u" "user"
+    check_argument "$PORTAINER_PASSWORD" "portainer password" "PORTAINER_PASSWORD" "p" "password"
+    check_argument "$PORTAINER_URL" "portainer url" "PORTAINER_URL" "l" "url"
+  fi
   if [ "$ACTION" == "deploy" ]; then
     check_argument "$DOCKER_COMPOSE_FILE" "docker compose file" "DOCKER_COMPOSE_FILE" "c" "compose-file"
     if [ -n "$ENVIRONMENT_VARIABLES_FILE" ] && [[ ! -f "$ENVIRONMENT_VARIABLES_FILE" ]]; then
@@ -308,7 +402,7 @@ set_globals() {
       exit 1
     fi
   fi
-  if [ "$ACTION" != "list" ]; then
+  if [ "$ACTION" != "list" ] && [[ ! ${ACTIONS_TEXT_ONLY[*]} =~ $ACTION ]]; then
     check_argument "$PORTAINER_STACK_NAME" "portainer stack name" "PORTAINER_STACK_NAME" "n" "name"
   fi
 }
@@ -452,17 +546,12 @@ inputs() {
         ;;
       actions)
         ACTION="actions"
-        echo "Portainer Stack Utils, version $VERSION"
-        echo ""
-        display_actions_message
-        exit 0
         ;;
       -V|--version|version)
         if [ -z "$ACTION" ]; then
           ACTION="version"
           echo "Portainer Stack Utils, version $VERSION
   License GPLv3: GNU GPL version 3"
-          exit 0
         else
           input_error "Error: invalid option '$1' for the '$ACTION' action"
           exit 1
@@ -473,21 +562,8 @@ inputs() {
           ACTION="help"
           display_help_message
         else
-          if [ "$ACTION" == "list" ]; then
-              echo "Usage:
-  psu $ACTION [options]
-
-Options:
-  -q, --quiet    Display only the stack names who are deployed
-  -h, --help     Display this help message
-
-Help:
-  Returns a list of the stacks already deployed"
-            ACTION="help"
-          else
-            input_error "Error: no help is available for the '$ACTION' action, run the 'psu help' command for global help"
-            exit 1
-          fi
+          display_help_action_message
+          ACTION="help"
         fi
         exit 0
         ;;
@@ -501,7 +577,10 @@ Help:
         ;;
       *)
         # deploy|undeploy|list|info|status|tasks|services... argument
-        if [[ ${ACTIONS[*]} =~ $1 ]]; then
+        if [ -n "${ACTIONS_ALIASES[$1]}" ] && [ -z "$ACTION" ]; then
+          # Use aliased action '$1' who use the action '${ACTIONS_ALIASES[$1]}'"
+          ACTION="${ACTIONS_ALIASES[$1]}";
+        elif [[ ${ACTIONS[*]} =~ $1 ]]; then
           if [ -z "$ACTION" ]; then
             ACTION="$1";
           else
@@ -1008,20 +1087,124 @@ containers() {
   echo "$containers"
 }
 
+display_options_message() {
+  echo "Options:"
+  local table
+  local flag_columns=6
+  local columns=30
+  local row
+  local flag
+  local name
+  local description
+
+  for option in $OPTIONS; do
+    display_options "${OPTIONS_ASSOC[$option]}"
+  done
+}
+
+display_help_action_message() {
+  local actions_table
+  local action_description
+  local required_options_table
+  local optional_options_table
+  local required_options
+  local optional_options
+  local option_list
+  IFS=';' read -ra actions_table <<< "${ACTIONS_ASSOC[$ACTION]}"
+  action_description="${actions_table[0]}"
+
+  IFS='|' read -ra required_options_table <<< "${actions_table[1]}"
+  for required_option in "${required_options_table[@]}"; do
+    option_list=("${OPTIONS_ASSOC[$required_option]}")
+    required_options+="$(display_options "${option_list[@]}")\n"
+  done
+
+  IFS='|' read -ra optional_options_table <<< "${actions_table[2]}"
+  for optional_option in "${optional_options_table[@]}"; do
+    option_list=("${OPTIONS_ASSOC[$optional_option]}")
+    optional_options+="$(display_options "${option_list[@]}")\n"
+  done
+
+  echo "Usage:
+psu $ACTION [options]
+
+Required options:
+$(echo -e "$required_options")
+
+Optional options:
+$(echo -e "$optional_options")
+
+Help:
+  $action_description"
+}
+
+display_options() {
+  local table
+  local flag_columns=6
+  local columns=30
+  local row
+  local flag
+  local name
+  local description
+  local options
+  if [ -n "$1" ]; then
+    options=("$1")
+  else
+    options=("${OPTIONS_ASSOC[@]}")
+  fi
+  for option in "${options[@]}"; do
+    IFS=';' read -ra table <<< "$option"
+    flag="${table[0]}"
+    name="${table[1]}"
+    description="${table[2]}"
+    if [ -n "$description" ]; then
+      row=$(printf "%-${flag_columns}s %-${columns}s %-${columns}s \n" "$flag," "$name" "$description")
+      echo "  $row"
+    fi
+  done
+}
+
 display_actions_message() {
   echo "Available actions:"
-  local actions_columns=15
-  local actions_table_row
-  local action_table
-  local action_name
-  local action_description
+  local table
+  local columns=15
+  local row
+  local name
+  local description
   for action in "${ACTIONS_TABLE[@]}"; do
-    IFS='|' read -ra action_table <<< "$action"
-    action_name="${action_table[0]}"
-    action_description="${action_table[1]}"
-    actions_table_row=$(printf "%-${actions_columns}s %-${actions_columns}s \n" "$action_name" "$action_description")
-    echo "  $actions_table_row"
+    IFS=';' read -ra table <<< "$action"
+    name="${table[0]}"
+    description="${table[1]}"
+    if [ -n "$description" ]; then
+      row=$(printf "%-${columns}s %-${columns}s \n" "$name" "$description")
+      echo "  $row"
+    fi
   done
+
+  if [ $VERBOSE_MODE == "true" ]; then
+    display_actions_aliased_message
+  fi
+}
+
+display_actions_aliased_message() {
+  if [ ${#ACTIONS_ALIASES[@]} -ne 0 ]; then
+    echo ""
+    echo "Available aliased actions:"
+    local alias_columns=25
+    local alias_table_header
+    local alias_table_separator
+    local alias_table_row
+    alias_table_header=$(printf "| %-${alias_columns}s | %-${alias_columns}s |\n" "Aliased action:" "Equivalent action:")
+    alias_table_separator=$(printf "+%$((${#alias_table_header}-2))s+\n" "" | tr ' ' '-')
+    echo "  $alias_table_separator"
+    echo "  $alias_table_header"
+    echo "  $alias_table_separator"
+    for action in "${!ACTIONS_ALIASES[@]}"; do
+      alias_table_row=$(printf "| %-${alias_columns}s | %-${alias_columns}s |\n" "$action" "${ACTIONS_ALIASES[$action]}")
+      echo "  $alias_table_row"
+    done | sort
+    echo "  $alias_table_separator"
+  fi
 }
 
 display_help_message() {
@@ -1031,29 +1214,9 @@ Usage:
   psu <action> [options]
 
 Arguments:
-  action                         The name of the action to execute (possible values: '${ACTIONS// /\', \'}')
+  action  The name of the action to execute (possible values: '${ACTIONS// /\', \'}')
 
-Options:
-  -l, --url=URL                  URL of the Portainer instance
-  -u, --user=USERNAME            Username of the Portainer instance
-  -p, --password=PASSWORD        Password of the Portainer instance
-  -n, --name=STACK_NAME          Stack name
-  -c, --compose-file=[FILE_PATH] Path to docker-compose file (required if action=deploy)
-  -g, --env-file                 Path to file with environment variables to be used by the stack (only used when action=deploy or action=update)
-  -e, --endpoint=[ENDPOINT_ID]   Which Docker endpoint to use. Defaults to 1
-  -r, --prune                    Whether to prune unused containers or not. Defaults to false
-  -T, --timeout=[SECONDS]        Status timeout, number of seconds before thrown an error (only used when action=status). Defaults to 100
-  -j, --detect-job=[true|false]  Auto detect services who are jobs in the current stack. Defaults to true
-  -S, --service[=SERVICE_NAME]   Filtering by a service name of the current stack
-  -i, --insecure                 Skip the host's SSL certificate verification, use at your own risk. Defaults to false
-  -v, --verbose                  Increase the verbosity of messages. Defaults to false
-  -d, --debug                    Print as much information as possible to help diagnosing a malfunction. Defaults to false
-  -q, --quiet                    Display the minimum of information or nothing, UNIX/Linux friendly. Defaults to false
-  -t, --strict                   Never updates an existent stack nor removes an inexistent one, and instead exits with an error. Defaults to false
-  -h, --help                     Display help message
-  -V, --version                  Display the version of this program
-  -s, --secure[=yes|no]          DEPRECATED: Use the --insecure option instead. Enable or disable the host's SSL certificate verification. Defaults to 'yes'
-  -a, --action=[ACTION_NAME]     DEPRECATED: Use <action> argument instead. The name of the action to execute
+$(display_options_message)
 
 $(display_actions_message)
 
