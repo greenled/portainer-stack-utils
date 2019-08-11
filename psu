@@ -26,7 +26,7 @@ set -e
 ############################
 main() {
   VERSION="0.2.0-alpha.2"
-  ACTIONS="deploy undeploy list info status services tasks tasks:healthy containers help version"
+  ACTIONS="deploy undeploy list info status services tasks tasks:healthy containers actions help version"
 
   set_globals "$@"
 
@@ -423,16 +423,25 @@ inputs() {
           shift
         fi
         ;;
+      actions)
+        ACTION="actions"
+        echo "Portainer Stack Utils, version $VERSION"
+        echo ""
+        echo "Available actions:"
+        for action in $ACTIONS; do
+          echo "  $action"
+        done
+        exit 0
+        ;;
       -V|--version|version)
-        local message
-        local version_message
-        message="Portainer Stack Utils, version $VERSION
-  License GPLv3: GNU GPL version 3"
-        version_message="$(input_message "$1" "$message")"
-        if [ -n "$version_message" ]; then
+        if [ -z "$ACTION" ]; then
           ACTION="version"
-          echo "$version_message"
+          echo "Portainer Stack Utils, version $VERSION
+  License GPLv3: GNU GPL version 3"
           exit 0
+        else
+          input_error "Error: invalid option '$1' for the '$ACTION' action"
+          exit 1
         fi
         ;;
       -h|--help|help)
@@ -507,7 +516,7 @@ inputs() {
             exit 1
           fi
         else
-          input_error "Error: Invalid argument: '$1', run the 'psu help' command for more information"
+          input_error "Error: Unknown action '$1', run the 'psu help' command for more information"
           exit 1
         fi
     esac
@@ -581,20 +590,6 @@ input_flag() {
     echo "$value"
   else
     input_error "Error: wrong value given for the '${option%=*}' option, should be '${allowed_values// /\' or \'}'"
-    exit 1
-  fi
-}
-
-input_message() {
-  local option
-  local value
-  option="$1"
-  value="$2"
-
-  if [ -z "$ACTION" ]; then
-    echo "$value"
-  else
-    input_error "Error: invalid option '$option' for the '$ACTION' action"
     exit 1
   fi
 }
