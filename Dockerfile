@@ -1,22 +1,29 @@
 FROM alpine:3.10
 
 ENV LANG="en_US.UTF-8" \
-  LC_ALL="C.UTF-8" \
-  LANGUAGE="en_US.UTF-8" \
-  TERM="xterm" \
-  ACTION="" \
-  PORTAINER_USER="" \
-  PORTAINER_PASSWORD="" \
-  PORTAINER_URL="" \
-  PORTAINER_STACK_NAME="" \
-  DOCKER_COMPOSE_FILE="" \
-  ENVIRONMENT_VARIABLES_FILE="" \
-  PORTAINER_PRUNE="false" \
-  PORTAINER_ENDPOINT="1" \
-  HTTPIE_VERIFY_SSL="yes" \
-  VERBOSE_MODE="false" \
-  DEBUG_MODE="false" \
-  STRICT_MODE="false"
+    LC_ALL="C.UTF-8" \
+    LANGUAGE="en_US.UTF-8" \
+    TERM="xterm" \
+    ACTION="" \
+    PORTAINER_USER="" \
+    PORTAINER_PASSWORD="" \
+    PORTAINER_AUTH_TOKEN="" \
+    PORTAINER_URL="" \
+    PORTAINER_STACK_NAME="" \
+    PORTAINER_SERVICE_NAME="" \
+    DOCKER_COMPOSE_FILE="" \
+    DOCKER_COMPOSE_LINT="true" \
+    ENVIRONMENT_VARIABLES_FILE="" \
+    PORTAINER_ENDPOINT="1" \
+    PORTAINER_PRUNE="false" \
+    TIMEOUT=100 \
+    AUTO_DETECT_JOB="true" \
+    HTTPIE_VERIFY_SSL="yes" \
+    VERBOSE_MODE="false" \
+    DEBUG_MODE="false" \
+    QUIET_MODE="false" \
+    STRICT_MODE="false" \
+    MASKED_VARIABLES="false"
 
 RUN apk --update add \
   bash \
