@@ -48,7 +48,7 @@ main() {
     "masked-variables;-m;--masked-variables;In debug/verbose mode, value of sensitive variables will be hidden, avoid leaking passwords/tokens in logs. Possible values: true|extended|false. Defaults to false"
     "quiet;-q;--quiet;Display the minimum of information or nothing, UNIX/Linux friendly. Defaults to false"
     "strict;-t;--strict;Never updates an existent stack nor removes an inexistent one, and instead exits with an error. Defaults to false"
-    "lint;-L;--lint=[true|false];Validate the Docker compose/stack file before deploying the stack (only used when action=deploy). Defaults to false"
+    "lint;-L;--lint=[true|false];Validate the Docker compose/stack file before deploying the stack (only used when action=deploy). Defaults to true"
     "help;-h;--help;Display help message. To display help of a given action, run: 'psu <action> --help'"
     "version;-V;--version;Display the version of this program"
     "secure;-s;--secure[=yes|no];DEPRECATED: Use the '--insecure' option instead. Enable or disable the host's SSL certificate verification. Defaults to 'yes'"
@@ -390,7 +390,7 @@ set_globals() {
   PORTAINER_STACK_NAME=${PORTAINER_STACK_NAME}
   PORTAINER_SERVICE_NAME=${PORTAINER_SERVICE_NAME}
   DOCKER_COMPOSE_FILE=${DOCKER_COMPOSE_FILE}
-  DOCKER_COMPOSE_LINT=${DOCKER_COMPOSE_LINT:-"false"}
+  DOCKER_COMPOSE_LINT=${DOCKER_COMPOSE_LINT:-"true"}
   ENVIRONMENT_VARIABLES_FILE=${ENVIRONMENT_VARIABLES_FILE}
   PORTAINER_ENDPOINT=${PORTAINER_ENDPOINT:-"1"}
   PORTAINER_PRUNE=${PORTAINER_PRUNE:-"false"}
