@@ -25,7 +25,7 @@ set -e
 #   None                   #
 ############################
 main() {
-  VERSION="0.2.0-alpha.4"
+  VERSION="0.2.0-alpha.5"
 
   ACTIONS_TABLE=(
     "deploy|Deploy the stack"
