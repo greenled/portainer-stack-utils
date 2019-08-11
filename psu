@@ -34,9 +34,10 @@ main() {
     "password;-p;--password=PASSWORD;Password of the Portainer instance"
     "auth-token;-A;--auth-token=[AUTH_TOKEN];Use a Portainer auth token instead of '--user' and '--password' options, you can get it with the 'psu login' command. Defaults to null"
     "name;-n;--name=STACK_NAME;Stack name"
-    "compose-file;-c;--compose-file=[FILE_PATH];Path to docker-compose file (required if action=deploy)"
-    "stack-file;;--stack-file=[FILE_PATH];Path to docker-stack file. Alias of '--compose-file' option"
-    "env-file;-g;--env-file;Path to file with environment variables to be used by the stack (only used when action=deploy|update)"
+    "compose-file;-c|-f;--compose-file=FILE_PATH;Path to docker compose/stack file (required if action=deploy)"
+    "compose-file-base64;-C|-F;--compose-file-base64=[BASE64];Content of docker compose/stack file, encoded in base64, useful with Docker in Docker (only used when action=deploy)"
+    "env-file;-g;--env-file=[FILE_PATH];Path to a file of environment variables, to be used by the stack (only used when action=deploy)"
+    "env-file-base64;-G;--env-file-base64=[BASE64];Content of file with environment variables, encoded in base64, to be used by the stack, useful with Docker in Docker (only used when action=deploy)"
     "endpoint;-e;--endpoint=[ENDPOINT_ID];Which Docker endpoint to use. Defaults to 1"
     "prune;-r;--prune;Whether to prune unused containers or not (only used when action=deploy). Defaults to false"
     "timeout;-T;--timeout=[SECONDS];Timeout, number of seconds before thrown an error (only used when action=status|tasks|tasks:healthy). Defaults to 100"
@@ -57,19 +58,19 @@ main() {
 
   ACTIONS_TABLE=(
     # action_name;description[;required_option_key1|required_option_key2...][;optional_option_key1|optional_option_key2...]
-    "deploy;Deploy the stack;url|user|password|name|compose-file;auth-token|endpoint|lint|env-file|prune|insecure|verbose|debug|masked-variables|strict"
-    "undeploy;Undeploy/remove the stack;url|user|password|name;auth-token|endpoint|insecure|verbose|debug|masked-variables|strict"
-    "login;Log in to a Portainer instance;url|user|password;insecure|verbose|debug|masked-variables"
-    "list;Lists of the stacks already deployed;url|user|password;auth-token|endpoint|quiet|insecure|verbose|debug|masked-variables|help"
-    "info;Stack information;url|user|password|name;auth-token|endpoint|quiet|insecure|verbose|debug|masked-variables"
+    "deploy;Deploy the given stack;url|user|password|name|compose-file;auth-token|endpoint|lint|compose-file-base64|env-file|env-file-base64|prune|insecure|verbose|debug|masked-variables|strict"
+    "rm;Remove/undeploy the given stack;url|user|password|name;auth-token|endpoint|insecure|verbose|debug|masked-variables|strict"
+    "ls;List stacks already deployed;url|user|password;auth-token|endpoint|quiet|insecure|verbose|debug|masked-variables"
     "status;Check if the stack is running/deployed correctly;url|user|password|name;auth-token|endpoint|service|detect-job|timeout|insecure|verbose|debug|masked-variables"
+    "services;List services already deployed in the current stack;url|user|password|name;auth-token|endpoint|quiet|insecure|verbose|debug|masked-variables"
+    "tasks;List tasks in the current stack;url|user|password|name;auth-token|endpoint|service|detect-job|timeout|quiet|insecure|verbose|debug|masked-variables"
+    "tasks:healthy;List tasks who are running correctly in the current stack;url|user|password|name;auth-token|endpoint|service|detect-job|timeout|quiet|insecure|verbose|debug|masked-variables"
+    "containers;List containers running in the current stack;url|user|password|name;auth-token|endpoint|service|quiet|insecure|verbose|debug|masked-variables"
+    "login;Log in to a Portainer instance;url|user|password;insecure|verbose|debug|masked-variables"
+    "lint;Validate the Docker compose/stack file;compose-file;compose-file-base64|verbose|debug"
+    "inspect;Display low-level information of the current stack;url|user|password|name;auth-token|endpoint|quiet|insecure|verbose|debug|masked-variables"
     "system:info;Display Docker system-wide information;url|user|password;auth-token|endpoint|insecure|verbose|debug|masked-variables"
-    "services;Lists services already deployed for the current stack;url|user|password|name;auth-token|endpoint|quiet|insecure|verbose|debug|masked-variables"
-    "tasks;Lists tasks for the current stack;url|user|password|name;auth-token|endpoint|service|detect-job|timeout|quiet|insecure|verbose|debug|masked-variables"
-    "tasks:healthy;Lists tasks who are running correctly for the current stack;url|user|password|name;auth-token|endpoint|service|detect-job|timeout|quiet|insecure|verbose|debug|masked-variables"
-    "containers;Lists containers running for the current stack;url|user|password|name;auth-token|endpoint|service|quiet|insecure|verbose|debug|masked-variables"
-    "lint;Validate the Docker compose/stack file;compose-file;verbose|debug"
-    "actions;Lists available actions of this program;;verbose|debug"
+    "actions;List available actions of this program;;verbose|debug"
     "help;Display help message"
     "version;Display this program version"
   )
@@ -83,20 +84,15 @@ main() {
   # Please, avoid to use these action aliases in production
   declare -A ACTIONS_ALIASES
   ACTIONS_ALIASES=(
-    ["update"]="deploy"
-    ["remove"]="undeploy"
-    ["stacks:deploy"]="deploy"
-    ["stacks:undeploy"]="undeploy"
     ["auth"]="login"
-    ["stacks:list"]="list"
-    ["stacks:info"]="info"
-    ["stacks:status"]="status"
-    ["system"]="system:info"
     ["docker:info"]="system:info"
-    ["services:list"]="services"
-    ["tasks:list"]="tasks"
-    ["containers:list"]="containers"
-    ["actions:list"]="actions"
+    ["remove"]="rm"
+    ["undeploy"]="rm"
+    ["list"]="ls"
+    ["ps"]="tasks"
+    ["ps:healthy"]="tasks:healthy"
+    ["update"]="deploy"
+    ["validate"]="lint"
   )
 
   transform_actions_table
@@ -137,7 +133,7 @@ main() {
     exit 0
   fi
 
-  if [ $ACTION == "undeploy" ]; then
+  if [ $ACTION == "rm" ]; then
     undeploy
     exit 0
   fi
@@ -266,7 +262,7 @@ main() {
 
   # Returns stack info
   # If it already exists
-  if [ $ACTION == "info" ]; then
+  if [ $ACTION == "inspect" ]; then
     if [ -n "$STACK" ]; then
       if [ $QUIET_MODE == "false" ]; then
         echo "$STACK"
@@ -280,7 +276,7 @@ main() {
   fi
 
   # Get list of all stacks
-  if [ $ACTION == "list" ]; then
+  if [ $ACTION == "ls" ]; then
     if [ $QUIET_MODE == "false" ]; then
       # Returns response in JSON format
       echo "$STACKS"
@@ -405,7 +401,7 @@ set_globals() {
       exit 1
     fi
   fi
-  if [ "$ACTION" != "list" ] && [ "$ACTION" != "login" ] && [ "$ACTION" != "system:info" ] && [[ ! ${ACTIONS_TEXT_ONLY[*]} =~ $ACTION ]]; then
+  if [ "$ACTION" != "ls" ] && [ "$ACTION" != "login" ] && [ "$ACTION" != "system:info" ] && [[ ! ${ACTIONS_TEXT_ONLY[*]} =~ $ACTION ]]; then
     check_argument "$PORTAINER_STACK_NAME" "portainer stack name" "PORTAINER_STACK_NAME" "n" "name"
   fi
 }
@@ -448,16 +444,18 @@ inputs() {
           shift
         fi
         ;;
-      -c=*|--compose-file=*|-c|--compose-file)
+      -c=*|-f=*|--compose-file=*|--file=*|-c|-f|--compose-file|--file)
         DOCKER_COMPOSE_FILE=$(input_option "$1" "$2")
         if [ -n "$2" ] && [[ ! $2 =~ ^-.+$ ]] ; then
           # When the second argument is the value of the current option
           shift
         fi
         ;;
-      --stack-file=*|--stack-file)
-        # Alias of the '--compose-file' option
-        DOCKER_COMPOSE_FILE=$(input_option "$1" "$2")
+      -C=*|-F=*|--compose-file-base64=*|--file-base64=*|-C|-F|--compose-file-base64|--file-base64)
+        local docker_compose_file_base64
+        docker_compose_file_base64=$(input_option "$1" "$2")
+        echo "$docker_compose_file_base64" | base64 -d > docker_compose_file_from_base64.yml
+        DOCKER_COMPOSE_FILE=docker_compose_file_from_base64.yml
         if [ -n "$2" ] && [[ ! $2 =~ ^-.+$ ]] ; then
           # When the second argument is the value of the current option
           shift
@@ -472,6 +470,16 @@ inputs() {
         ;;
       -g=*|--env-file=*|-g|--env-file)
         ENVIRONMENT_VARIABLES_FILE=$(input_option "$1" "$2")
+        if [ -n "$2" ] && [[ ! $2 =~ ^-.+$ ]] ; then
+          # When the second argument is the value of the current option
+          shift
+        fi
+        ;;
+      -G=*|--env-file-base64=*|-G|--env-file-base64)
+        local env_file_base64
+        env_file_base64=$(input_option "$1" "$2")
+        echo "$env_file_base64" | base64 -d > env_file_from_base64
+        ENVIRONMENT_VARIABLES_FILE=env_file_from_base64
         if [ -n "$2" ] && [[ ! $2 =~ ^-.+$ ]] ; then
           # When the second argument is the value of the current option
           shift
@@ -609,7 +617,7 @@ inputs() {
         fi
         ;;
       *)
-        # deploy|undeploy|list|info|status|tasks|services... argument
+        # deploy|rm|ls|inspect|status|tasks|services... argument
         if [ -n "${ACTIONS_ALIASES[$1]}" ] && [ -z "$ACTION" ]; then
           # Use aliased action '$1' who use the action '${ACTIONS_ALIASES[$1]}'"
           ACTION="${ACTIONS_ALIASES[$1]}";
@@ -833,6 +841,7 @@ echo_verbose() {
   local message=$1
   local yellow='\033[1;33m'
   local nc='\033[0m'
+
   if [ $VERBOSE_MODE == "true" ]; then
     local verbose_message
     verbose_message=$(mask_variables "$message")
