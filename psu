@@ -961,7 +961,6 @@ tasks() {
       filter_include_job_auto_detection=$(if [ "$AUTO_DETECT_JOB" == "true" ]; then echo 'map(select(any(.Spec.RestartPolicy; .Condition == "none")))'; else echo 'map(select(.Spec.ContainerSpec.Labels."job-name"))'; fi)
       # For tasks which run a script then shutdown when it's successfully executed, like 'Job' in Kubernetes
       local last_task_created_at
-      # last_task_created_at=$(tasks | jq -jc "$filter_include_job_auto_detection | max_by(.CreatedAt) | select(.CreatedAt) | .CreatedAt")
       last_task_created_at=$(tasks | jq -jc "max_by(.CreatedAt) | .CreatedAt")
       local filter_created_at
       filter_created_at="map(select(.CreatedAt >= \"$last_task_created_at\"))"
