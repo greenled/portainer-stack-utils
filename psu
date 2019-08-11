@@ -30,37 +30,35 @@ main() {
 
   set_globals "$@"
 
-  if [ "$ACTION" != "help" ] && [ "$ACTION" != "version" ]; then
-    # Get Portainer auth token. Will be used on every API request.
-    echo_verbose "Getting auth token..."
-    AUTH_TOKEN=$(http \
-      --check-status \
-      --ignore-stdin \
-      --verify=$HTTPIE_VERIFY_SSL \
-      $PORTAINER_URL/api/auth \
-      username=$PORTAINER_USER \
-      password=$PORTAINER_PASSWORD)
-    check_for_errors $? "$AUTH_TOKEN"
-    echo_debug "Get auth token response -> $(echo $AUTH_TOKEN | jq -C .)"
-    AUTH_TOKEN=$(echo $AUTH_TOKEN | jq -r .jwt)
-    echo_debug "Auth token -> $AUTH_TOKEN"
+  # Get Portainer auth token. Will be used on every API request.
+  echo_verbose "Getting auth token..."
+  AUTH_TOKEN=$(http \
+    --check-status \
+    --ignore-stdin \
+    --verify=$HTTPIE_VERIFY_SSL \
+    $PORTAINER_URL/api/auth \
+    username=$PORTAINER_USER \
+    password=$PORTAINER_PASSWORD)
+  check_for_errors $? "$AUTH_TOKEN"
+  echo_debug "Get auth token response -> $(echo $AUTH_TOKEN | jq -C .)"
+  AUTH_TOKEN=$(echo $AUTH_TOKEN | jq -r .jwt)
+  echo_debug "Auth token -> $AUTH_TOKEN"
 
-    # Get list of all stacks
-    echo_verbose "Getting stack $PORTAINER_STACK_NAME..."
-    STACKS=$(http \
-      --check-status \
-      --ignore-stdin \
-      --verify=$HTTPIE_VERIFY_SSL \
-      "$PORTAINER_URL/api/stacks" \
-      "Authorization: Bearer $AUTH_TOKEN")
-    check_for_errors $? "$STACKS"
-    echo_debug "Get stacks response -> $(echo $STACKS | jq -C .)"
+  # Get list of all stacks
+  echo_verbose "Getting stack $PORTAINER_STACK_NAME..."
+  STACKS=$(http \
+    --check-status \
+    --ignore-stdin \
+    --verify=$HTTPIE_VERIFY_SSL \
+    "$PORTAINER_URL/api/stacks" \
+    "Authorization: Bearer $AUTH_TOKEN")
+  check_for_errors $? "$STACKS"
+  echo_debug "Get stacks response -> $(echo $STACKS | jq -C .)"
 
-    # Get desired stack from stacks list by it's name
-    STACK=$(echo "$STACKS" \
-      | jq --arg PORTAINER_STACK_NAME "$PORTAINER_STACK_NAME" -jc '.[] | select(.Name == $PORTAINER_STACK_NAME)')
-    echo_debug "Stack ${PORTAINER_STACK_NAME} -> $(echo $STACK | jq -C .)"
-  fi
+  # Get desired stack from stacks list by it's name
+  STACK=$(echo "$STACKS" \
+    | jq --arg PORTAINER_STACK_NAME "$PORTAINER_STACK_NAME" -jc '.[] | select(.Name == $PORTAINER_STACK_NAME)')
+  echo_debug "Stack ${PORTAINER_STACK_NAME} -> $(echo $STACK | jq -C .)"
 
   if [ $ACTION == "deploy" ]; then
     deploy
@@ -273,11 +271,9 @@ set_globals() {
 
   # Check required arguments have been provided
   check_argument "$ACTION" "action" "ACTION" "a" "action"
-  if [ "$ACTION" != "help" ] && [ "$ACTION" != "version" ]; then
-    check_argument "$PORTAINER_USER" "portainer user" "PORTAINER_USER" "u" "user"
-    check_argument "$PORTAINER_PASSWORD" "portainer password" "PORTAINER_PASSWORD" "p" "password"
-    check_argument "$PORTAINER_URL" "portainer url" "PORTAINER_URL" "l" "url"
-  fi
+  check_argument "$PORTAINER_USER" "portainer user" "PORTAINER_USER" "u" "user"
+  check_argument "$PORTAINER_PASSWORD" "portainer password" "PORTAINER_PASSWORD" "p" "password"
+  check_argument "$PORTAINER_URL" "portainer url" "PORTAINER_URL" "l" "url"
   if [ "$ACTION" == "deploy" ]; then
     check_argument "$DOCKER_COMPOSE_FILE" "docker compose file" "DOCKER_COMPOSE_FILE" "c" "compose-file"
     if [ -n "$ENVIRONMENT_VARIABLES_FILE" ] && [[ ! -f "$ENVIRONMENT_VARIABLES_FILE" ]]; then
@@ -285,7 +281,7 @@ set_globals() {
       exit 1
     fi
   fi
-  if [ "$ACTION" != "list" ] && [ "$ACTION" != "help" ] && [ "$ACTION" != "version" ]; then
+  if [ "$ACTION" != "list" ]; then
     check_argument "$PORTAINER_STACK_NAME" "portainer stack name" "PORTAINER_STACK_NAME" "n" "name"
   fi
 }
@@ -436,6 +432,7 @@ inputs() {
         if [ -n "$version_message" ]; then
           ACTION="version"
           echo "$version_message"
+          exit 0
         fi
         ;;
       -h|--help|help)
@@ -490,6 +487,7 @@ inputs() {
             exit 1
           fi
         fi
+        exit 0
         ;;
       -a=*|--action=*|-a|--action)
         # DEPRECATED: To keep backwards compatibility with psu 0.1.x
