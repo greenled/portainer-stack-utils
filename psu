@@ -45,7 +45,7 @@ main() {
     "insecure;-i;--insecure;Skip the host's SSL certificate verification, use at your own risk. Defaults to false"
     "verbose;-v;--verbose;Increase the verbosity of messages. Defaults to false"
     "debug;-d;--debug;Print as much information as possible to help diagnosing a malfunction. Defaults to false"
-    "masked-variables;-m;--masked-variables;In debug and/or verbose mode, the value of sensitive variables will be hidden, useful in CI tool to avoid leaking passwords or tokens in your logs. Possible values: true|extended|false. Defaults to false"
+    "masked-variables;-m;--masked-variables;In debug and/or verbose mode, the value of sensitive variables will be hidden, useful in CI to avoid leaking passwords/tokens in logs. Possible values: true|extended|false. Defaults to false"
     "quiet;-q;--quiet;Display the minimum of information or nothing, UNIX/Linux friendly. Defaults to false"
     "strict;-t;--strict;Never updates an existent stack nor removes an inexistent one, and instead exits with an error. Defaults to false"
     "help;-h;--help;Display help message. To display help of a given action, run: 'psu <action> --help'"
