@@ -1073,7 +1073,11 @@ services() {
     filters=="{$filter_service}" \
     "Authorization: Bearer $AUTH_TOKEN")
   check_for_errors $? "$services"
-  echo "$services"
+
+  local filter_mode
+  # If a service has a replicas set to zero, skip it!
+  filter_mode="map(select(.Spec.Mode.Global or any(.Spec.Mode.Replicated; .Replicas > 0)))"
+  echo "$services" | jq -jc "$filter_mode"
 }
 
 containers() {
