@@ -1283,7 +1283,9 @@ lint() {
       rm -f docker_stack_validation_report
       exit 1
     else
-      echo "[OK]"
+      if [ "$ACTION" == "lint" ]; then
+        echo "[OK]"
+      fi
       echo_verbose "The '$DOCKER_COMPOSE_FILE' Docker compose/stack file is valid"
     fi
   else
