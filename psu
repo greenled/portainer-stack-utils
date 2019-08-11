@@ -1049,7 +1049,7 @@ tasks() {
       echo "$tasks" | jq -jc "$filter_status | $filter_exclude_job_auto_detection | sort_by(.CreatedAt) | reverse | unique_by(.Slot)"
     fi
   else
-    echo "$tasks" | jq --arg state "$state" -jc 'sort_by(.CreatedAt) | reverse | unique_by(.Slot)'
+    echo "$tasks" | jq -jc 'sort_by(.CreatedAt) | reverse | unique_by(.Slot)'
   fi
 }
 
