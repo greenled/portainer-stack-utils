@@ -58,6 +58,7 @@ main() {
     # action_name;description[;required_option_key1|required_option_key2...][;optional_option_key1|optional_option_key2...]
     "deploy;Deploy the stack;url|user|password|name|compose-file;auth-token|endpoint|env-file|prune|insecure|verbose|debug|masked-variables|strict"
     "undeploy;Undeploy/remove the stack;url|user|password|name;auth-token|endpoint|insecure|verbose|debug|masked-variables|strict"
+    "login;Log in to a Portainer instance;url|user|password;insecure|verbose|debug|masked-variables"
     "list;Lists of the stacks already deployed;url|user|password;auth-token|endpoint|quiet|insecure|verbose|debug|masked-variables|help"
     "info;Stack information;url|user|password|name;auth-token|endpoint|quiet|insecure|verbose|debug|masked-variables"
     "status;Check if the stack is running/deployed correctly;url|user|password|name;auth-token|endpoint|service|detect-job|timeout|insecure|verbose|debug|masked-variables"
@@ -83,6 +84,7 @@ main() {
     ["remove"]="undeploy"
     ["stacks:deploy"]="deploy"
     ["stacks:undeploy"]="undeploy"
+    ["auth"]="login"
     ["stacks:list"]="list"
     ["stacks:info"]="info"
     ["stacks:status"]="status"
@@ -174,6 +176,13 @@ main() {
 
   if [ $ACTION == "undeploy" ]; then
     undeploy
+    exit 0
+  fi
+
+  if [ $ACTION == "login" ]; then
+    if [ $QUIET_MODE == "false" ] && [ $MASKED_VARIABLES == "false" ]; then
+      echo "$PORTAINER_AUTH_TOKEN"
+    fi
     exit 0
   fi
 
@@ -421,7 +430,7 @@ set_globals() {
       exit 1
     fi
   fi
-  if [ "$ACTION" != "list" ] && [ "$ACTION" != "system:info" ] && [[ ! ${ACTIONS_TEXT_ONLY[*]} =~ $ACTION ]]; then
+  if [ "$ACTION" != "list" ] && [ "$ACTION" != "login" ] && [ "$ACTION" != "system:info" ] && [[ ! ${ACTIONS_TEXT_ONLY[*]} =~ $ACTION ]]; then
     check_argument "$PORTAINER_STACK_NAME" "portainer stack name" "PORTAINER_STACK_NAME" "n" "name"
   fi
 }
@@ -1087,6 +1096,27 @@ undeploy() {
     "Authorization: Bearer $PORTAINER_AUTH_TOKEN")
   check_for_errors $? "$delete"
   echo_debug "Delete action response -> $(echo $delete | jq -C .)"
+}
+
+# Get Portainer auth token. Will be used on every API request.
+login() {
+  echo_verbose "Getting auth token..."
+  local auth_token_json
+  auth_token_json=$(http \
+    --check-status \
+    --ignore-stdin \
+    --verify=$HTTPIE_VERIFY_SSL \
+    $PORTAINER_URL/api/auth \
+    username=$PORTAINER_USER \
+    password=$PORTAINER_PASSWORD)
+  check_for_errors $? "$auth_token_json"
+  PORTAINER_AUTH_TOKEN=$(echo $auth_token_json | jq -r .jwt)
+  echo_debug "Get auth token response -> $(echo $auth_token_json | jq -C .)"
+  echo_debug "Auth token -> $PORTAINER_AUTH_TOKEN"
+  if [ -z "$PORTAINER_AUTH_TOKEN" ]; then
+    echo_error "Auth token is empty, check if your username and password are correct."
+    exit 1
+  fi
 }
 
 ###################################################
