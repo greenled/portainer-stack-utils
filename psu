@@ -595,8 +595,8 @@ inputs() {
           HTTPIE_VERIFY_SSL="yes"
         fi
         if [ "$HTTPIE_VERIFY_SSL" == "no" ] && [ -z "$PYTHONWARNINGS" ]; then
-          # Fix httpie with Ubuntu 16.04
-          PYTHONWARNINGS="ignore:Unverified HTTPS request"
+          # Fix httpie with Debian and Ubuntu
+          export PYTHONWARNINGS="ignore:Unverified HTTPS request"
         fi
         if [ -n "$2" ] && [[ ! $2 =~ ^-.+$ ]] ; then
           # When the second argument is the value of the current option
@@ -607,8 +607,8 @@ inputs() {
         echo_verbose "DEPRECATED: Use '--insecure' option, instead of this '$1' option"
         HTTPIE_VERIFY_SSL=$(input_flag "$1" "$2" "yes no" "no")
         if [ "$HTTPIE_VERIFY_SSL" == "no" ] && [ -z "$PYTHONWARNINGS" ]; then
-          # Fix httpie with Ubuntu 16.04
-          PYTHONWARNINGS="ignore:Unverified HTTPS request"
+          # Fix httpie with Debian and Ubuntu
+          export PYTHONWARNINGS="ignore:Unverified HTTPS request"
         fi
         if [ -n "$2" ] && [[ ! $2 =~ ^-.+$ ]] ; then
           # When the second argument is the value of the current option
