@@ -1274,7 +1274,7 @@ display_options() {
     name="${table[1]}"
     description="${table[2]}"
     if [ -n "$description" ]; then
-      row=$(printf "%-${flag_columns}s %-${columns}s %-${columns}s \n" "$flag," "$name" "$description")
+      row=$(printf "%-${flag_columns}s %-${columns}s %-${columns}s \n" "$(if [ -n "$flag" ]; then echo "$flag,"; fi)" "$name" "$description")
       echo "  $row"
     fi
   done
