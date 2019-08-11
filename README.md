@@ -43,6 +43,8 @@ docker run -e ACTION=deploy greenled/portainer-stack-utils ...
 ```
 
 See the [With envvars](#with-envvars) section for a list of all supported environment variables.
+For detailed instructions, see [How to use](#how-to-use) section.
+
 
 #### Tags
 
