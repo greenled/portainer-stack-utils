@@ -439,7 +439,7 @@ inputs() {
         fi
         ;;
       -s|--secure|-s=*|--secure=*)
-        # DEPRECATED: use `insecure` action instead
+        echo_verbose "DEPRECATED: use 'insecure' action, instead of this '$1' option"
         HTTPIE_VERIFY_SSL=$(input_flag "$1" "$2" "yes no" "no")
         if [ "$HTTPIE_VERIFY_SSL" == "no" ] && [ -z "$PYTHONWARNINGS" ]; then
           # Fix httpie with Ubuntu 16.04
