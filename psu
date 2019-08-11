@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 #
-# Deploy/update/undeploy/info/status Docker stacks in a Portainer instance.
-# And also list stacks, services, tasks and containers
+# Deploy/update/remove/inspect/status Docker stacks in a Portainer instance.
+# List stacks, services, tasks and containers
+# And more!
 
 set -e
 
