@@ -26,7 +26,7 @@ set -e
 ############################
 main() {
   VERSION="0.2.0-alpha.2"
-  ACTIONS="deploy undeploy list info services tasks tasks_healthy containers status help version"
+  ACTIONS="deploy undeploy list info status services tasks tasks:healthy containers help version"
 
   set_globals "$@"
 
@@ -97,7 +97,7 @@ main() {
       # Tasks should not have one of these states:
       # 'failed', 'orphaned', 'remove'
 
-      timeout -t $ROLLOUT_STATUS_TIMEOUT bash -c "until (export DEBUG_MODE=false && export VERBOSE_MODE=false && psu -a tasks_healthy -q) >/dev/null 2>&1; do echo -n \$(if [ \"\$VERBOSE_MODE\" == \"true\" ]; then echo -n .; fi) && sleep 1; done;"
+      timeout -t $ROLLOUT_STATUS_TIMEOUT bash -c "until (export DEBUG_MODE=false && export VERBOSE_MODE=false && psu -a tasks:healthy -q) >/dev/null 2>&1; do echo -n \$(if [ \"\$VERBOSE_MODE\" == \"true\" ]; then echo -n .; fi) && sleep 1; done;"
       status=$?
 
       if $(exit $status); then
@@ -110,9 +110,9 @@ main() {
       fi
   fi
 
-  if [ $ACTION == "tasks" ] || [ $ACTION == "tasks_healthy" ]; then
+  if [ $ACTION == "tasks" ] || [ $ACTION == "tasks:healthy" ]; then
     local scope
-    scope="$(if [ $ACTION == "tasks_healthy" ]; then echo healthy; else echo all; fi)"
+    scope="$(if [ $ACTION == "tasks:healthy" ]; then echo healthy; else echo all; fi)"
     local tasks
     if [ -n "$PORTAINER_SERVICE_NAME" ]; then
       echo_verbose "List $scope tasks from service '$PORTAINER_SERVICE_NAME' of stack '$PORTAINER_STACK_NAME'..."
