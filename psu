@@ -122,6 +122,7 @@ main() {
       echo_verbose "List $scope tasks of stack '$PORTAINER_STACK_NAME'..."
       local services
       services="$(timeout -t $ROLLOUT_STATUS_TIMEOUT bash -c "until (export DEBUG_MODE=false && export VERBOSE_MODE=false && echo \"\$(psu -a services -q)\"); do sleep 1; done;")"
+      # TODO: Improve performance, find a way to do parallel requests
       for service in $services; do
         export PORTAINER_SERVICE_NAME=${service#"${PORTAINER_STACK_NAME}_"}
         local new_tasks
