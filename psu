@@ -568,7 +568,8 @@ inputs() {
         exit 0
         ;;
       -a=*|--action=*|-a|--action)
-        # DEPRECATED: To keep backwards compatibility with psu 0.1.x
+        # To keep backwards compatibility with psu 0.1.x
+        echo_verbose "DEPRECATED: Use 'psu <action> [options]' command, instead of using this '$1' option"
         ACTION=$(input_option "$1" "$2" "$ACTIONS")
         if [ -n "$2" ] && [[ ! $2 =~ ^-.+$ ]] ; then
           # When the second argument is the value of the current option
