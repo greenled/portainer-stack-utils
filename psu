@@ -227,7 +227,7 @@ main() {
       # Tasks should not have one of these states:
       # 'failed', 'orphaned', 'remove'
 
-      timeout -t $TIMEOUT bash -c "until (export PORTAINER_SERVICE_NAME=$PORTAINER_SERVICE_NAME && export DEBUG_MODE=false && export VERBOSE_MODE=false && psu -a tasks:healthy -q) >/dev/null 2>&1; do echo -n \$(if [ \"\$VERBOSE_MODE\" == \"true\" ]; then echo -n .; fi) && sleep 1; done;"
+      timeout $TIMEOUT bash -c "until (export PORTAINER_SERVICE_NAME=$PORTAINER_SERVICE_NAME && export DEBUG_MODE=false && export VERBOSE_MODE=false && psu -a tasks:healthy -q) >/dev/null 2>&1; do echo -n \$(if [ \"\$VERBOSE_MODE\" == \"true\" ]; then echo -n .; fi) && sleep 1; done;"
       status=$?
 
       if $(exit $status); then
@@ -251,7 +251,7 @@ main() {
     else
       echo_verbose "List $scope tasks of stack '$PORTAINER_STACK_NAME'..."
       local services
-      services="$(timeout -t $TIMEOUT bash -c "until (export DEBUG_MODE=false && export VERBOSE_MODE=false && echo \"\$(psu -a services -q)\"); do sleep 1; done;")"
+      services="$(timeout $TIMEOUT bash -c "until (export DEBUG_MODE=false && export VERBOSE_MODE=false && echo \"\$(psu -a services -q)\"); do sleep 1; done;")"
       # TODO: Improve performance, find a way to do parallel requests
       for service in $services; do
         export PORTAINER_SERVICE_NAME=${service#"${PORTAINER_STACK_NAME}_"}
