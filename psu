@@ -1063,12 +1063,14 @@ tasks_healthy() {
 
 services() {
   local services
+  local filter_service
+  filter_service="\"label\":{\"com.docker.stack.namespace=$PORTAINER_STACK_NAME\":true}"
   services=$(http \
     --check-status \
     --ignore-stdin \
     --verify=$HTTPIE_VERIFY_SSL \
     "$PORTAINER_URL/api/endpoints/$PORTAINER_ENDPOINT/docker/services" \
-    filters=="{\"label\":{\"com.docker.stack.namespace=$PORTAINER_STACK_NAME\":true}}" \
+    filters=="{$filter_service}" \
     "Authorization: Bearer $AUTH_TOKEN")
   check_for_errors $? "$services"
   echo "$services"
