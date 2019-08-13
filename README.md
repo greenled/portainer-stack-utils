@@ -1,6 +1,7 @@
 # Portainer Stack Utils
 
 [![Docker Automated build](https://img.shields.io/docker/automated/greenled/portainer-stack-utils.svg)](https://hub.docker.com/r/greenled/portainer-stack-utils/)
+[![Build Status](https://cloud.drone.io/api/badges/greenled/portainer-stack-utils/status.svg)](https://cloud.drone.io/greenled/portainer-stack-utils)
 [![Docker Pulls](https://img.shields.io/docker/pulls/greenled/portainer-stack-utils.svg)](https://hub.docker.com/r/greenled/portainer-stack-utils/)
 [![Microbadger](https://images.microbadger.com/badges/image/greenled/portainer-stack-utils.svg)](http://microbadger.com/images/greenled/portainer-stack-utils "Image size")
 [![Go Report Card](https://goreportcard.com/badge/github.com/greenled/portainer-stack-utils)](https://goreportcard.com/report/github.com/greenled/portainer-stack-utils)
