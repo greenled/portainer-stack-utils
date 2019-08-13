@@ -1,0 +1,20 @@
+kind: pipeline
+name: default
+
+steps:
+  - name: fetch
+    image: docker:git
+    commands:
+      - git fetch --tags
+
+  - name: test
+    image: golang
+    volumes:
+      - name: deps
+        path: /go
+    commands:
+      - go test -cover -v ./...
+
+volumes:
+  - name: deps
+    temp: {}
