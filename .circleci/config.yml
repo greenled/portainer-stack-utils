@@ -1,0 +1,12 @@
+version: 2
+jobs:
+  build:
+    docker:
+      - image: goreleaser:goreleaser
+    working_directory: /go/src/github.com/greenled/portainer-stack-utils
+    steps:
+      - checkout
+      - setup_remote_docker:
+          docker_layer_caching: true
+      - run: |
+          goreleaser --skip-publish --snapshot
