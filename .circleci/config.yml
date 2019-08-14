@@ -6,10 +6,18 @@ executors:
       - image: goreleaser/goreleaser
 
 jobs:
+  release-test:
+    executor: goreleaser
+    working_directory: /go/src/github.com/greenled/portainer-stack-utils
+    steps:
+    - checkout
+    - setup_remote_docker:
+    - run: goreleaser --skip-publish --snapshot
+
   release:
     executor: goreleaser
     working_directory: /go/src/github.com/greenled/portainer-stack-utils
     steps:
       - checkout
       - setup_remote_docker:
-      - run: goreleaser --skip-publish --snapshot
+      - run: goreleaser
