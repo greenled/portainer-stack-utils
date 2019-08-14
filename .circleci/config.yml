@@ -3,45 +3,45 @@ version: 2
 executors:
   go:
     docker:
-      - image: circleci/golang:1.12
+    - image: circleci/golang:1.12
     environment:
       GO111MODULES: on
 
   goreleaser:
     docker:
-      - image: goreleaser/goreleaser
+    - image: goreleaser/goreleaser
 
 commands:
   gomod:
     steps:
-      - restore_cache:
-          keys: [gomod-]
-      - run:
-          name: Download dependencies
-          command: go mod download
-      - save_cache:
-          key: gomod-{{ checksum "go.sum" }}
-          paths: [/go/pkg/mod]
+    - restore_cache:
+        keys: [gomod-]
+    - run:
+        name: Download dependencies
+        command: go mod download
+    - save_cache:
+        key: gomod-{{ checksum "go.sum" }}
+        paths: [/go/pkg/mod]
 
 jobs:
   test:
     executor: go
     steps:
-      - checkout
-      - gomod
-      - run: go test -v ./...
+    - checkout
+    - gomod
+    - run: go test -v ./...
 
   coverage:
     executor: go
     steps:
-      - checkout
-      - gomod
-      - run: go test -race -coverprofile=coverage.txt ./...
-      - store_artifacts:
-          path: ./coverage.txt
-          destination: coverage.txt
-      - codecov/upload:
-          path: coverage.txt
+    - checkout
+    - gomod
+    - run: go test -race -coverprofile=coverage.txt ./...
+    - store_artifacts:
+        path: ./coverage.txt
+        destination: coverage.txt
+    - codecov/upload:
+        path: coverage.txt
 
   release-test:
     executor: goreleaser
@@ -55,22 +55,22 @@ jobs:
     executor: goreleaser
     working_directory: /go/src/github.com/greenled/portainer-stack-utils
     steps:
-      - checkout
-      - setup_remote_docker:
-      - run: goreleaser
+    - checkout
+    - setup_remote_docker:
+    - run: goreleaser
 
 workflows:
   version: 2
   ci:
     jobs:
-      - test
-      - coverage
-      - release-test
-      - release:
-          requires:
-            - test
-            - coverage
-            - release-test
-            filters:
-              tags:
-                only: /v.*/
+    - test
+    - coverage
+    - release-test
+    - release:
+        requires:
+        - test
+        - coverage
+        - release-test
+        filters:
+          tags:
+            only: /v.*/
