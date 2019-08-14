@@ -5,9 +5,10 @@ import (
 	"os"
 	"strings"
 
+	"github.com/greenled/portainer-stack-utils/version"
+
 	"github.com/sirupsen/logrus"
 
-	"github.com/greenled/portainer-stack-utils/common"
 	"github.com/mitchellh/go-homedir"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -35,7 +36,7 @@ func init() {
 	cobra.OnInitialize(initConfig, initLogger)
 
 	rootCmd.SetVersionTemplate("{{ version }}\n")
-	cobra.AddTemplateFunc("version", common.BuildVersionString)
+	cobra.AddTemplateFunc("version", version.BuildVersionString)
 
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "Config file. (default \"$HOME/.psu.yaml)\"")
 	rootCmd.PersistentFlags().StringP("log-level", "v", "info", "Log level. One of trace, debug, info, warning, error, fatal or panic.")

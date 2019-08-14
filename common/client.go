@@ -8,6 +8,8 @@ import (
 	"net/url"
 	"strings"
 
+	"github.com/greenled/portainer-stack-utils/version"
+
 	"github.com/greenled/portainer-stack-utils/client"
 	"github.com/sirupsen/logrus"
 
@@ -92,7 +94,7 @@ func GetDefaultClientConfig() (config client.Config, err error) {
 		User:          viper.GetString("user"),
 		Password:      viper.GetString("password"),
 		Token:         viper.GetString("auth-token"),
-		UserAgent:     BuildUseAgentString(),
+		UserAgent:     version.BuildUseAgentString(),
 		DoNotUseToken: false,
 	}
 
