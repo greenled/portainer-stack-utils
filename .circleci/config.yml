@@ -58,3 +58,19 @@ jobs:
       - checkout
       - setup_remote_docker:
       - run: goreleaser
+
+workflows:
+  version: 2
+  ci:
+    jobs:
+      - test
+      - coverage
+      - release-test
+      - release:
+          requires:
+            - test
+            - coverage
+            - release-test
+            filters:
+              tags:
+                only: /v.*/
