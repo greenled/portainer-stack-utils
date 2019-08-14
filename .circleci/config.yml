@@ -29,14 +29,18 @@ jobs:
     steps:
     - checkout
     - gomod
-    - run: go test -v ./...
+    - run:
+        name: Run tests
+        command: go test -v ./...
 
   coverage:
     executor: go
     steps:
     - checkout
     - gomod
-    - run: go test -race -coverprofile=coverage.txt ./...
+    - run:
+        name: Create test coverage report
+        command: go test -race -coverprofile=coverage.txt ./...
     - store_artifacts:
         path: ./coverage.txt
         destination: coverage.txt
@@ -49,7 +53,9 @@ jobs:
     steps:
     - checkout
     - setup_remote_docker
-    - run: goreleaser --skip-publish --snapshot
+    - run:
+        name: Create snapshot
+        command: goreleaser --skip-publish --snapshot
 
   release:
     executor: goreleaser
@@ -57,9 +63,11 @@ jobs:
     steps:
     - checkout
     - setup_remote_docker
-    - run: |
-        docker login -u $CI_REGISTY_USER -p $CI_REGISTY_PASSWORD $CI_REGISTRY
-        goreleaser
+    - run:
+        name: Create and publish release
+        command: |
+          docker login -u $CI_REGISTY_USER -p $CI_REGISTY_PASSWORD $CI_REGISTRY
+          goreleaser
 
 workflows:
   version: 2
