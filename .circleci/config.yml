@@ -1,6 +1,6 @@
 version: 2
 jobs:
-  build:
+  release:
     docker:
       - image: goreleaser/goreleaser
     working_directory: /go/src/github.com/greenled/portainer-stack-utils
