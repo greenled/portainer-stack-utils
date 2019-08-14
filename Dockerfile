@@ -1,4 +1,4 @@
-FROM alpine:3
+FROM alpine:3.10
 
 ENV PSU_AUTH_TOKEN="" \
   PSU_CONFIG="" \
