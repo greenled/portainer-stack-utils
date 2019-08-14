@@ -24,6 +24,13 @@ commands:
           paths: [/go/pkg/mod]
 
 jobs:
+  test:
+    executor: go
+    steps:
+      - checkout
+      - gomod
+      - run: go test -v ./...
+
   release-test:
     executor: goreleaser
     working_directory: /go/src/github.com/greenled/portainer-stack-utils
