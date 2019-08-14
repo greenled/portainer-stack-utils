@@ -11,6 +11,18 @@ executors:
     docker:
       - image: goreleaser/goreleaser
 
+commands:
+  gomod:
+    steps:
+      - restore_cache:
+          keys: [gomod-]
+      - run:
+          name: Download dependencies
+          command: go mod download
+      - save_cache:
+          key: gomod-{{ checksum "go.sum" }}
+          paths: [/go/pkg/mod]
+
 jobs:
   release-test:
     executor: goreleaser
