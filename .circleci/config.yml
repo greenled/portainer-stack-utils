@@ -1,6 +1,12 @@
 version: 2
 
 executors:
+  go:
+    docker:
+      - image: circleci/golang:1.12
+    environment:
+      GO111MODULES: on
+
   goreleaser:
     docker:
       - image: goreleaser/goreleaser
