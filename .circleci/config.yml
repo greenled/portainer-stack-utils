@@ -57,7 +57,9 @@ jobs:
     steps:
     - checkout
     - setup_remote_docker:
-    - run: goreleaser
+    - run: |
+        docker login -u $CI_REGISTY_USER -p $CI_REGISTY_PASSWORD $CI_REGISTRY
+        goreleaser
 
 workflows:
   version: 2
