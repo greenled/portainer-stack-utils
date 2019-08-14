@@ -17,6 +17,7 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 package cmd
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"text/template"
@@ -48,17 +49,9 @@ var endpointListCmd = &cobra.Command{
 		endpoints, err := client.GetEndpoints()
 		common.CheckError(err)
 
-		if viper.GetString("endpoint.list.format") != "" {
-			// Print endpoint fields formatted
-			template, templateParsingErr := template.New("endpointTpl").Parse(viper.GetString("endpoint.list.format"))
-			common.CheckError(templateParsingErr)
-			for _, e := range endpoints {
-				templateExecutionErr := template.Execute(os.Stdout, e)
-				common.CheckError(templateExecutionErr)
-				fmt.Println()
-			}
-		} else {
-			// Print all endpoint fields as a table
+		switch viper.GetString("endpoint.list.format") {
+		case "table":
+			// Print endpoints in a table format
 			writer, err := common.NewTabWriter([]string{
 				"ID",
 				"NAME",
@@ -88,6 +81,20 @@ var endpointListCmd = &cobra.Command{
 			}
 			flushErr := writer.Flush()
 			common.CheckError(flushErr)
+		case "json":
+			// Print endpoints in a json format
+			statusJsonBytes, err := json.Marshal(endpoints)
+			common.CheckError(err)
+			fmt.Println(string(statusJsonBytes))
+		default:
+			// Print endpoints in a custom format
+			template, templateParsingErr := template.New("endpointTpl").Parse(viper.GetString("endpoint.list.format"))
+			common.CheckError(templateParsingErr)
+			for _, e := range endpoints {
+				templateExecutionErr := template.Execute(os.Stdout, e)
+				common.CheckError(templateExecutionErr)
+				fmt.Println()
+			}
 		}
 	},
 }
@@ -95,7 +102,7 @@ var endpointListCmd = &cobra.Command{
 func init() {
 	endpointCmd.AddCommand(endpointListCmd)
 
-	endpointListCmd.Flags().String("format", "", "Format output using a Go template.")
+	endpointListCmd.Flags().String("format", "table", `Output format. Can be "table", "json" or a Go template.`)
 	viper.BindPFlag("endpoint.list.format", endpointListCmd.Flags().Lookup("format"))
 
 	endpointListCmd.SetUsageTemplate(endpointListCmd.UsageTemplate() + common.GetFormatHelp(portainer.Endpoint{}))

@@ -1,12 +1,12 @@
 package cmd
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"text/template"
 
 	"github.com/greenled/portainer-stack-utils/client"
-
 	portainer "github.com/portainer/portainer/api"
 
 	"github.com/sirupsen/logrus"
@@ -64,17 +64,9 @@ var stackListCmd = &cobra.Command{
 			common.CheckError(err)
 		}
 
-		if viper.GetString("stack.list.format") != "" {
-			// Print stack fields formatted
-			template, templateParsingErr := template.New("stackTpl").Parse(viper.GetString("stack.list.format"))
-			common.CheckError(templateParsingErr)
-			for _, s := range stacks {
-				templateExecutionErr := template.Execute(os.Stdout, s)
-				common.CheckError(templateExecutionErr)
-				fmt.Println()
-			}
-		} else {
-			// Print all stack fields as a table
+		switch viper.GetString("stack.list.format") {
+		case "table":
+			// Print stacks in a table format
 			writer, err := common.NewTabWriter([]string{
 				"ID",
 				"NAME",
@@ -94,6 +86,20 @@ var stackListCmd = &cobra.Command{
 			}
 			flushErr := writer.Flush()
 			common.CheckError(flushErr)
+		case "json":
+			// Print stacks in a json format
+			stacksJsonBytes, err := json.Marshal(stacks)
+			common.CheckError(err)
+			fmt.Println(string(stacksJsonBytes))
+		default:
+			// Print stacks in a custom format
+			template, templateParsingErr := template.New("stackTpl").Parse(viper.GetString("stack.list.format"))
+			common.CheckError(templateParsingErr)
+			for _, s := range stacks {
+				templateExecutionErr := template.Execute(os.Stdout, s)
+				common.CheckError(templateExecutionErr)
+				fmt.Println()
+			}
 		}
 	},
 }
@@ -102,7 +108,7 @@ func init() {
 	stackCmd.AddCommand(stackListCmd)
 
 	stackListCmd.Flags().Int("endpoint", 0, "Filter by endpoint ID.")
-	stackListCmd.Flags().String("format", "", "Format output using a Go template.")
+	stackListCmd.Flags().String("format", "table", `Output format. Can be "table", "json" or a Go template.`)
 	viper.BindPFlag("stack.list.endpoint", stackListCmd.Flags().Lookup("endpoint"))
 	viper.BindPFlag("stack.list.format", stackListCmd.Flags().Lookup("format"))
 

@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"text/template"
@@ -32,17 +33,9 @@ var endpointGroupListCmd = &cobra.Command{
 		endpointGroups, err := client.GetEndpointGroups()
 		common.CheckError(err)
 
-		if viper.GetString("endpoint.group.list.format") != "" {
-			// Print endpoint group fields formatted
-			template, templateParsingErr := template.New("endpointGroupTpl").Parse(viper.GetString("endpoint.group.list.format"))
-			common.CheckError(templateParsingErr)
-			for _, g := range endpointGroups {
-				templateExecutionErr := template.Execute(os.Stdout, g)
-				common.CheckError(templateExecutionErr)
-				fmt.Println()
-			}
-		} else {
-			// Print all endpoint group fields as a table
+		switch viper.GetString("endpoint.group.list.format") {
+		case "table":
+			// Print endpoint groups in a table format
 			writer, err := common.NewTabWriter([]string{
 				"ID",
 				"NAME",
@@ -60,6 +53,20 @@ var endpointGroupListCmd = &cobra.Command{
 			}
 			flushErr := writer.Flush()
 			common.CheckError(flushErr)
+		case "json":
+			// Print endpoint groups in a json format
+			statusJsonBytes, err := json.Marshal(endpointGroups)
+			common.CheckError(err)
+			fmt.Println(string(statusJsonBytes))
+		default:
+			// Print endpoint groups in a custom format
+			template, templateParsingErr := template.New("endpointGroupTpl").Parse(viper.GetString("endpoint.group.list.format"))
+			common.CheckError(templateParsingErr)
+			for _, g := range endpointGroups {
+				templateExecutionErr := template.Execute(os.Stdout, g)
+				common.CheckError(templateExecutionErr)
+				fmt.Println()
+			}
 		}
 	},
 }
@@ -67,7 +74,7 @@ var endpointGroupListCmd = &cobra.Command{
 func init() {
 	endpointGroupCmd.AddCommand(endpointGroupListCmd)
 
-	endpointGroupListCmd.Flags().String("format", "", "Format output using a Go template.")
+	endpointGroupListCmd.Flags().String("format", "table", `Output format. Can be "table", "json" or a Go template.`)
 	viper.BindPFlag("endpoint.group.list.format", endpointGroupListCmd.Flags().Lookup("format"))
 
 	endpointGroupListCmd.SetUsageTemplate(endpointGroupListCmd.UsageTemplate() + common.GetFormatHelp(portainer.EndpointGroup{}))

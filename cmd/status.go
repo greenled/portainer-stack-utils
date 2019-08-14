@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"text/template"
@@ -28,15 +29,9 @@ var statusCmd = &cobra.Command{
 		respBody, err := client.GetStatus()
 		common.CheckError(err)
 
-		if viper.GetString("status.format") != "" {
-			// Print stack fields formatted
-			template, templateParsingErr := template.New("statusTpl").Parse(viper.GetString("status.format"))
-			common.CheckError(templateParsingErr)
-			templateExecutionErr := template.Execute(os.Stdout, respBody)
-			common.CheckError(templateExecutionErr)
-			fmt.Println()
-		} else {
-			// Print status fields as a table
+		switch viper.GetString("status.format") {
+		case "table":
+			// Print status in a table format
 			writer, newTabWriterErr := common.NewTabWriter([]string{
 				"VERSION",
 				"AUTHENTICATION",
@@ -56,6 +51,18 @@ var statusCmd = &cobra.Command{
 
 			flushErr := writer.Flush()
 			common.CheckError(flushErr)
+		case "json":
+			// Print status in a json format
+			statusJsonBytes, err := json.Marshal(respBody)
+			common.CheckError(err)
+			fmt.Println(string(statusJsonBytes))
+		default:
+			// Print status in a custom format
+			template, templateParsingErr := template.New("statusTpl").Parse(viper.GetString("status.format"))
+			common.CheckError(templateParsingErr)
+			templateExecutionErr := template.Execute(os.Stdout, respBody)
+			common.CheckError(templateExecutionErr)
+			fmt.Println()
 		}
 	},
 }
@@ -63,7 +70,7 @@ var statusCmd = &cobra.Command{
 func init() {
 	rootCmd.AddCommand(statusCmd)
 
-	statusCmd.Flags().String("format", "", "Format output using a Go template.")
+	statusCmd.Flags().String("format", "table", `Output format. Can be "table", "json" or a Go template.`)
 	viper.BindPFlag("status.format", statusCmd.Flags().Lookup("format"))
 
 	statusCmd.SetUsageTemplate(statusCmd.UsageTemplate() + common.GetFormatHelp(portainer.Status{}))

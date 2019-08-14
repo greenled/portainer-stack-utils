@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"sort"
@@ -54,17 +55,9 @@ var configListCmd = &cobra.Command{
 			})
 		}
 
-		if viper.GetString("config.list.format") != "" {
-			// Print configs with a custom format
-			template, templateParsingErr := template.New("configTpl").Parse(viper.GetString("config.list.format"))
-			common.CheckError(templateParsingErr)
-			for _, c := range configs {
-				templateExecutionErr := template.Execute(os.Stdout, c)
-				common.CheckError(templateExecutionErr)
-				fmt.Println()
-			}
-		} else {
-			// Print configs with a table format
+		switch viper.GetString("config.list.format") {
+		case "table":
+			// Print configs in a table format
 			writer, err := common.NewTabWriter([]string{
 				"KEY",
 				"ENV VAR",
@@ -82,6 +75,20 @@ var configListCmd = &cobra.Command{
 			}
 			flushErr := writer.Flush()
 			common.CheckError(flushErr)
+		case "json":
+			// Print configs in a json format
+			statusJsonBytes, err := json.Marshal(configs)
+			common.CheckError(err)
+			fmt.Println(string(statusJsonBytes))
+		default:
+			// Print configs in a custom format
+			template, templateParsingErr := template.New("configTpl").Parse(viper.GetString("config.list.format"))
+			common.CheckError(templateParsingErr)
+			for _, c := range configs {
+				templateExecutionErr := template.Execute(os.Stdout, c)
+				common.CheckError(templateExecutionErr)
+				fmt.Println()
+			}
 		}
 	},
 }
@@ -89,7 +96,7 @@ var configListCmd = &cobra.Command{
 func init() {
 	configCmd.AddCommand(configListCmd)
 
-	configListCmd.Flags().String("format", "", "Format output using a Go template.")
+	configListCmd.Flags().String("format", "table", `Output format. Can be "table", "json" or a Go template.`)
 	viper.BindPFlag("config.list.format", configListCmd.Flags().Lookup("format"))
 
 	configListCmd.SetUsageTemplate(configListCmd.UsageTemplate() + common.GetFormatHelp(config{}))
