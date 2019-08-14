@@ -7,8 +7,7 @@ executors:
 
 jobs:
   release:
-    docker:
-      - image: goreleaser/goreleaser
+    executor: goreleaser
     working_directory: /go/src/github.com/greenled/portainer-stack-utils
     steps:
       - checkout
