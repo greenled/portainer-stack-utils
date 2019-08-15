@@ -39,22 +39,21 @@ var stackListCmd = &cobra.Command{
 		if endpointId != 0 {
 			var selectionErr error
 			endpointSwarmClusterId, selectionErr = common.GetEndpointSwarmClusterId(endpointId)
-			switch selectionErr.(type) {
-			case nil:
+			if selectionErr == nil {
 				// It's a swarm cluster
 				logrus.WithFields(logrus.Fields{
 					"endpoint": endpointId,
 				}).Debug("Getting stacks")
 				stacks, err = portainerClient.GetStacks(endpointSwarmClusterId, endpointId)
 				common.CheckError(err)
-			case *common.StackClusterNotFoundError:
+			} else if selectionErr == common.ErrStackClusterNotFound {
 				// It's not a swarm cluster
 				logrus.WithFields(logrus.Fields{
 					"endpoint": endpointId,
 				}).Debug("Getting stacks")
 				stacks, err = portainerClient.GetStacks("", endpointId)
 				common.CheckError(err)
-			default:
+			} else {
 				// Something else happened
 				common.CheckError(selectionErr)
 			}

@@ -41,28 +41,26 @@ var stackRemoveCmd = &cobra.Command{
 
 		var selectionErr, stackRetrievalErr error
 		endpointSwarmClusterId, selectionErr = common.GetEndpointSwarmClusterId(endpointId)
-		switch selectionErr.(type) {
-		case nil:
+		if selectionErr == nil {
 			// It's a swarm cluster
 			logrus.WithFields(logrus.Fields{
 				"stack":    stackName,
 				"endpoint": endpointId,
 			}).Debug("Getting stack")
 			stack, stackRetrievalErr = common.GetStackByName(stackName, endpointSwarmClusterId, endpointId)
-		case *common.StackClusterNotFoundError:
+		} else if selectionErr == common.ErrStackClusterNotFound {
 			// It's not a swarm cluster
 			logrus.WithFields(logrus.Fields{
 				"stack":    stackName,
 				"endpoint": endpointId,
 			}).Debug("Getting stack")
 			stack, stackRetrievalErr = common.GetStackByName(stackName, "", endpointId)
-		default:
+		} else {
 			// Something else happened
 			common.CheckError(selectionErr)
 		}
 
-		switch stackRetrievalErr.(type) {
-		case nil:
+		if stackRetrievalErr == nil {
 			// The stack exists
 			stackId := stack.ID
 
@@ -76,7 +74,7 @@ var stackRemoveCmd = &cobra.Command{
 				"stack":    stack.Name,
 				"endpoint": stack.EndpointID,
 			}).Info("Stack removed")
-		case *common.StackNotFoundError:
+		} else if stackRetrievalErr == common.ErrStackNotFound {
 			// The stack does not exist
 			logrus.WithFields(logrus.Fields{
 				"stack":    stackName,
@@ -89,7 +87,7 @@ var stackRemoveCmd = &cobra.Command{
 					"suggestions": fmt.Sprintf("try with a different endpoint: psu stack rm %s --endpoint ENDPOINT_ID", stackName),
 				}).Fatal("stack does not exist")
 			}
-		default:
+		} else {
 			// Something else happened
 			common.CheckError(stackRetrievalErr)
 		}

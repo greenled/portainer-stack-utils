@@ -48,12 +48,11 @@ var stackDeployCmd = &cobra.Command{
 		}
 
 		endpointSwarmClusterId, selectionErr := common.GetEndpointSwarmClusterId(endpointId)
-		switch selectionErr.(type) {
-		case nil:
+		if selectionErr == nil {
 			// It's a swarm cluster
-		case *common.StackClusterNotFoundError:
+		} else if selectionErr == common.ErrStackClusterNotFound {
 			// It's not a swarm cluster
-		default:
+		} else {
 			// Something else happened
 			common.CheckError(selectionErr)
 		}
@@ -63,8 +62,7 @@ var stackDeployCmd = &cobra.Command{
 			"endpoint": endpointId,
 		}).Debug("Getting stack")
 		retrievedStack, stackRetrievalErr := common.GetStackByName(stackName, endpointSwarmClusterId, endpointId)
-		switch stackRetrievalErr.(type) {
-		case nil:
+		if stackRetrievalErr == nil {
 			// We are updating an existing stack
 			logrus.WithFields(logrus.Fields{
 				"stack": retrievedStack.Name,
@@ -110,7 +108,7 @@ var stackDeployCmd = &cobra.Command{
 			}).Info("Updating stack")
 			err := portainerClient.UpdateStack(retrievedStack, newEnvironmentVariables, stackFileContent, viper.GetBool("stack.deploy.prune"), endpointId)
 			common.CheckError(err)
-		case *common.StackNotFoundError:
+		} else if stackRetrievalErr == common.ErrStackNotFound {
 			// We are deploying a new stack
 			logrus.WithFields(logrus.Fields{
 				"stack": stackName,
@@ -149,7 +147,7 @@ var stackDeployCmd = &cobra.Command{
 					"id":       stack.ID,
 				}).Info("Stack created")
 			}
-		default:
+		} else {
 			// Something else happened
 			common.CheckError(stackRetrievalErr)
 		}

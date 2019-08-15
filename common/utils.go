@@ -1,13 +1,31 @@
 package common
 
 import (
-	"errors"
 	"fmt"
 	"reflect"
 
 	portainer "github.com/portainer/portainer/api"
 	"github.com/sirupsen/logrus"
 )
+
+const (
+	ErrStackNotFound             = Error("Stack not found")
+	ErrStackClusterNotFound      = Error("Stack cluster not found")
+	ErrSeveralEndpointsAvailable = Error("Several endpoints available")
+	ErrNoEndpointsAvailable      = Error("No endpoints available")
+)
+
+const (
+	valueNotFoundError = Error("Value not found")
+)
+
+// Error represents an application error.
+type Error string
+
+// Error returns the error message.
+func (e Error) Error() string {
+	return string(e)
+}
 
 func GetDefaultEndpoint() (endpoint portainer.Endpoint, err error) {
 	portainerClient, err := GetClient()
@@ -22,10 +40,10 @@ func GetDefaultEndpoint() (endpoint portainer.Endpoint, err error) {
 	}
 
 	if len(endpoints) == 0 {
-		err = errors.New("No endpoints available")
+		err = ErrNoEndpointsAvailable
 		return
 	} else if len(endpoints) > 1 {
-		err = errors.New("Several endpoints available")
+		err = ErrSeveralEndpointsAvailable
 		return
 	}
 	endpoint = endpoints[0]
@@ -49,9 +67,7 @@ func GetStackByName(name string, swarmId string, endpointId portainer.EndpointID
 			return stack, nil
 		}
 	}
-	err = &StackNotFoundError{
-		StackName: name,
-	}
+	err = ErrStackNotFound
 	return
 }
 
@@ -72,12 +88,11 @@ func GetEndpointSwarmClusterId(endpointId portainer.EndpointID) (endpointSwarmCl
 
 	// Get swarm (if any) information for endpoint
 	id, selectionErr := selectValue(result, []string{"Swarm", "Cluster", "ID"})
-	switch selectionErr.(type) {
-	case nil:
+	if selectionErr == nil {
 		endpointSwarmClusterId = id.(string)
-	case *valueNotFoundError:
-		err = &StackClusterNotFoundError{}
-	default:
+	} else if selectionErr == valueNotFoundError {
+		err = ErrStackClusterNotFound
+	} else {
 		err = selectionErr
 	}
 
@@ -87,7 +102,7 @@ func GetEndpointSwarmClusterId(endpointId portainer.EndpointID) (endpointSwarmCl
 func selectValue(jsonMap map[string]interface{}, jsonPath []string) (interface{}, error) {
 	value := jsonMap[jsonPath[0]]
 	if value == nil {
-		return nil, &valueNotFoundError{}
+		return nil, valueNotFoundError
 	} else if len(jsonPath) > 1 {
 		return selectValue(value.(map[string]interface{}), jsonPath[1:])
 	} else {
@@ -121,25 +136,4 @@ func repr(t reflect.Type, margin, beforeMargin string) (r string) {
 		r = fmt.Sprintf("%s", t.Name())
 	}
 	return
-}
-
-// Custom customerrors
-type StackNotFoundError struct {
-	StackName string
-}
-
-func (e *StackNotFoundError) Error() string {
-	return fmt.Sprintf("Stack %s not found", e.StackName)
-}
-
-type valueNotFoundError struct{}
-
-func (e *valueNotFoundError) Error() string {
-	return "Value not found"
-}
-
-type StackClusterNotFoundError struct{}
-
-func (e *StackClusterNotFoundError) Error() string {
-	return "Stack cluster not found"
 }
