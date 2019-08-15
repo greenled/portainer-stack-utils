@@ -83,4 +83,4 @@ workflows:
         - release-test
         filters:
           tags:
-            only: /v.*/
+            only: /^v.*/
