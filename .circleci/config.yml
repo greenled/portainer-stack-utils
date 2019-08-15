@@ -48,6 +48,7 @@ jobs:
     - run:
         name: Create test coverage report and send it to Code Climate
         command: |
+          pwd
           ./cc-test-reporter before-build
           go test -race -coverprofile=c.out ./...
           ./cc-test-reporter after-build --exit-code $?
