@@ -82,5 +82,7 @@ workflows:
         - coverage
         - release-test
         filters:
+          branches:
+            ignore: /.*/
           tags:
             only: /^v.*/
