@@ -40,9 +40,10 @@ jobs:
     - gomod
     - run:
         name: Create test coverage report
-        command: |
-          go test -race -coverprofile=coverage.txt ./...
-          go tool cover -func=coverage.txt
+        command: go test -race -coverprofile=coverage.txt ./...
+    - run:
+        name: Print test coverage report
+        command: go tool cover -func=coverage.txt
     - store_artifacts:
         path: ./coverage.txt
         destination: coverage.txt
