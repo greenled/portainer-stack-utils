@@ -1,5 +1,6 @@
 # Portainer Stack Utils
 
+[![CircleCI](https://circleci.com/gh/greenled/portainer-stack-utils.svg?style=svg)](https://circleci.com/gh/greenled/portainer-stack-utils)
 [![Docker Automated build](https://img.shields.io/docker/automated/greenled/portainer-stack-utils.svg)](https://hub.docker.com/r/greenled/portainer-stack-utils/)
 [![Docker Pulls](https://img.shields.io/docker/pulls/greenled/portainer-stack-utils.svg)](https://hub.docker.com/r/greenled/portainer-stack-utils/)
 [![Microbadger](https://images.microbadger.com/badges/image/greenled/portainer-stack-utils.svg)](http://microbadger.com/images/greenled/portainer-stack-utils "Image size")
