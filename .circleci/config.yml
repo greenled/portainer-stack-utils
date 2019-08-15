@@ -1,0 +1,88 @@
+version: 2.1
+
+executors:
+  go:
+    docker:
+    - image: circleci/golang:1.12
+    environment:
+      GO111MODULES: on
+
+  goreleaser:
+    docker:
+    - image: goreleaser/goreleaser
+
+commands:
+  gomod:
+    steps:
+    - restore_cache:
+        keys: [gomod-]
+    - run:
+        name: Download dependencies
+        command: go mod download
+    - save_cache:
+        key: gomod-{{ checksum "go.sum" }}
+        paths: [/go/pkg/mod]
+
+jobs:
+  test:
+    executor: go
+    steps:
+    - checkout
+    - gomod
+    - run:
+        name: Run tests
+        command: go test -v ./...
+
+  coverage:
+    executor: go
+    steps:
+    - checkout
+    - gomod
+    - run:
+        name: Create test coverage report
+        command: go test -race -coverprofile=coverage.txt ./...
+    - run:
+        name: Print test coverage report
+        command: go tool cover -func=coverage.txt
+    - store_artifacts:
+        path: ./coverage.txt
+        destination: coverage.txt
+
+  release-test:
+    executor: goreleaser
+    working_directory: /go/src/github.com/greenled/portainer-stack-utils
+    steps:
+    - checkout
+    - setup_remote_docker
+    - run:
+        name: Create snapshot
+        command: goreleaser --skip-publish --snapshot
+
+  release:
+    executor: goreleaser
+    working_directory: /go/src/github.com/greenled/portainer-stack-utils
+    steps:
+    - checkout
+    - setup_remote_docker
+    - run:
+        name: Create and publish release
+        command: |
+          docker login -u $CI_REGISTY_USER -p $CI_REGISTY_PASSWORD $CI_REGISTRY
+          goreleaser
+
+workflows:
+  ci:
+    jobs:
+    - test
+    - coverage
+    - release-test
+    - release:
+        requires:
+        - test
+        - coverage
+        - release-test
+        filters:
+          branches:
+            ignore: /.*/
+          tags:
+            only: /^v.*/
