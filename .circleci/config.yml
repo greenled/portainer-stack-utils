@@ -49,11 +49,11 @@ jobs:
         name: Create test coverage report and send it to Code Climate
         command: |
           ./cc-test-reporter before-build
-          go test -race -coverprofile=coverage.txt ./...
-          ./cc-test-reporter after-build --coverage-input-type cover --exit-code $?
+          go test -race -coverprofile=c.out ./...
+          ./cc-test-reporter after-build --exit-code $?
     - store_artifacts:
-        path: ./coverage.txt
-        destination: coverage.txt
+        path: ./c.out
+        destination: c.out
 
   release-test:
     executor: goreleaser
