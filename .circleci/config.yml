@@ -40,12 +40,12 @@ jobs:
     - gomod
     - run:
         name: Create test coverage report
-        command: go test -race -coverprofile=coverage.txt ./...
+        command: |
+          go test -race -coverprofile=coverage.txt ./...
+          go tool cover -func=coverage.txt
     - store_artifacts:
         path: ./coverage.txt
         destination: coverage.txt
-    - codecov/upload:
-        path: coverage.txt
 
   release-test:
     executor: goreleaser
