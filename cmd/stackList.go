@@ -21,37 +21,43 @@ var stackListCmd = &cobra.Command{
 	Use:     "list",
 	Short:   "List stacks",
 	Aliases: []string{"ls"},
-	Example: `  Print stacks in endpoint with ID=1 in a table format:
-  psu stack ls --endpoint 1
+	Example: `  Print stacks in endpoint with name=primary in a table format:
+  psu stack ls --endpoint primary
 
-  Print names of stacks in endpoint with ID=1:
-  psu stack ls --endpoint 1 --format "{{ .Name }}"
+  Print names of stacks in endpoint with name=primary:
+  psu stack ls --endpoint primary --format "{{ .Name }}"
 
-  Print environment variables of stacks in endpoint with ID=1:
+  Print environment variables of stacks in all endpoints:
   psu stack ls --format "{{ .Name }}: {{ range .Env }}{{ .Name }}=\"{{ .Value }}\" {{ end }}"`,
 	Run: func(cmd *cobra.Command, args []string) {
 		portainerClient, err := common.GetClient()
 		common.CheckError(err)
 
-		endpointId := portainer.EndpointID(viper.GetInt("stack.list.endpoint"))
+		endpoints, endpointsRetrievalErr := portainerClient.GetEndpoints()
+		common.CheckError(endpointsRetrievalErr)
+
 		var endpointSwarmClusterId string
 		var stacks []portainer.Stack
-		if endpointId != 0 {
+		if endpointName := viper.GetString("stack.list.endpoint"); endpointName != "" {
+			// Get endpoint by name
+			endpoint, endpointRetrievalErr := common.GetEndpointFromListByName(endpoints, endpointName)
+			common.CheckError(endpointRetrievalErr)
+
 			var selectionErr error
-			endpointSwarmClusterId, selectionErr = common.GetEndpointSwarmClusterId(endpointId)
+			endpointSwarmClusterId, selectionErr = common.GetEndpointSwarmClusterId(endpoint.ID)
 			if selectionErr == nil {
 				// It's a swarm cluster
 				logrus.WithFields(logrus.Fields{
-					"endpoint": endpointId,
+					"endpoint": endpoint.Name,
 				}).Debug("Getting stacks")
-				stacks, err = portainerClient.GetStacks(endpointSwarmClusterId, endpointId)
+				stacks, err = portainerClient.GetStacks(endpointSwarmClusterId, endpoint.ID)
 				common.CheckError(err)
 			} else if selectionErr == common.ErrStackClusterNotFound {
 				// It's not a swarm cluster
 				logrus.WithFields(logrus.Fields{
-					"endpoint": endpointId,
+					"endpoint": endpoint.Name,
 				}).Debug("Getting stacks")
-				stacks, err = portainerClient.GetStacks("", endpointId)
+				stacks, err = portainerClient.GetStacks("", endpoint.ID)
 				common.CheckError(err)
 			} else {
 				// Something else happened
@@ -70,16 +76,18 @@ var stackListCmd = &cobra.Command{
 				"ID",
 				"NAME",
 				"TYPE",
-				"ENDPOINT ID",
+				"ENDPOINT",
 			})
 			common.CheckError(err)
 			for _, s := range stacks {
-				_, err := fmt.Fprintln(writer, fmt.Sprintf(
-					"%v\t%s\t%v\t%v",
+				stackEndpoint, err := common.GetEndpointFromListById(endpoints, s.EndpointID)
+				common.CheckError(err)
+				_, err = fmt.Fprintln(writer, fmt.Sprintf(
+					"%v\t%s\t%v\t%s",
 					s.ID,
 					s.Name,
 					client.GetTranslatedStackType(s),
-					s.EndpointID,
+					stackEndpoint.Name,
 				))
 				common.CheckError(err)
 			}
@@ -106,7 +114,7 @@ var stackListCmd = &cobra.Command{
 func init() {
 	stackCmd.AddCommand(stackListCmd)
 
-	stackListCmd.Flags().Int("endpoint", 0, "Filter by endpoint ID.")
+	stackListCmd.Flags().String("endpoint", "", "Filter by endpoint name.")
 	stackListCmd.Flags().String("format", "table", `Output format. Can be "table", "json" or a Go template.`)
 	viper.BindPFlag("stack.list.endpoint", stackListCmd.Flags().Lookup("endpoint"))
 	viper.BindPFlag("stack.list.format", stackListCmd.Flags().Lookup("format"))
