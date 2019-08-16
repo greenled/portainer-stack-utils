@@ -12,7 +12,7 @@ Portainer Stack Utils is a CLI client for [Portainer](https://portainer.io/) wri
 
 ## Supported Portainer API
 
-This application was created for the latest Portainer API, which at the time of writing is [1.21.0](https://app.swaggerhub.com/apis/deviantony/Portainer/1.21.0).
+This application was created for the latest Portainer API, which at the time of writing is [1.22.0](https://app.swaggerhub.com/apis/deviantony/Portainer/1.22.0).
 
 ## How to install
 
