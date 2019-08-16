@@ -142,6 +142,36 @@ echo "stack.deploy.env-file: .env" > .config.yml
 psu stack deploy django-stack -c /path/to/docker-compose.yml --config .config.yml
 ```
 
+### Log level
+
+You can control how much noise you want the program to do by setting the log level. There are seven log levels:
+
+- *panic*: Unexpected errors that stop program execution.
+- *fatal*: Expected errors that stop program execution.
+- *error*: Errors that should definitely be noted but don't stop the program execution.
+- *warning*: Non-critical events that deserve eyes.
+- *info*: General events about what's going on inside the program. This is the default level.
+- *debug*: Very verbose logging. Usually only enabled when debugging.
+- *trace*: Finer-grained logging than the *debug* level.
+
+**WARNING**: **trace** level will print sensitive information, like Portainer API requests and responses (with authentication tokens, stacks environment variables, and so on). Avoid using **trace** level in CI/CD environments, as those logs are usually recorded.
+
+This is an example with *debug* level:
+
+```bash
+psu stack deploy asd --endpoint primary --log-level debug
+```
+
+The output would look like:
+
+```text
+DEBU[0000] Getting endpoint's Docker info     endpoint=5
+DEBU[0000] Getting stack                      endpoint=primary stack=asd
+DEBU[0000] Stack not found                    stack=asd
+INFO[0000] Creating stack                     endpoint=primary stack=asd
+INFO[0000] Stack created                      endpoint=primary id=89 stack=asd
+```
+
 ### Verbose mode
 
 In verbose mode the script prints execution steps.
