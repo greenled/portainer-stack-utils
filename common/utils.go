@@ -92,6 +92,24 @@ func GetEndpointByName(name string) (endpoint portainer.Endpoint, err error) {
 	return
 }
 
+func GetEndpointFromListById(endpoints []portainer.Endpoint, id portainer.EndpointID) (endpoint portainer.Endpoint, err error) {
+	for i := range endpoints {
+		if endpoints[i].ID == id {
+			return endpoints[i], err
+		}
+	}
+	return endpoint, ErrEndpointNotFound
+}
+
+func GetEndpointFromListByName(endpoints []portainer.Endpoint, name string) (endpoint portainer.Endpoint, err error) {
+	for i := range endpoints {
+		if endpoints[i].Name == name {
+			return endpoints[i], err
+		}
+	}
+	return endpoint, ErrEndpointNotFound
+}
+
 func GetEndpointSwarmClusterId(endpointId portainer.EndpointID) (endpointSwarmClusterId string, err error) {
 	// Get docker information for endpoint
 	portainerClient, err := GetClient()
