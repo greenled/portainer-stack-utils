@@ -191,17 +191,7 @@ INFO[0000] Stack created                      endpoint=primary id=89 stack=asd
 
 ## Contributing
 
-So, you want to contribute to the project:
-
-- Fork it
-- Download your fork to your PC (git clone https://github.com/your_username/portainer-stack-utils && cd portainer-stack-utils)
-- Create your feature branch (git checkout -b my-new-feature)
-- Make changes and add them (git add .)
-- Commit your changes (git commit -m 'Add some feature')
-- Push to the branch (git push origin my-new-feature)
-- Create a new pull request
-
-If you are submitting a complex feature, create a small design proposal on the [issue tracker](https://github.com/greenled/portainer-stack-utils/issues) before you start.
+Contributing guidelines can be found in [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## License
 
