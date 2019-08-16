@@ -121,18 +121,26 @@ A JSON configuration file should look like this:
 
 *Note that flat and nested keys are both valid.*
 
-### Stack environment variables
+### Environment variables for deployed stacks
 
-You will usually want to set some environment variables in your stacks. You can do so with the `--env-file` flag:
+You will often want to set environment variables in your deployed stacks. You can do so through the `stack.deploy.env-file` [configuration key](#configuration). :
 
 ```bash
 touch .env
 echo "MYSQL_ROOT_PASSWORD=agoodpassword" >> .env
 echo "ALLOWED_HOSTS=*" >> .env
-psu stack deploy django-stack -c /path/to/docker-compose.yml -e .env
-```
 
-As every flag, this one can also be used with the `PSU_STACK_DEPLOY_ENV_FILE` [environment variable](#environment-variables) and the `psu.stack.deploy.env-file` [configuration key](#configuration-files).
+# Using --env-file flag
+psu stack deploy django-stack -c /path/to/docker-compose.yml -e .env
+
+# Using PSU_STACK_DEPLOY_ENV_FILE environment variable
+PSU_STACK_DEPLOY_ENV_FILE=.env
+psu stack deploy django-stack -c /path/to/docker-compose.yml
+
+# Using a config file
+echo "stack.deploy.env-file: .env" > .config.yml
+psu stack deploy django-stack -c /path/to/docker-compose.yml --config .config.yml
+```
 
 ### Verbose mode
 
