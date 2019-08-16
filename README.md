@@ -42,7 +42,7 @@ psu stack rm mystack
 
 Commands can have subcommands, like `stack ls` and `stack deploy` in the previous example. They can also have aliases (i.e. `create` and `up` are aliases of `deploy`).
 
-Some flags are global, which means they affect every command (i.e. `--verbose`), while others are local, which mean they only affect the command they belong to (i.e. `--stack-file` flag from `deploy` command). Also, some flags have a short version (i.e `--debug`, `-d`).
+Some flags are global, which means they affect every command (i.e. `--log-level`), while others are local, which mean they only affect the command they belong to (i.e. `--stack-file` flag from `deploy` command). Also, some flags have a short version (i.e `--insecure`, `-i`).
 
 ### Configuration
 
