@@ -46,125 +46,80 @@ Some flags are global, which means they affect every command (i.e. `--log-level`
 
 ### Configuration
 
-Each flag can be set inline (i.e. `--debug`), through an environment variable (i.e. `PSU_DEBUG=true`) and through a configuration file ([see below](#with-configuration-file)). All three methods can be combined, but if a flag is set more than once the order of precedence is:
+The program can be configured through [inline flags](#inline-flags) (i.e. `--user`), [environment variables](#environment-variables) (i.e. `PSU_USER=admin`) and/or [configuration files](#configuration-files), which translate into multi-level configuration keys in the form `x[.y[.z[...]]]`. Run `psu config ls` to see all available configuration options.
 
-1. Inline flag
-2. Environment variable
+All three methods can be combined. If a configuration key is set in several places the order of precedence is:
+
+1. Inline flags
+2. Environment variables
 3. Configuration file
+4. Default values
 
-#### With inline flags
+#### Inline flags
 
-Each command has it's own flags. Run `psu [COMMAND [SUBCOMMAND]] --help` to see each command's flag set.
+Configuration can be set through inline flags. Valid combinations of commands and flags directly map to configuration keys:
 
-```bash
-psu --help
-psu stack --help
-psu stack deploy --help
-```
+| Configuration key | Command | Flag |
+| :---------------- | :------ | :--- |
+| user | psu | --user |
+| stack.list.format | psu stack list | --format |
+| stack.deploy.env-file | stack deploy | --env-file |
 
-#### With environment variables
+Run `psu help COMMAND` to see all available flags for a given command.
 
-This is particularly useful for CI/CD pipelines.
+#### Environment variables
 
-Environment variables can be bound to flags following the `PSU_[COMMAND_[SUBCOMMAND_]]FLAG` naming pattern:
+Configuration can be set through environment variables. Supported environment variables follow the `PSU_[COMMAND_[SUBCOMMAND_]]FLAG` naming pattern:
 
-| Command and subcommand | Flag | Environment variable | Comment |
-| :--------------------- | :--- | :------------------- | :------ |
-|  | --verbose | PSU_VERBOSE=true | All environment variables are prefixed with "PSU_" |
-| stack list | --quiet | PSU_STACK_LIST_QUIET=true | Commands and subcommands are uppercased and joined with "_" |
-| stack deploy | --env-file .env | PSU_STACK_DEPLOY_ENV_FILE=.env | Characters "-" in flag name are replaced with "_" |
+| Configuration key | Environment variable |
+| :---------------- | :------------------- |
+| user | PSU_USER |
+| stack.list.format | PSU_STACK_LIST_FORMAT |
+| stack.deploy.env-file | PSU_STACK_DEPLOY_ENV_FILE |
 
-#### With configuration file
+*Note that all supported environment variables are prefixed with "PSU_" to avoid name clashing. Characters "-" and "." in configuration key names are replaced with "_" in environment variable names.*
 
-Flags can be bound to a configuration file. Use the `--config` flag to specify a configuration file to load flags from. By default the file `$HOME/.psu.yaml` is used if present.
+#### Configuration files
 
-#### Using Yaml
+Configuration can be set through a configuration file. Supported file formats are [JSON](#json-configuration-file), TOML, [YAML](#yaml-configuration-file), HCL, envfile and Java properties config files. Use the `--config` global flag to specify a configuration file. File `$HOME/.psu.yaml` is used by default if present.
 
-If you use a Yaml configuration file:
+##### YAML configuration file
 
-```text
-[command:
-  [subcommand:]]
-    flag: value
-```
+A Yaml configuration file should look like this:
 
 ```yaml
-verbose: true
-url: http://localhost:10000
+log-level: debug
+user: admin
 insecure: true
+stack.list.format: table
 stack:
+  deploy.env-file: .env
   deploy:
     stack-file: docker-compose.yml
-    env-file: .env
-  list:
-    quiet: true
 ```
 
-This is valid too:
+*Note that flat and nested keys are both valid.*
 
-```text
-[command.[subcommand.]]flag: value
-```
+##### JSON configuration file
 
-```yaml
-verbose: true
-url: http://localhost:10000
-insecure: true
-stack.deploy.stack-file: docker-compose.yml
-stack.deploy.env-file: .env
-stack.list.quiet: true
-```
-
-#### Using Json
-
-If you use a Json configuration file:
-
-```text
-{
-  ["command": {
-    ["subcommand": {]]
-      "flag": value
-    [}]
-  [}]
-{
-```
+A JSON configuration file should look like this:
 
 ```json
 {
-  "verbose": true,
-  "url": "http://localhost:10000",
+  "log-level": "debug",
+  "user": "admin",
   "insecure": true,
+  "stack.list.format": "table",
   "stack": {
+    "deploy.env-file": ".env",
     "deploy": {
-      "stack-file": "docker-compose.yml",
-      "env-file": ".env"
-    },
-    "list": {
-      "quiet": true
+      "stack-file": "docker-compose.yml"
     }
   }
 }
 ```
 
-This is valid too:
-
-```text
-{
-  "[command.[subcommand.]]flag": value
-}
-```
-
-```json
-{
-"verbose": true,
-"url": "http://localhost:10000",
-"insecure": true,
-"stack.deploy.stack-file": "docker-compose.yml",
-"stack.deploy.env-file": ".env",
-"stack.list.quiet": true
-}
-
-```
+*Note that flat and nested keys are both valid.*
 
 ### Stack environment variables
 
@@ -177,7 +132,7 @@ echo "ALLOWED_HOSTS=*" >> .env
 psu stack deploy django-stack -c /path/to/docker-compose.yml -e .env
 ```
 
-As every flag, this one can also be used with the `PSU_STACK_DEPLOY_ENV_FILE` [environment variable](#with-environment-variables) and the `psu.stack.deploy.env-file` [configuration key](#with-configuration-file).
+As every flag, this one can also be used with the `PSU_STACK_DEPLOY_ENV_FILE` [environment variable](#environment-variables) and the `psu.stack.deploy.env-file` [configuration key](#configuration-files).
 
 ### Verbose mode
 
@@ -191,7 +146,7 @@ In verbose mode the script prints execution steps.
 2019/07/20 19:15:45 [Swarm cluster found with id qwe123rty456uio789asd123f]
 ```
 
-Verbose mode can be enabled through the `PSU_VERBOSE` [environment variable](#with-environment-variables) and the `verbose` [configuration key](#with-configuration-file).
+Verbose mode can be enabled through the `PSU_VERBOSE` [environment variable](#environment-variables) and the `verbose` [configuration key](#configuration-files).
 
 ### Debug mode
 
@@ -199,7 +154,7 @@ In debug mode the script prints as much information as possible to help diagnosi
 
 **WARNING**: Debug mode will print configuration values (with Portainer credentials) and Portainer API responses (with sensitive information like authentication token and stacks environment variables). Avoid using debug mode in CI/CD pipelines, as pipeline logs are usually recorded.
 
-Debug mode can be enabled through the `PSU_DEBUG` [environment variable](#with-environment-variables) and the `debug` [configuration key](#with-configuration-file).
+Debug mode can be enabled through the `PSU_DEBUG` [environment variable](#environment-variables) and the `debug` [configuration key](#configuration-files).
 
 ## Contributing
 
