@@ -6,6 +6,23 @@
 [![Microbadger](https://images.microbadger.com/badges/image/greenled/portainer-stack-utils.svg)](http://microbadger.com/images/greenled/portainer-stack-utils "Image size")
 [![Go Report Card](https://goreportcard.com/badge/github.com/greenled/portainer-stack-utils)](https://goreportcard.com/report/github.com/greenled/portainer-stack-utils)
 
+## Table of contents
+
+- [Overview](#overview)
+- [Supported Portainer API](#supported-portainer-api)
+- [How to install](#how-to-install)
+- [How to use](#how-to-use)
+  - [Configuration](#configuration)
+    - [Inline flags](#inline-flags)
+    - [Environment variables](#environment-variables)
+    - [Configuration files](#configuration-files)
+      - [YAML configuration file](#yaml-configuration-file)
+      - [JSON configuration file](#json-configuration-file)
+  - [Environment variables for deployed stacks](#environment-variables-for-deployed-stacks)
+  - [Log level](#log-level)
+- [Contributing](#contributing)
+- [License](#license)
+
 ## Overview
 
 Portainer Stack Utils is a CLI client for [Portainer](https://portainer.io/) written in Go.
