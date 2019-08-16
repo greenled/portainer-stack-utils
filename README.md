@@ -172,28 +172,6 @@ INFO[0000] Creating stack                     endpoint=primary stack=asd
 INFO[0000] Stack created                      endpoint=primary id=89 stack=asd
 ```
 
-### Verbose mode
-
-In verbose mode the script prints execution steps.
-
-```text
-2019/07/20 19:15:45 [Using config file: /home/johndoe/.psu.yaml]
-2019/07/20 19:15:45 [Getting stack mystack...]
-2019/07/20 19:15:45 [Getting auth token...]
-2019/07/20 19:15:45 [Stack mystack not found. Deploying...]
-2019/07/20 19:15:45 [Swarm cluster found with id qwe123rty456uio789asd123f]
-```
-
-Verbose mode can be enabled through the `PSU_VERBOSE` [environment variable](#environment-variables) and the `verbose` [configuration key](#configuration-files).
-
-### Debug mode
-
-In debug mode the script prints as much information as possible to help diagnosing a malfunction.
-
-**WARNING**: Debug mode will print configuration values (with Portainer credentials) and Portainer API responses (with sensitive information like authentication token and stacks environment variables). Avoid using debug mode in CI/CD pipelines, as pipeline logs are usually recorded.
-
-Debug mode can be enabled through the `PSU_DEBUG` [environment variable](#environment-variables) and the `debug` [configuration key](#configuration-files).
-
 ## Contributing
 
 So, you want to contribute to the project:
