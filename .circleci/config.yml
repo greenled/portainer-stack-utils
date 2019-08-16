@@ -67,7 +67,7 @@ jobs:
     - run:
         name: Create and publish release
         command: |
-          docker login -u $CI_REGISTY_USER -p $CI_REGISTY_PASSWORD $CI_REGISTRY
+          echo "$CI_REGISTY_PASSWORD" | docker login -u $CI_REGISTY_USER --password-stdin $CI_REGISTRY
           goreleaser
 
 workflows:
