@@ -11,6 +11,7 @@ import (
 const (
 	ErrStackNotFound             = Error("Stack not found")
 	ErrStackClusterNotFound      = Error("Stack cluster not found")
+	ErrEndpointNotFound          = Error("Endpoint not found")
 	ErrSeveralEndpointsAvailable = Error("Several endpoints available")
 	ErrNoEndpointsAvailable      = Error("No endpoints available")
 )
@@ -69,6 +70,44 @@ func GetStackByName(name string, swarmId string, endpointId portainer.EndpointID
 	}
 	err = ErrStackNotFound
 	return
+}
+
+func GetEndpointByName(name string) (endpoint portainer.Endpoint, err error) {
+	portainerClient, err := GetClient()
+	if err != nil {
+		return
+	}
+
+	endpoints, err := portainerClient.GetEndpoints()
+	if err != nil {
+		return
+	}
+
+	for _, endpoint := range endpoints {
+		if endpoint.Name == name {
+			return endpoint, nil
+		}
+	}
+	err = ErrEndpointNotFound
+	return
+}
+
+func GetEndpointFromListById(endpoints []portainer.Endpoint, id portainer.EndpointID) (endpoint portainer.Endpoint, err error) {
+	for i := range endpoints {
+		if endpoints[i].ID == id {
+			return endpoints[i], err
+		}
+	}
+	return endpoint, ErrEndpointNotFound
+}
+
+func GetEndpointFromListByName(endpoints []portainer.Endpoint, name string) (endpoint portainer.Endpoint, err error) {
+	for i := range endpoints {
+		if endpoints[i].Name == name {
+			return endpoints[i], err
+		}
+	}
+	return endpoint, ErrEndpointNotFound
 }
 
 func GetEndpointSwarmClusterId(endpointId portainer.EndpointID) (endpointSwarmClusterId string, err error) {
