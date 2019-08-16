@@ -35,8 +35,8 @@ Here are some examples:
 ```bash
 psu help
 psu status --help
-psu stack ls --quiet --endpoint 5
-psu stack deploy mystack --stack-file docker-compose.yml -e .env --verbose
+psu stack ls --endpoint primary --format "{{ .Name }}"
+psu stack deploy mystack --stack-file docker-compose.yml -e .env --log-level debug
 psu stack rm mystack
 ```
 
