@@ -18,6 +18,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `--format` flag to select output format from "table", "json" or a custom Go template. Defaults to "table".
 - `endpoint list|ls` command to print endpoints.
   - `--format` flag to select output format from "table", "json" or a custom Go template. Defaults to "table".
+- `endpoint group inspect` command to print endpoint group info.
+  - `--format` flag to select output format from "table", "json" or a custom Go template. Defaults to "table".
 - `endpoint group list|ls` command to print endpoint groups.
   - `--format` flag to select output format from "table", "json" or a custom Go template. Defaults to "table".
 - `endpoint inspect` command to print endpoint info.
