@@ -47,10 +47,14 @@ var endpointListCmd = &cobra.Command{
 			common.CheckError(err)
 			for _, e := range endpoints {
 				var endpointType string
-				if e.Type == 1 {
+				if e.Type == portainer.DockerEnvironment {
 					endpointType = "docker"
-				} else if e.Type == 2 {
-					endpointType = "agent"
+				} else if e.Type == portainer.AgentOnDockerEnvironment {
+					endpointType = "agent on docker"
+				} else if e.Type == portainer.AzureEnvironment {
+					endpointType = "azure"
+				} else if e.Type == portainer.EdgeAgentEnvironment {
+					endpointType = "edge agent"
 				}
 				_, err := fmt.Fprintln(writer, fmt.Sprintf(
 					"%v\t%s\t%v\t%s\t%s\t%v",
