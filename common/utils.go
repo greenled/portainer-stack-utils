@@ -12,6 +12,7 @@ const (
 	ErrStackNotFound             = Error("Stack not found")
 	ErrStackClusterNotFound      = Error("Stack cluster not found")
 	ErrEndpointNotFound          = Error("Endpoint not found")
+	ErrEndpointGroupNotFound     = Error("Endpoint group not found")
 	ErrSeveralEndpointsAvailable = Error("Several endpoints available")
 	ErrNoEndpointsAvailable      = Error("No endpoints available")
 )
@@ -89,6 +90,26 @@ func GetEndpointByName(name string) (endpoint portainer.Endpoint, err error) {
 		}
 	}
 	err = ErrEndpointNotFound
+	return
+}
+
+func GetEndpointGroupByName(name string) (endpointGroup portainer.EndpointGroup, err error) {
+	portainerClient, err := GetClient()
+	if err != nil {
+		return
+	}
+
+	endpointGroups, err := portainerClient.GetEndpointGroups()
+	if err != nil {
+		return
+	}
+
+	for _, endpointGroup := range endpointGroups {
+		if endpointGroup.Name == name {
+			return endpointGroup, nil
+		}
+	}
+	err = ErrEndpointGroupNotFound
 	return
 }
 
