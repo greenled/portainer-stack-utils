@@ -1,23 +1,21 @@
 package cmd
 
 import (
-	"github.com/spf13/cobra"
 	"os"
+
+	"github.com/spf13/cobra"
 )
 
 // completionCmd represents the completion command
 var completionCmd = &cobra.Command{
 	Use:   "completion",
-	Short: "Generates bash completion scripts",
-	Long: `To load completion run
+	Short: "Generate Bash completion scripts",
+	Example: `  Load completions in the current Bash shell:
+  . <(psu completion)
 
-. <(psu completion)
-
-To configure your bash shell to load completions for each session add to your bashrc
-
-# ~/.bashrc or ~/.profile
-. <(psu completion)
-`,
+  Configure Bash shell to load completions for each session:
+  # ~/.bashrc or ~/.profile
+  . <(psu completion)`,
 	Run: func(cmd *cobra.Command, args []string) {
 		rootCmd.GenBashCompletion(os.Stdout)
 	},
