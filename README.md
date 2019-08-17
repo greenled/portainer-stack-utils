@@ -20,6 +20,7 @@
       - [JSON configuration file](#json-configuration-file)
   - [Environment variables for deployed stacks](#environment-variables-for-deployed-stacks)
   - [Log level](#log-level)
+  - [Exit statuses](#exit-statuses)
 - [Contributing](#contributing)
 - [License](#license)
 
@@ -188,6 +189,12 @@ DEBU[0000] Stack not found                    stack=asd
 INFO[0000] Creating stack                     endpoint=primary stack=asd
 INFO[0000] Stack created                      endpoint=primary id=89 stack=asd
 ```
+
+### Exit statuses
+
+- *0*: Program executed normally.
+- *1*: An expected error stopped program execution.
+- *2*: An unexpected error stopped program execution.
 
 ## Contributing
 
