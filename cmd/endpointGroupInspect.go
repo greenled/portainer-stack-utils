@@ -15,7 +15,7 @@ import (
 
 // endpointGroupInspectCmd represents the endpoint group inspect command
 var endpointGroupInspectCmd = &cobra.Command{
-	Use:     "inspect",
+	Use:     "inspect <name>",
 	Short:   "Inspect an endpoint group",
 	Example: "  psu endpoint group inspect production",
 	Args:    cobra.ExactArgs(1),

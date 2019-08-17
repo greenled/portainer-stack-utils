@@ -12,7 +12,7 @@ import (
 
 // configSetCmd represents the config set command
 var configSetCmd = &cobra.Command{
-	Use:   "set KEY VALUE",
+	Use:   "set <key> <value>",
 	Short: "Set config",
 	Args:  cobra.ExactArgs(2),
 	Run: func(cmd *cobra.Command, args []string) {

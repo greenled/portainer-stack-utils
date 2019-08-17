@@ -16,7 +16,7 @@ import (
 
 // endpointInspectCmd represents the endpoint inspect command
 var endpointInspectCmd = &cobra.Command{
-	Use:     "inspect",
+	Use:     "inspect <name>",
 	Short:   "Inspect an endpoint",
 	Example: "  psu endpoint inspect primary",
 	Args:    cobra.MaximumNArgs(1),

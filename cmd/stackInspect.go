@@ -18,7 +18,7 @@ import (
 
 // stackInspectCmd represents the stack inspect command
 var stackInspectCmd = &cobra.Command{
-	Use:     "inspect",
+	Use:     "inspect <name>",
 	Short:   "Inspect a stack",
 	Example: "  psu stack inspect mystack",
 	Args:    cobra.ExactArgs(1),

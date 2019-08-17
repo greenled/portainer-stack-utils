@@ -10,7 +10,7 @@ import (
 
 // configGetCmd represents the config get command
 var configGetCmd = &cobra.Command{
-	Use:   "get KEY",
+	Use:   "get <key>",
 	Short: "Get config",
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {

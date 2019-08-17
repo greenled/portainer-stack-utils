@@ -12,7 +12,7 @@ import (
 
 // stackRemoveCmd represents the remove command
 var stackRemoveCmd = &cobra.Command{
-	Use:     "remove STACK_NAME",
+	Use:     "remove <name>",
 	Short:   "Remove a stack",
 	Aliases: []string{"rm", "down"},
 	Example: "  psu stack rm mystack",

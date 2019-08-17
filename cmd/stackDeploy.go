@@ -15,7 +15,7 @@ import (
 
 // stackDeployCmd represents the undeploy command
 var stackDeployCmd = &cobra.Command{
-	Use:     "deploy STACK_NAME",
+	Use:     "deploy <name>",
 	Short:   "Deploy a new stack or update an existing one",
 	Aliases: []string{"up", "create"},
 	Example: "  psu stack deploy mystack --stack-file mystack.yml",
