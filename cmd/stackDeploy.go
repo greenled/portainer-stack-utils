@@ -18,7 +18,7 @@ var stackDeployCmd = &cobra.Command{
 	Use:     "deploy STACK_NAME",
 	Short:   "Deploy a new stack or update an existing one",
 	Aliases: []string{"up", "create"},
-	Example: "psu stack deploy mystack --stack-file mystack.yml",
+	Example: "  psu stack deploy mystack --stack-file mystack.yml",
 	Args:    cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		var loadedEnvironmentVariables []portainer.Pair

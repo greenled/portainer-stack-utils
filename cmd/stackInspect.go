@@ -20,7 +20,7 @@ import (
 var stackInspectCmd = &cobra.Command{
 	Use:     "inspect",
 	Short:   "Inspect a stack",
-	Example: "psu stack inspect mystack",
+	Example: "  psu stack inspect mystack",
 	Args:    cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		stackName := args[0]

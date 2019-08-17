@@ -15,7 +15,7 @@ var stackRemoveCmd = &cobra.Command{
 	Use:     "remove STACK_NAME",
 	Short:   "Remove a stack",
 	Aliases: []string{"rm", "down"},
-	Example: "psu stack rm mystack",
+	Example: "  psu stack rm mystack",
 	Args:    cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		portainerClient, clientRetrievalErr := common.GetClient()

@@ -17,7 +17,7 @@ import (
 var endpointGroupInspectCmd = &cobra.Command{
 	Use:     "inspect",
 	Short:   "Inspect an endpoint group",
-	Example: "psu endpoint group inspect production",
+	Example: "  psu endpoint group inspect production",
 	Args:    cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		endpointGroupName := args[0]

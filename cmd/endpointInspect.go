@@ -18,7 +18,7 @@ import (
 var endpointInspectCmd = &cobra.Command{
 	Use:     "inspect",
 	Short:   "Inspect an endpoint",
-	Example: "psu endpoint inspect primary",
+	Example: "  psu endpoint inspect primary",
 	Args:    cobra.MaximumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		var endpoint portainer.Endpoint
