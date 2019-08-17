@@ -41,6 +41,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `-A, --auth-token` global flag to set Portainer auth token.
 - `--config` global flag to set the path to a configuration file. Supported file formats are JSON, TOML, YAML, HCL, envfile and Java properties config files. Defaults to "$HOME/.psu.yaml".
 - `-h, --help` global flag to print global help.
+- `--log-format` global flag to set log format from "text" and "json". Defaults to "text".
 - `-v, --log-level` global flag to set log level from "panic", "faltal", "error", "warning", "info", "debug" and "trace". Defaults to "info".
 - `--password` long name for `-p` global flag.
 - `-t, --timeout` global flag to set a timeout for requests execution.

@@ -40,6 +40,7 @@ func init() {
 
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "Config file. (default \"$HOME/.psu.yaml)\"")
 	rootCmd.PersistentFlags().StringP("log-level", "v", "info", "Log level. One of trace, debug, info, warning, error, fatal or panic.")
+	rootCmd.PersistentFlags().String("log-format", "text", "Log format. One of text or json.")
 	rootCmd.PersistentFlags().BoolP("insecure", "i", false, "Skip Portainer SSL certificate verification.")
 	rootCmd.PersistentFlags().StringP("url", "l", "", "Portainer url.")
 	rootCmd.PersistentFlags().StringP("user", "u", "", "Portainer user.")
@@ -48,6 +49,7 @@ func init() {
 	rootCmd.PersistentFlags().DurationP("timeout", "t", 0, "Waiting time before aborting (like 100ms, 30s, 1h20m).")
 	viper.BindPFlag("config", rootCmd.PersistentFlags().Lookup("config"))
 	viper.BindPFlag("log-level", rootCmd.PersistentFlags().Lookup("log-level"))
+	viper.BindPFlag("log-format", rootCmd.PersistentFlags().Lookup("log-format"))
 	viper.BindPFlag("insecure", rootCmd.PersistentFlags().Lookup("insecure"))
 	viper.BindPFlag("url", rootCmd.PersistentFlags().Lookup("url"))
 	viper.BindPFlag("timeout", rootCmd.PersistentFlags().Lookup("timeout"))
@@ -95,4 +97,17 @@ func initLogger() {
 		logrus.SetLevel(logrus.InfoLevel)
 	}
 	logrus.SetLevel(logLevel)
+
+	switch viper.GetString("log-format") {
+	case "json":
+		logrus.SetFormatter(&logrus.JSONFormatter{})
+	case "text":
+		logrus.SetFormatter(&logrus.TextFormatter{})
+	default:
+		logrus.WithFields(logrus.Fields{
+			"format":       viper.GetString("log-format"),
+			"implications": `Default text format will be used instead`,
+		}).Warning("Unknown log format")
+		logrus.SetFormatter(&logrus.TextFormatter{})
+	}
 }
