@@ -35,9 +35,7 @@ This application was created for the latest Portainer API, which at the time of 
 
 ## How to install
 
-Download the binaries for your platform from [the releases page](https://github.com/greenled/portainer-stack-utils/releases). The binaries have no external dependencies.
-
-You can also install the source code with `go` and build the binaries yourself.
+Download the binaries for your platform and architecture from [the releases page](https://github.com/greenled/portainer-stack-utils/releases).
 
 ## How to use
 
