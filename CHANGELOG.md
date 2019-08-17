@@ -29,6 +29,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `-r, --prune` flag to remove services that are no longer referenced.
   - `--replace-env` flag to replace environment variables instead of merging them while updating a stack.
   - `-c, --stack-file` flag to set the file with the YAML definition of the stack.
+- `stack inspect` command to print stack info.
+  - `--format` flag to select output format from "table", "json" or a custom Go template. Defaults to "table".
+  - `--endpoint` flag to filter stack by endpoint name.
 - `stack list|ls` command to print stacks.
   - `--format` flag to select output format from "table", "json" or a custom Go template. Defaults to "table".
   - `--endpoint` flag to filter stacks by endpoint name.
