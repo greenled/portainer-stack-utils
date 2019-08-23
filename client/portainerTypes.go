@@ -47,9 +47,8 @@ type GenericError struct {
 func (e *GenericError) Error() string {
 	if e.Details != "" {
 		return fmt.Sprintf("%s: %s", e.Err, e.Details)
-	} else {
-		return fmt.Sprintf("%s", e.Err)
 	}
+	return fmt.Sprintf("%s", e.Err)
 }
 
 // AuthenticateUserRequest represents the body of a request to POST /auth
