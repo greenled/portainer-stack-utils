@@ -9,7 +9,7 @@ import (
 
 func TestGetTranslatedStackType(t *testing.T) {
 	type args struct {
-		s portainer.Stack
+		t portainer.StackType
 	}
 	tests := []struct {
 		name string
@@ -19,34 +19,28 @@ func TestGetTranslatedStackType(t *testing.T) {
 		{
 			name: "swarm stack type",
 			args: args{
-				s: portainer.Stack{
-					Type: 1,
-				},
+				t: portainer.DockerSwarmStack,
 			},
 			want: "swarm",
 		},
 		{
 			name: "compose stack type",
 			args: args{
-				s: portainer.Stack{
-					Type: 2,
-				},
+				t: portainer.DockerComposeStack,
 			},
 			want: "compose",
 		},
 		{
 			name: "unknown stack type",
 			args: args{
-				s: portainer.Stack{
-					Type: 100,
-				},
+				t: 100,
 			},
 			want: "",
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			assert.Equal(t, tt.want, GetTranslatedStackType(tt.args.s))
+			assert.Equal(t, tt.want, GetTranslatedStackType(tt.args.t))
 		})
 	}
 }

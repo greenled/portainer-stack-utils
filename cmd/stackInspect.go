@@ -87,7 +87,7 @@ var stackInspectCmd = &cobra.Command{
 					"%v\t%s\t%v\t%s",
 					stack.ID,
 					stack.Name,
-					client.GetTranslatedStackType(stack),
+					client.GetTranslatedStackType(stack.Type),
 					endpoint.Name,
 				))
 				common.CheckError(err)

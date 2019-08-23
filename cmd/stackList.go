@@ -89,7 +89,7 @@ var stackListCmd = &cobra.Command{
 					"%v\t%s\t%v\t%s",
 					s.ID,
 					s.Name,
-					client.GetTranslatedStackType(s),
+					client.GetTranslatedStackType(s.Type),
 					stackEndpoint.Name,
 				))
 				common.CheckError(err)

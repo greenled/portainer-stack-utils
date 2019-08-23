@@ -7,11 +7,11 @@ import (
 )
 
 // GetTranslatedStackType returns a stack's Type field (int) translated to it's human readable form (string)
-func GetTranslatedStackType(s portainer.Stack) string {
-	switch s.Type {
-	case 1:
+func GetTranslatedStackType(t portainer.StackType) string {
+	switch t {
+	case portainer.DockerSwarmStack:
 		return "swarm"
-	case 2:
+	case portainer.DockerComposeStack:
 		return "compose"
 	default:
 		return ""
