@@ -18,7 +18,7 @@ import (
 
 var cachedClient client.PortainerClient
 
-// Get the cached client or a new one
+// GetClient returns the cached Portainer API client. If none is present, creates and returns a new one).
 func GetClient() (c client.PortainerClient, err error) {
 	if cachedClient == nil {
 		cachedClient, err = GetDefaultClient()
@@ -29,7 +29,7 @@ func GetClient() (c client.PortainerClient, err error) {
 	return cachedClient, nil
 }
 
-// Get the default client
+// GetDefaultClient returns a new Portainer API client with the default configuration
 func GetDefaultClient() (c client.PortainerClient, err error) {
 	config, err := GetDefaultClientConfig()
 	if err != nil {
@@ -82,7 +82,7 @@ func GetDefaultClient() (c client.PortainerClient, err error) {
 	return
 }
 
-// Get the default config for a client
+// GetDefaultClientConfig returns the default configuration for a Portainer API client
 func GetDefaultClientConfig() (config client.Config, err error) {
 	apiURL, err := url.Parse(strings.TrimRight(viper.GetString("url"), "/") + "/api/")
 	if err != nil {
@@ -101,7 +101,7 @@ func GetDefaultClientConfig() (config client.Config, err error) {
 	return
 }
 
-// Get the default http client for a Portainer client
+// GetDefaultHTTPClient returns the default HTTP client for a Portainer API client
 func GetDefaultHTTPClient() *http.Client {
 	return &http.Client{
 		Timeout: viper.GetDuration("timeout"),

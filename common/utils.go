@@ -8,6 +8,7 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+// Common errors
 const (
 	ErrStackNotFound             = Error("Stack not found")
 	ErrStackClusterNotFound      = Error("Stack cluster not found")
@@ -29,6 +30,7 @@ func (e Error) Error() string {
 	return string(e)
 }
 
+// GetDefaultEndpoint returns the default endpoint (if only one endpoint exists)
 func GetDefaultEndpoint() (endpoint portainer.Endpoint, err error) {
 	portainerClient, err := GetClient()
 	if err != nil {
@@ -53,6 +55,8 @@ func GetDefaultEndpoint() (endpoint portainer.Endpoint, err error) {
 	return
 }
 
+// GetStackByName returns a stack by its name from the (endpoint filtered) list
+// of all stacks
 func GetStackByName(name string, swarmID string, endpointID portainer.EndpointID) (stack portainer.Stack, err error) {
 	portainerClient, err := GetClient()
 	if err != nil {
@@ -73,6 +77,8 @@ func GetStackByName(name string, swarmID string, endpointID portainer.EndpointID
 	return
 }
 
+// GetEndpointByName returns an endpoint by its name from the list of all
+// endpoints
 func GetEndpointByName(name string) (endpoint portainer.Endpoint, err error) {
 	portainerClient, err := GetClient()
 	if err != nil {
@@ -93,6 +99,8 @@ func GetEndpointByName(name string) (endpoint portainer.Endpoint, err error) {
 	return
 }
 
+// GetEndpointGroupByName returns an endpoint group by its name from the list
+// of all endpoint groups
 func GetEndpointGroupByName(name string) (endpointGroup portainer.EndpointGroup, err error) {
 	portainerClient, err := GetClient()
 	if err != nil {
@@ -113,6 +121,8 @@ func GetEndpointGroupByName(name string) (endpointGroup portainer.EndpointGroup,
 	return
 }
 
+// GetEndpointFromListByID returns an endpoint by its id from a list of
+// endpoints
 func GetEndpointFromListByID(endpoints []portainer.Endpoint, id portainer.EndpointID) (endpoint portainer.Endpoint, err error) {
 	for i := range endpoints {
 		if endpoints[i].ID == id {
@@ -122,6 +132,8 @@ func GetEndpointFromListByID(endpoints []portainer.Endpoint, id portainer.Endpoi
 	return endpoint, ErrEndpointNotFound
 }
 
+// GetEndpointFromListByName returns an endpoint by its name from a list of
+// endpoints
 func GetEndpointFromListByName(endpoints []portainer.Endpoint, name string) (endpoint portainer.Endpoint, err error) {
 	for i := range endpoints {
 		if endpoints[i].Name == name {
@@ -131,6 +143,7 @@ func GetEndpointFromListByName(endpoints []portainer.Endpoint, name string) (end
 	return endpoint, ErrEndpointNotFound
 }
 
+// GetEndpointSwarmClusterID returns an endpoint's swarm cluster id
 func GetEndpointSwarmClusterID(endpointID portainer.EndpointID) (endpointSwarmClusterID string, err error) {
 	// Get docker information for endpoint
 	portainerClient, err := GetClient()
@@ -167,6 +180,7 @@ func selectValue(jsonMap map[string]interface{}, jsonPath []string) (interface{}
 	}
 }
 
+// GetFormatHelp returns the help string for --format flags
 func GetFormatHelp(v interface{}) (r string) {
 	typeOfV := reflect.TypeOf(v)
 	r = fmt.Sprintf(`

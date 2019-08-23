@@ -13,11 +13,13 @@ import (
 	portainer "github.com/portainer/portainer/api"
 )
 
+// StackListFilter represents a filter for a stack list
 type StackListFilter struct {
 	SwarmID    string               `json:"SwarmId,omitempty"`
 	EndpointID portainer.EndpointID `json:"EndpointId,omitempty"`
 }
 
+// Config represents a Portainer client configuration
 type Config struct {
 	URL           *url.URL
 	User          string
@@ -27,6 +29,7 @@ type Config struct {
 	DoNotUseToken bool
 }
 
+// PortainerClient represents a Portainer API client
 type PortainerClient interface {
 	// Authenticate a user to get an auth token
 	Authenticate() (token string, err error)
@@ -305,7 +308,7 @@ func (n *portainerClientImp) GetStatus() (status portainer.Status, err error) {
 	return
 }
 
-// Create a new client
+// NewClient creates a new Portainer API client
 func NewClient(httpClient *http.Client, config Config) PortainerClient {
 	return &portainerClientImp{
 		httpClient: httpClient,
