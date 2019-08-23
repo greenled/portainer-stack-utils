@@ -138,9 +138,6 @@ func GetEndpointSwarmClusterId(endpointId portainer.EndpointID) (endpointSwarmCl
 		return
 	}
 
-	logrus.WithFields(logrus.Fields{
-		"endpoint": endpointId,
-	}).Debug("Getting endpoint's Docker info")
 	result, err := portainerClient.GetEndpointDockerInfo(endpointId)
 	if err != nil {
 		return

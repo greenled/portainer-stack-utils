@@ -53,6 +53,9 @@ var stackDeployCmd = &cobra.Command{
 			common.CheckError(endpointRetrievalErr)
 		}
 
+		logrus.WithFields(logrus.Fields{
+			"endpoint": endpoint.Name,
+		}).Debug("Getting endpoint's Docker info")
 		endpointSwarmClusterId, selectionErr := common.GetEndpointSwarmClusterId(endpoint.ID)
 		if selectionErr == nil {
 			// It's a swarm cluster

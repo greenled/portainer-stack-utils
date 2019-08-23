@@ -43,6 +43,9 @@ var stackListCmd = &cobra.Command{
 			endpoint, endpointRetrievalErr := common.GetEndpointFromListByName(endpoints, endpointName)
 			common.CheckError(endpointRetrievalErr)
 
+			logrus.WithFields(logrus.Fields{
+				"endpoint": endpoint.Name,
+			}).Debug("Getting endpoint's Docker info")
 			var selectionErr error
 			endpointSwarmClusterId, selectionErr = common.GetEndpointSwarmClusterId(endpoint.ID)
 			if selectionErr == nil {
