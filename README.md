@@ -183,7 +183,7 @@ psu stack deploy asd --endpoint primary --log-level debug
 The output would look like:
 
 ```text
-DEBU[0000] Getting endpoint's Docker info     endpoint=5
+DEBU[0000] Getting endpoint's Docker info     endpoint=primary
 DEBU[0000] Getting stack                      endpoint=primary stack=asd
 DEBU[0000] Stack not found                    stack=asd
 INFO[0000] Creating stack                     endpoint=primary stack=asd
