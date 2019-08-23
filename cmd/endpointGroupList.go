@@ -55,9 +55,9 @@ var endpointGroupListCmd = &cobra.Command{
 			common.CheckError(flushErr)
 		case "json":
 			// Print endpoint groups in a json format
-			statusJsonBytes, err := json.Marshal(endpointGroups)
+			statusJSONBytes, err := json.Marshal(endpointGroups)
 			common.CheckError(err)
-			fmt.Println(string(statusJsonBytes))
+			fmt.Println(string(statusJSONBytes))
 		default:
 			// Print endpoint groups in a custom format
 			template, templateParsingErr := template.New("endpointGroupTpl").Parse(viper.GetString("endpoint.group.list.format"))

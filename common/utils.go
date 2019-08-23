@@ -53,13 +53,13 @@ func GetDefaultEndpoint() (endpoint portainer.Endpoint, err error) {
 	return
 }
 
-func GetStackByName(name string, swarmId string, endpointId portainer.EndpointID) (stack portainer.Stack, err error) {
+func GetStackByName(name string, swarmID string, endpointID portainer.EndpointID) (stack portainer.Stack, err error) {
 	portainerClient, err := GetClient()
 	if err != nil {
 		return
 	}
 
-	stacks, err := portainerClient.GetStacks(swarmId, endpointId)
+	stacks, err := portainerClient.GetStacks(swarmID, endpointID)
 	if err != nil {
 		return
 	}
@@ -113,7 +113,7 @@ func GetEndpointGroupByName(name string) (endpointGroup portainer.EndpointGroup,
 	return
 }
 
-func GetEndpointFromListById(endpoints []portainer.Endpoint, id portainer.EndpointID) (endpoint portainer.Endpoint, err error) {
+func GetEndpointFromListByID(endpoints []portainer.Endpoint, id portainer.EndpointID) (endpoint portainer.Endpoint, err error) {
 	for i := range endpoints {
 		if endpoints[i].ID == id {
 			return endpoints[i], err
@@ -131,14 +131,14 @@ func GetEndpointFromListByName(endpoints []portainer.Endpoint, name string) (end
 	return endpoint, ErrEndpointNotFound
 }
 
-func GetEndpointSwarmClusterId(endpointId portainer.EndpointID) (endpointSwarmClusterId string, err error) {
+func GetEndpointSwarmClusterID(endpointID portainer.EndpointID) (endpointSwarmClusterID string, err error) {
 	// Get docker information for endpoint
 	portainerClient, err := GetClient()
 	if err != nil {
 		return
 	}
 
-	result, err := portainerClient.GetEndpointDockerInfo(endpointId)
+	result, err := portainerClient.GetEndpointDockerInfo(endpointID)
 	if err != nil {
 		return
 	}
@@ -146,7 +146,7 @@ func GetEndpointSwarmClusterId(endpointId portainer.EndpointID) (endpointSwarmCl
 	// Get swarm (if any) information for endpoint
 	id, selectionErr := selectValue(result, []string{"Swarm", "Cluster", "ID"})
 	if selectionErr == nil {
-		endpointSwarmClusterId = id.(string)
+		endpointSwarmClusterID = id.(string)
 	} else if selectionErr == valueNotFoundError {
 		err = ErrStackClusterNotFound
 	} else {

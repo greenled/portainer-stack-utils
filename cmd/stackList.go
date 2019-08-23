@@ -36,7 +36,7 @@ var stackListCmd = &cobra.Command{
 		endpoints, endpointsRetrievalErr := portainerClient.GetEndpoints()
 		common.CheckError(endpointsRetrievalErr)
 
-		var endpointSwarmClusterId string
+		var endpointSwarmClusterID string
 		var stacks []portainer.Stack
 		if endpointName := viper.GetString("stack.list.endpoint"); endpointName != "" {
 			// Get endpoint by name
@@ -47,13 +47,13 @@ var stackListCmd = &cobra.Command{
 				"endpoint": endpoint.Name,
 			}).Debug("Getting endpoint's Docker info")
 			var selectionErr error
-			endpointSwarmClusterId, selectionErr = common.GetEndpointSwarmClusterId(endpoint.ID)
+			endpointSwarmClusterID, selectionErr = common.GetEndpointSwarmClusterID(endpoint.ID)
 			if selectionErr == nil {
 				// It's a swarm cluster
 				logrus.WithFields(logrus.Fields{
 					"endpoint": endpoint.Name,
 				}).Debug("Getting stacks")
-				stacks, err = portainerClient.GetStacks(endpointSwarmClusterId, endpoint.ID)
+				stacks, err = portainerClient.GetStacks(endpointSwarmClusterID, endpoint.ID)
 				common.CheckError(err)
 			} else if selectionErr == common.ErrStackClusterNotFound {
 				// It's not a swarm cluster
@@ -83,7 +83,7 @@ var stackListCmd = &cobra.Command{
 			})
 			common.CheckError(err)
 			for _, s := range stacks {
-				stackEndpoint, err := common.GetEndpointFromListById(endpoints, s.EndpointID)
+				stackEndpoint, err := common.GetEndpointFromListByID(endpoints, s.EndpointID)
 				common.CheckError(err)
 				_, err = fmt.Fprintln(writer, fmt.Sprintf(
 					"%v\t%s\t%v\t%s",
@@ -98,9 +98,9 @@ var stackListCmd = &cobra.Command{
 			common.CheckError(flushErr)
 		case "json":
 			// Print stacks in a json format
-			stacksJsonBytes, err := json.Marshal(stacks)
+			stacksJSONBytes, err := json.Marshal(stacks)
 			common.CheckError(err)
-			fmt.Println(string(stacksJsonBytes))
+			fmt.Println(string(stacksJSONBytes))
 		default:
 			// Print stacks in a custom format
 			template, templateParsingErr := template.New("stackTpl").Parse(viper.GetString("stack.list.format"))

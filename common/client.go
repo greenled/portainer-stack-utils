@@ -36,7 +36,7 @@ func GetDefaultClient() (c client.PortainerClient, err error) {
 		return
 	}
 
-	c = client.NewClient(GetDefaultHttpClient(), config)
+	c = client.NewClient(GetDefaultHTTPClient(), config)
 
 	c.BeforeRequest(func(req *http.Request) (err error) {
 		var bodyString string
@@ -84,13 +84,13 @@ func GetDefaultClient() (c client.PortainerClient, err error) {
 
 // Get the default config for a client
 func GetDefaultClientConfig() (config client.Config, err error) {
-	apiUrl, err := url.Parse(strings.TrimRight(viper.GetString("url"), "/") + "/api/")
+	apiURL, err := url.Parse(strings.TrimRight(viper.GetString("url"), "/") + "/api/")
 	if err != nil {
 		return
 	}
 
 	config = client.Config{
-		Url:           apiUrl,
+		URL:           apiURL,
 		User:          viper.GetString("user"),
 		Password:      viper.GetString("password"),
 		Token:         viper.GetString("auth-token"),
@@ -102,7 +102,7 @@ func GetDefaultClientConfig() (config client.Config, err error) {
 }
 
 // Get the default http client for a Portainer client
-func GetDefaultHttpClient() *http.Client {
+func GetDefaultHTTPClient() *http.Client {
 	return &http.Client{
 		Timeout: viper.GetDuration("timeout"),
 		Transport: &http.Transport{

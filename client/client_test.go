@@ -12,24 +12,24 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func readRequestBodyAsJson(req *http.Request, body *map[string]interface{}) (err error) {
+func readRequestBodyAsJSON(req *http.Request, body *map[string]interface{}) (err error) {
 	bodyBytes, err := ioutil.ReadAll(req.Body)
 	defer req.Body.Close()
 	err = json.Unmarshal(bodyBytes, body)
 	return
 }
 
-func writeResponseBodyAsJson(w http.ResponseWriter, body map[string]interface{}) (err error) {
+func writeResponseBodyAsJSON(w http.ResponseWriter, body map[string]interface{}) (err error) {
 	bodyBytes, err := json.Marshal(body)
 	fmt.Fprintln(w, string(bodyBytes))
 	return
 }
 
 func TestNewClient(t *testing.T) {
-	apiUrl, _ := url.Parse("http://validurl.com/api")
+	apiURL, _ := url.Parse("http://validurl.com/api")
 
 	validClient := NewClient(http.DefaultClient, Config{
-		Url: apiUrl,
+		URL: apiURL,
 	})
 	assert.NotNil(t, validClient)
 }
@@ -37,7 +37,7 @@ func TestNewClient(t *testing.T) {
 func TestClientAuthenticates(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 		var body map[string]interface{}
-		err := readRequestBodyAsJson(req, &body)
+		err := readRequestBodyAsJSON(req, &body)
 
 		assert.Equal(t, req.Method, http.MethodPost)
 		assert.Equal(t, req.RequestURI, "/api/auth")
@@ -53,16 +53,16 @@ func TestClientAuthenticates(t *testing.T) {
 		assert.NotNil(t, body["Password"])
 		assert.Equal(t, body["Password"], "a")
 
-		writeResponseBodyAsJson(w, map[string]interface{}{
+		writeResponseBodyAsJSON(w, map[string]interface{}{
 			"jwt": "somerandomtoken",
 		})
 	}))
 	defer ts.Close()
 
-	apiUrl, _ := url.Parse(ts.URL + "/api/")
+	apiURL, _ := url.Parse(ts.URL + "/api/")
 
 	customClient := NewClient(ts.Client(), Config{
-		Url:       apiUrl,
+		URL:       apiURL,
 		User:      "admin",
 		Password:  "a",
 		UserAgent: "GE007",

@@ -14,12 +14,12 @@ import (
 )
 
 type StackListFilter struct {
-	SwarmId    string               `json:",omitempty"`
-	EndpointId portainer.EndpointID `json:",omitempty"`
+	SwarmID    string               `json:"SwarmId,omitempty"`
+	EndpointID portainer.EndpointID `json:"EndpointId,omitempty"`
 }
 
 type Config struct {
-	Url           *url.URL
+	URL           *url.URL
 	User          string
 	Password      string
 	Token         string
@@ -38,25 +38,25 @@ type PortainerClient interface {
 	GetEndpointGroups() ([]portainer.EndpointGroup, error)
 
 	// Get stacks, optionally filtered by swarmId and endpointId
-	GetStacks(swarmId string, endpointId portainer.EndpointID) ([]portainer.Stack, error)
+	GetStacks(swarmID string, endpointID portainer.EndpointID) ([]portainer.Stack, error)
 
 	// Create swarm stack
-	CreateSwarmStack(stackName string, environmentVariables []portainer.Pair, stackFileContent string, swarmClusterId string, endpointId portainer.EndpointID) (stack portainer.Stack, err error)
+	CreateSwarmStack(stackName string, environmentVariables []portainer.Pair, stackFileContent string, swarmClusterID string, endpointID portainer.EndpointID) (stack portainer.Stack, err error)
 
 	// Create compose stack
-	CreateComposeStack(stackName string, environmentVariables []portainer.Pair, stackFileContent string, endpointId portainer.EndpointID) (stack portainer.Stack, err error)
+	CreateComposeStack(stackName string, environmentVariables []portainer.Pair, stackFileContent string, endpointID portainer.EndpointID) (stack portainer.Stack, err error)
 
 	// Update stack
-	UpdateStack(stack portainer.Stack, environmentVariables []portainer.Pair, stackFileContent string, prune bool, endpointId portainer.EndpointID) error
+	UpdateStack(stack portainer.Stack, environmentVariables []portainer.Pair, stackFileContent string, prune bool, endpointID portainer.EndpointID) error
 
 	// Delete stack
-	DeleteStack(stackId portainer.StackID) error
+	DeleteStack(stackID portainer.StackID) error
 
 	// Get stack file content
-	GetStackFileContent(stackId portainer.StackID) (content string, err error)
+	GetStackFileContent(stackID portainer.StackID) (content string, err error)
 
 	// Get endpoint Docker info
-	GetEndpointDockerInfo(endpointId portainer.EndpointID) (info map[string]interface{}, err error)
+	GetEndpointDockerInfo(endpointID portainer.EndpointID) (info map[string]interface{}, err error)
 
 	// Get Portainer status info
 	GetStatus() (portainer.Status, error)
@@ -103,12 +103,12 @@ func checkResponseForErrors(resp *http.Response) error {
 
 // Do an http request
 func (n *portainerClientImp) do(uri, method string, request io.Reader, requestType string, headers http.Header) (resp *http.Response, err error) {
-	requestUrl, err := n.url.Parse(uri)
+	requestURL, err := n.url.Parse(uri)
 	if err != nil {
 		return
 	}
 
-	req, err := http.NewRequest(method, requestUrl.String(), request)
+	req, err := http.NewRequest(method, requestURL.String(), request)
 	if err != nil {
 		return
 	}
@@ -230,62 +230,62 @@ func (n *portainerClientImp) GetEndpointGroups() (endpointGroups []portainer.End
 	return
 }
 
-func (n *portainerClientImp) GetStacks(swarmId string, endpointId portainer.EndpointID) (stacks []portainer.Stack, err error) {
+func (n *portainerClientImp) GetStacks(swarmID string, endpointID portainer.EndpointID) (stacks []portainer.Stack, err error) {
 	filter := StackListFilter{
-		SwarmId:    swarmId,
-		EndpointId: endpointId,
+		SwarmID:    swarmID,
+		EndpointID: endpointID,
 	}
 
-	filterJsonBytes, _ := json.Marshal(filter)
-	filterJsonString := string(filterJsonBytes)
+	filterJSONBytes, _ := json.Marshal(filter)
+	filterJSONString := string(filterJSONBytes)
 
-	err = n.doJSON(fmt.Sprintf("stacks?filters=%s", filterJsonString), http.MethodGet, nil, &stacks)
+	err = n.doJSON(fmt.Sprintf("stacks?filters=%s", filterJSONString), http.MethodGet, nil, &stacks)
 	return
 }
 
-func (n *portainerClientImp) CreateSwarmStack(stackName string, environmentVariables []portainer.Pair, stackFileContent string, swarmClusterId string, endpointId portainer.EndpointID) (stack portainer.Stack, err error) {
+func (n *portainerClientImp) CreateSwarmStack(stackName string, environmentVariables []portainer.Pair, stackFileContent string, swarmClusterID string, endpointID portainer.EndpointID) (stack portainer.Stack, err error) {
 	reqBody := StackCreateRequest{
 		Name:             stackName,
 		Env:              environmentVariables,
-		SwarmID:          swarmClusterId,
+		SwarmID:          swarmClusterID,
 		StackFileContent: stackFileContent,
 	}
 
-	err = n.doJSON(fmt.Sprintf("stacks?type=%v&method=%s&endpointId=%v", 1, "string", endpointId), http.MethodPost, &reqBody, &stack)
+	err = n.doJSON(fmt.Sprintf("stacks?type=%v&method=%s&endpointId=%v", 1, "string", endpointID), http.MethodPost, &reqBody, &stack)
 	return
 }
 
-func (n *portainerClientImp) CreateComposeStack(stackName string, environmentVariables []portainer.Pair, stackFileContent string, endpointId portainer.EndpointID) (stack portainer.Stack, err error) {
+func (n *portainerClientImp) CreateComposeStack(stackName string, environmentVariables []portainer.Pair, stackFileContent string, endpointID portainer.EndpointID) (stack portainer.Stack, err error) {
 	reqBody := StackCreateRequest{
 		Name:             stackName,
 		Env:              environmentVariables,
 		StackFileContent: stackFileContent,
 	}
 
-	err = n.doJSON(fmt.Sprintf("stacks?type=%v&method=%s&endpointId=%v", 2, "string", endpointId), http.MethodPost, &reqBody, &stack)
+	err = n.doJSON(fmt.Sprintf("stacks?type=%v&method=%s&endpointId=%v", 2, "string", endpointID), http.MethodPost, &reqBody, &stack)
 	return
 }
 
-func (n *portainerClientImp) UpdateStack(stack portainer.Stack, environmentVariables []portainer.Pair, stackFileContent string, prune bool, endpointId portainer.EndpointID) (err error) {
+func (n *portainerClientImp) UpdateStack(stack portainer.Stack, environmentVariables []portainer.Pair, stackFileContent string, prune bool, endpointID portainer.EndpointID) (err error) {
 	reqBody := StackUpdateRequest{
 		Env:              environmentVariables,
 		StackFileContent: stackFileContent,
 		Prune:            prune,
 	}
 
-	err = n.doJSON(fmt.Sprintf("stacks/%v?endpointId=%v", stack.ID, endpointId), http.MethodPut, &reqBody, nil)
+	err = n.doJSON(fmt.Sprintf("stacks/%v?endpointId=%v", stack.ID, endpointID), http.MethodPut, &reqBody, nil)
 	return
 }
 
-func (n *portainerClientImp) DeleteStack(stackId portainer.StackID) (err error) {
-	err = n.doJSON(fmt.Sprintf("stacks/%d", stackId), http.MethodDelete, nil, nil)
+func (n *portainerClientImp) DeleteStack(stackID portainer.StackID) (err error) {
+	err = n.doJSON(fmt.Sprintf("stacks/%d", stackID), http.MethodDelete, nil, nil)
 	return
 }
 
-func (n *portainerClientImp) GetStackFileContent(stackId portainer.StackID) (content string, err error) {
+func (n *portainerClientImp) GetStackFileContent(stackID portainer.StackID) (content string, err error) {
 	var respBody StackFileInspectResponse
 
-	err = n.doJSON(fmt.Sprintf("stacks/%v/file", stackId), http.MethodGet, nil, &respBody)
+	err = n.doJSON(fmt.Sprintf("stacks/%v/file", stackID), http.MethodGet, nil, &respBody)
 	if err != nil {
 		return
 	}
@@ -295,8 +295,8 @@ func (n *portainerClientImp) GetStackFileContent(stackId portainer.StackID) (con
 	return
 }
 
-func (n *portainerClientImp) GetEndpointDockerInfo(endpointId portainer.EndpointID) (info map[string]interface{}, err error) {
-	err = n.doJSON(fmt.Sprintf("endpoints/%v/docker/info", endpointId), http.MethodGet, nil, &info)
+func (n *portainerClientImp) GetEndpointDockerInfo(endpointID portainer.EndpointID) (info map[string]interface{}, err error) {
+	err = n.doJSON(fmt.Sprintf("endpoints/%v/docker/info", endpointID), http.MethodGet, nil, &info)
 	return
 }
 
@@ -309,7 +309,7 @@ func (n *portainerClientImp) GetStatus() (status portainer.Status, err error) {
 func NewClient(httpClient *http.Client, config Config) PortainerClient {
 	return &portainerClientImp{
 		httpClient: httpClient,
-		url:        config.Url,
+		url:        config.URL,
 		user:       config.User,
 		password:   config.Password,
 		token:      config.Token,

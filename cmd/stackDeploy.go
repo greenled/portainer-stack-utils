@@ -56,7 +56,7 @@ var stackDeployCmd = &cobra.Command{
 		logrus.WithFields(logrus.Fields{
 			"endpoint": endpoint.Name,
 		}).Debug("Getting endpoint's Docker info")
-		endpointSwarmClusterId, selectionErr := common.GetEndpointSwarmClusterId(endpoint.ID)
+		endpointSwarmClusterID, selectionErr := common.GetEndpointSwarmClusterID(endpoint.ID)
 		if selectionErr == nil {
 			// It's a swarm cluster
 		} else if selectionErr == common.ErrStackClusterNotFound {
@@ -70,7 +70,7 @@ var stackDeployCmd = &cobra.Command{
 			"stack":    stackName,
 			"endpoint": endpoint.Name,
 		}).Debug("Getting stack")
-		retrievedStack, stackRetrievalErr := common.GetStackByName(stackName, endpointSwarmClusterId, endpoint.ID)
+		retrievedStack, stackRetrievalErr := common.GetStackByName(stackName, endpointSwarmClusterID, endpoint.ID)
 		if stackRetrievalErr == nil {
 			// We are updating an existing stack
 			logrus.WithFields(logrus.Fields{
@@ -129,13 +129,13 @@ var stackDeployCmd = &cobra.Command{
 			stackFileContent, loadingErr := loadStackFile(viper.GetString("stack.deploy.stack-file"))
 			common.CheckError(loadingErr)
 
-			if endpointSwarmClusterId != "" {
+			if endpointSwarmClusterID != "" {
 				// It's a swarm cluster
 				logrus.WithFields(logrus.Fields{
 					"stack":    stackName,
 					"endpoint": endpoint.Name,
 				}).Info("Creating stack")
-				stack, deploymentErr := portainerClient.CreateSwarmStack(stackName, loadedEnvironmentVariables, stackFileContent, endpointSwarmClusterId, endpoint.ID)
+				stack, deploymentErr := portainerClient.CreateSwarmStack(stackName, loadedEnvironmentVariables, stackFileContent, endpointSwarmClusterID, endpoint.ID)
 				common.CheckError(deploymentErr)
 				logrus.WithFields(logrus.Fields{
 					"stack":    stack.Name,

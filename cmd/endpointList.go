@@ -71,9 +71,9 @@ var endpointListCmd = &cobra.Command{
 			common.CheckError(flushErr)
 		case "json":
 			// Print endpoints in a json format
-			statusJsonBytes, err := json.Marshal(endpoints)
+			statusJSONBytes, err := json.Marshal(endpoints)
 			common.CheckError(err)
-			fmt.Println(string(statusJsonBytes))
+			fmt.Println(string(statusJSONBytes))
 		default:
 			// Print endpoints in a custom format
 			template, templateParsingErr := template.New("endpointTpl").Parse(viper.GetString("endpoint.list.format"))

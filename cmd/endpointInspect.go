@@ -74,9 +74,9 @@ var endpointInspectCmd = &cobra.Command{
 			common.CheckError(err)
 		case "json":
 			// Print endpoint in a json format
-			endpointJsonBytes, err := json.Marshal(endpoint)
+			endpointJSONBytes, err := json.Marshal(endpoint)
 			common.CheckError(err)
-			fmt.Println(string(endpointJsonBytes))
+			fmt.Println(string(endpointJSONBytes))
 		default:
 			// Print endpoint in a custom format
 			template, err := template.New("endpointTpl").Parse(viper.GetString("endpoint.inspect.format"))
