@@ -66,6 +66,9 @@ type PortainerClient interface {
 
 	// Run a function after receiving a response from Portainer
 	AfterResponse(hook func(resp *http.Response) (err error))
+
+	// Proxy proxies a request to /endpoint/{id}/docker and returns its result
+	Proxy(endpointId portainer.EndpointID, req *http.Request) (resp *http.Response, err error)
 }
 
 type portainerClientImp struct {
@@ -302,6 +305,11 @@ func (n *portainerClientImp) GetEndpointDockerInfo(endpointId portainer.Endpoint
 
 func (n *portainerClientImp) GetStatus() (status portainer.Status, err error) {
 	err = n.doJSON("status", http.MethodGet, nil, &status)
+	return
+}
+
+func (n *portainerClientImp) Proxy(endpointId portainer.EndpointID, req *http.Request) (resp *http.Response, err error) {
+	resp, err = n.do(fmt.Sprintf("endpoints/%v/docker%s", endpointId, req.RequestURI), req.Method, req.Body, "", req.Header)
 	return
 }
 
