@@ -119,9 +119,8 @@ func (n *portainerClientImp) do(uri, method string, requestBody io.Reader, heade
 		req.Header = headers
 	}
 
-	if requestBody != nil {
-		req.Header.Set("User-Agent", n.userAgent)
-	}
+	// Set user agent header
+	req.Header.Set("User-Agent", n.userAgent)
 
 	// Run all "before request" hooks
 	for i := 0; i < len(n.beforeRequestHooks); i++ {
