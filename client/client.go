@@ -104,13 +104,13 @@ func checkResponseForErrors(resp *http.Response) error {
 }
 
 // Do an http request
-func (n *portainerClientImp) do(uri, method string, request io.Reader, headers http.Header) (resp *http.Response, err error) {
+func (n *portainerClientImp) do(uri, method string, requestBody io.Reader, headers http.Header) (resp *http.Response, err error) {
 	requestURL, err := n.url.Parse(uri)
 	if err != nil {
 		return
 	}
 
-	req, err := http.NewRequest(method, requestURL.String(), request)
+	req, err := http.NewRequest(method, requestURL.String(), requestBody)
 	if err != nil {
 		return
 	}
@@ -119,7 +119,7 @@ func (n *portainerClientImp) do(uri, method string, request io.Reader, headers h
 		req.Header = headers
 	}
 
-	if request != nil {
+	if requestBody != nil {
 		req.Header.Set("User-Agent", n.userAgent)
 	}
 
@@ -153,11 +153,11 @@ func (n *portainerClientImp) do(uri, method string, request io.Reader, headers h
 }
 
 // Do a JSON http request
-func (n *portainerClientImp) doJSON(uri, method string, headers http.Header, request interface{}, response interface{}) error {
+func (n *portainerClientImp) doJSON(uri, method string, headers http.Header, requestBody interface{}, responseBody interface{}) error {
 	var body io.Reader
 
-	if request != nil {
-		reqBodyBytes, err := json.Marshal(request)
+	if requestBody != nil {
+		reqBodyBytes, err := json.Marshal(requestBody)
 		if err != nil {
 			return err
 		}
@@ -171,9 +171,9 @@ func (n *portainerClientImp) doJSON(uri, method string, headers http.Header, req
 		return err
 	}
 
-	if response != nil {
+	if responseBody != nil {
 		d := json.NewDecoder(resp.Body)
-		err := d.Decode(response)
+		err := d.Decode(responseBody)
 		if err != nil {
 			return err
 		}

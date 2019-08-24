@@ -85,10 +85,10 @@ func Test_portainerClientImp_do(t *testing.T) {
 		beforeFunctionCall func(t *testing.T, tt *fields)
 	}
 	type args struct {
-		uri     string
-		method  string
-		request io.Reader
-		headers http.Header
+		uri         string
+		method      string
+		requestBody io.Reader
+		headers     http.Header
 	}
 	tests := []struct {
 		name          string
@@ -174,7 +174,7 @@ func Test_portainerClientImp_do(t *testing.T) {
 			if tt.fields.beforeFunctionCall != nil {
 				tt.fields.beforeFunctionCall(t, &tt.fields)
 			}
-			gotResp, err := n.do(tt.args.uri, tt.args.method, tt.args.request, tt.args.headers)
+			gotResp, err := n.do(tt.args.uri, tt.args.method, tt.args.requestBody, tt.args.headers)
 
 			assert.Equal(t, tt.wantErr, err != nil)
 			if tt.wantRespCheck != nil {
