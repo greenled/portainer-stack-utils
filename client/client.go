@@ -104,7 +104,7 @@ func checkResponseForErrors(resp *http.Response) error {
 }
 
 // Do an http request
-func (n *portainerClientImp) do(uri, method string, request io.Reader, requestType string, headers http.Header) (resp *http.Response, err error) {
+func (n *portainerClientImp) do(uri, method string, request io.Reader, headers http.Header) (resp *http.Response, err error) {
 	requestURL, err := n.url.Parse(uri)
 	if err != nil {
 		return
@@ -120,7 +120,6 @@ func (n *portainerClientImp) do(uri, method string, request io.Reader, requestTy
 	}
 
 	if request != nil {
-		req.Header.Set("Content-Type", requestType)
 		req.Header.Set("User-Agent", n.userAgent)
 	}
 
@@ -165,7 +164,9 @@ func (n *portainerClientImp) doJSON(uri, method string, headers http.Header, req
 		body = bytes.NewReader(reqBodyBytes)
 	}
 
-	resp, err := n.do(uri, method, body, "application/json", headers)
+	headers.Set("Content-Type", "application/json")
+
+	resp, err := n.do(uri, method, body, headers)
 	if err != nil {
 		return err
 	}
