@@ -79,7 +79,6 @@ func Test_portainerClientImp_do(t *testing.T) {
 		password           string
 		token              string
 		userAgent          string
-		doNotUseToken      bool
 		beforeRequestHooks []func(req *http.Request) (err error)
 		afterResponseHooks []func(resp *http.Response) (err error)
 		server             *httptest.Server
@@ -122,7 +121,6 @@ func Test_portainerClientImp_do(t *testing.T) {
 		{
 			name: "extra headers are added",
 			fields: fields{
-				token: "somerandomtoken",
 				server: httptest.NewUnstartedServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 					assert.Equal(t, req.Header.Get("Some-Header"), "value")
 				})),
@@ -133,24 +131,6 @@ func Test_portainerClientImp_do(t *testing.T) {
 						"value",
 					},
 				},
-			},
-		},
-		{
-			name: "Authorization header is added when doNotUseToken is false",
-			fields: fields{
-				token: "token",
-				server: httptest.NewUnstartedServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-					assert.NotEmpty(t, req.Header.Get("Authorization"))
-				})),
-			},
-		},
-		{
-			name: "Authorization header is not added when doNotUseToken is true",
-			fields: fields{
-				doNotUseToken: true,
-				server: httptest.NewUnstartedServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-					assert.Equal(t, req.Header.Get("Authorization"), "")
-				})),
 			},
 		},
 		{
@@ -167,7 +147,6 @@ func Test_portainerClientImp_do(t *testing.T) {
 		{
 			name: "returns error on response error",
 			fields: fields{
-				token: "token",
 				server: httptest.NewUnstartedServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 					w.WriteHeader(http.StatusInternalServerError)
 				})),
@@ -189,7 +168,6 @@ func Test_portainerClientImp_do(t *testing.T) {
 				password:           tt.fields.password,
 				token:              tt.fields.token,
 				userAgent:          tt.fields.userAgent,
-				doNotUseToken:      tt.fields.doNotUseToken,
 				beforeRequestHooks: tt.fields.beforeRequestHooks,
 				afterResponseHooks: tt.fields.afterResponseHooks,
 			}
