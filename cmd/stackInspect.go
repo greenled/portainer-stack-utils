@@ -24,7 +24,7 @@ var stackInspectCmd = &cobra.Command{
 	Args:    cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		stackName := args[0]
-		var endpointSwarmClusterId string
+		var endpointSwarmClusterID string
 		var stack portainer.Stack
 
 		var endpoint portainer.Endpoint
@@ -51,14 +51,14 @@ var stackInspectCmd = &cobra.Command{
 			"endpoint": endpoint.Name,
 		}).Debug("Getting endpoint's Docker info")
 		var selectionErr, stackRetrievalErr error
-		endpointSwarmClusterId, selectionErr = common.GetEndpointSwarmClusterId(endpoint.ID)
+		endpointSwarmClusterID, selectionErr = common.GetEndpointSwarmClusterID(endpoint.ID)
 		if selectionErr == nil {
 			// It's a swarm cluster
 			logrus.WithFields(logrus.Fields{
 				"stack":    stackName,
 				"endpoint": endpoint.Name,
 			}).Debug("Getting stack")
-			stack, stackRetrievalErr = common.GetStackByName(stackName, endpointSwarmClusterId, endpoint.ID)
+			stack, stackRetrievalErr = common.GetStackByName(stackName, endpointSwarmClusterID, endpoint.ID)
 		} else if selectionErr == common.ErrStackClusterNotFound {
 			// It's not a swarm cluster
 			logrus.WithFields(logrus.Fields{
@@ -87,7 +87,7 @@ var stackInspectCmd = &cobra.Command{
 					"%v\t%s\t%v\t%s",
 					stack.ID,
 					stack.Name,
-					client.GetTranslatedStackType(stack),
+					client.GetTranslatedStackType(stack.Type),
 					endpoint.Name,
 				))
 				common.CheckError(err)
@@ -95,9 +95,9 @@ var stackInspectCmd = &cobra.Command{
 				common.CheckError(flushErr)
 			case "json":
 				// Print stack in a json format
-				stackJsonBytes, err := json.Marshal(stack)
+				stackJSONBytes, err := json.Marshal(stack)
 				common.CheckError(err)
-				fmt.Println(string(stackJsonBytes))
+				fmt.Println(string(stackJSONBytes))
 			default:
 				// Print stack in a custom format
 				template, templateParsingErr := template.New("stackTpl").Parse(viper.GetString("stack.inspect.format"))

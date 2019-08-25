@@ -77,9 +77,9 @@ var configListCmd = &cobra.Command{
 			common.CheckError(flushErr)
 		case "json":
 			// Print configs in a json format
-			statusJsonBytes, err := json.Marshal(configs)
+			statusJSONBytes, err := json.Marshal(configs)
 			common.CheckError(err)
-			fmt.Println(string(statusJsonBytes))
+			fmt.Println(string(statusJSONBytes))
 		default:
 			// Print configs in a custom format
 			template, templateParsingErr := template.New("configTpl").Parse(viper.GetString("config.list.format"))

@@ -13,13 +13,15 @@ import (
 	portainer "github.com/portainer/portainer/api"
 )
 
+// StackListFilter represents a filter for a stack list
 type StackListFilter struct {
-	SwarmId    string               `json:",omitempty"`
-	EndpointId portainer.EndpointID `json:",omitempty"`
+	SwarmID    string               `json:"SwarmId,omitempty"`
+	EndpointID portainer.EndpointID `json:"EndpointId,omitempty"`
 }
 
+// Config represents a Portainer client configuration
 type Config struct {
-	Url           *url.URL
+	URL           *url.URL
 	User          string
 	Password      string
 	Token         string
@@ -27,6 +29,7 @@ type Config struct {
 	DoNotUseToken bool
 }
 
+// PortainerClient represents a Portainer API client
 type PortainerClient interface {
 	// Authenticate a user to get an auth token
 	Authenticate() (token string, err error)
@@ -38,25 +41,25 @@ type PortainerClient interface {
 	GetEndpointGroups() ([]portainer.EndpointGroup, error)
 
 	// Get stacks, optionally filtered by swarmId and endpointId
-	GetStacks(swarmId string, endpointId portainer.EndpointID) ([]portainer.Stack, error)
+	GetStacks(swarmID string, endpointID portainer.EndpointID) ([]portainer.Stack, error)
 
 	// Create swarm stack
-	CreateSwarmStack(stackName string, environmentVariables []portainer.Pair, stackFileContent string, swarmClusterId string, endpointId portainer.EndpointID) (stack portainer.Stack, err error)
+	CreateSwarmStack(stackName string, environmentVariables []portainer.Pair, stackFileContent string, swarmClusterID string, endpointID portainer.EndpointID) (stack portainer.Stack, err error)
 
 	// Create compose stack
-	CreateComposeStack(stackName string, environmentVariables []portainer.Pair, stackFileContent string, endpointId portainer.EndpointID) (stack portainer.Stack, err error)
+	CreateComposeStack(stackName string, environmentVariables []portainer.Pair, stackFileContent string, endpointID portainer.EndpointID) (stack portainer.Stack, err error)
 
 	// Update stack
-	UpdateStack(stack portainer.Stack, environmentVariables []portainer.Pair, stackFileContent string, prune bool, endpointId portainer.EndpointID) error
+	UpdateStack(stack portainer.Stack, environmentVariables []portainer.Pair, stackFileContent string, prune bool, endpointID portainer.EndpointID) error
 
 	// Delete stack
-	DeleteStack(stackId portainer.StackID) error
+	DeleteStack(stackID portainer.StackID) error
 
 	// Get stack file content
-	GetStackFileContent(stackId portainer.StackID) (content string, err error)
+	GetStackFileContent(stackID portainer.StackID) (content string, err error)
 
 	// Get endpoint Docker info
-	GetEndpointDockerInfo(endpointId portainer.EndpointID) (info map[string]interface{}, err error)
+	GetEndpointDockerInfo(endpointID portainer.EndpointID) (info map[string]interface{}, err error)
 
 	// Get Portainer status info
 	GetStatus() (portainer.Status, error)
@@ -75,7 +78,6 @@ type portainerClientImp struct {
 	password           string
 	token              string
 	userAgent          string
-	doNotUseToken      bool
 	beforeRequestHooks []func(req *http.Request) (err error)
 	afterResponseHooks []func(resp *http.Response) (err error)
 }
@@ -102,13 +104,13 @@ func checkResponseForErrors(resp *http.Response) error {
 }
 
 // Do an http request
-func (n *portainerClientImp) do(uri, method string, request io.Reader, requestType string, headers http.Header) (resp *http.Response, err error) {
-	requestUrl, err := n.url.Parse(uri)
+func (n *portainerClientImp) do(uri, method string, requestBody io.Reader, headers http.Header) (resp *http.Response, err error) {
+	requestURL, err := n.url.Parse(uri)
 	if err != nil {
 		return
 	}
 
-	req, err := http.NewRequest(method, requestUrl.String(), request)
+	req, err := http.NewRequest(method, requestURL.String(), requestBody)
 	if err != nil {
 		return
 	}
@@ -117,20 +119,8 @@ func (n *portainerClientImp) do(uri, method string, request io.Reader, requestTy
 		req.Header = headers
 	}
 
-	if request != nil {
-		req.Header.Set("Content-Type", requestType)
-		req.Header.Set("User-Agent", n.userAgent)
-	}
-
-	if !n.doNotUseToken {
-		if n.token == "" {
-			n.token, err = n.Authenticate()
-			if err != nil {
-				return
-			}
-		}
-		req.Header.Set("Authorization", "Bearer "+n.token)
-	}
+	// Set user agent header
+	req.Header.Set("User-Agent", n.userAgent)
 
 	// Run all "before request" hooks
 	for i := 0; i < len(n.beforeRequestHooks); i++ {
@@ -162,31 +152,47 @@ func (n *portainerClientImp) do(uri, method string, request io.Reader, requestTy
 }
 
 // Do a JSON http request
-func (n *portainerClientImp) doJSON(uri, method string, request interface{}, response interface{}) error {
+func (n *portainerClientImp) doJSON(uri, method string, headers http.Header, requestBody interface{}, responseBody interface{}) error {
 	var body io.Reader
 
-	if request != nil {
-		reqBodyBytes, err := json.Marshal(request)
+	if requestBody != nil {
+		reqBodyBytes, err := json.Marshal(requestBody)
 		if err != nil {
 			return err
 		}
 		body = bytes.NewReader(reqBodyBytes)
 	}
 
-	resp, err := n.do(uri, method, body, "application/json", nil)
+	headers.Set("Content-Type", "application/json")
+
+	resp, err := n.do(uri, method, body, headers)
 	if err != nil {
 		return err
 	}
 
-	if response != nil {
+	if responseBody != nil {
 		d := json.NewDecoder(resp.Body)
-		err := d.Decode(response)
+		err := d.Decode(responseBody)
 		if err != nil {
 			return err
 		}
 	}
 
 	return nil
+}
+
+// Do a JSON http request with an auth token
+func (n *portainerClientImp) doJSONWithToken(uri, method string, headers http.Header, request interface{}, response interface{}) (err error) {
+	// Ensure there is an auth token
+	if n.token == "" {
+		n.token, err = n.Authenticate()
+		if err != nil {
+			return
+		}
+	}
+	headers.Set("Authorization", "Bearer "+n.token)
+
+	return n.doJSON(uri, method, headers, request, response)
 }
 
 func (n *portainerClientImp) BeforeRequest(hook func(req *http.Request) (err error)) {
@@ -205,15 +211,10 @@ func (n *portainerClientImp) Authenticate() (token string, err error) {
 
 	respBody := AuthenticateUserResponse{}
 
-	previousDoNotUseTokenValue := n.doNotUseToken
-	n.doNotUseToken = true
-
-	err = n.doJSON("auth", http.MethodPost, &reqBody, &respBody)
+	err = n.doJSON("auth", http.MethodPost, http.Header{}, &reqBody, &respBody)
 	if err != nil {
 		return
 	}
-
-	n.doNotUseToken = previousDoNotUseTokenValue
 
 	token = respBody.Jwt
 
@@ -221,71 +222,71 @@ func (n *portainerClientImp) Authenticate() (token string, err error) {
 }
 
 func (n *portainerClientImp) GetEndpoints() (endpoints []portainer.Endpoint, err error) {
-	err = n.doJSON("endpoints", http.MethodGet, nil, &endpoints)
+	err = n.doJSONWithToken("endpoints", http.MethodGet, http.Header{}, nil, &endpoints)
 	return
 }
 
 func (n *portainerClientImp) GetEndpointGroups() (endpointGroups []portainer.EndpointGroup, err error) {
-	err = n.doJSON("endpoint_groups", http.MethodGet, nil, &endpointGroups)
+	err = n.doJSONWithToken("endpoint_groups", http.MethodGet, http.Header{}, nil, &endpointGroups)
 	return
 }
 
-func (n *portainerClientImp) GetStacks(swarmId string, endpointId portainer.EndpointID) (stacks []portainer.Stack, err error) {
+func (n *portainerClientImp) GetStacks(swarmID string, endpointID portainer.EndpointID) (stacks []portainer.Stack, err error) {
 	filter := StackListFilter{
-		SwarmId:    swarmId,
-		EndpointId: endpointId,
+		SwarmID:    swarmID,
+		EndpointID: endpointID,
 	}
 
-	filterJsonBytes, _ := json.Marshal(filter)
-	filterJsonString := string(filterJsonBytes)
+	filterJSONBytes, _ := json.Marshal(filter)
+	filterJSONString := string(filterJSONBytes)
 
-	err = n.doJSON(fmt.Sprintf("stacks?filters=%s", filterJsonString), http.MethodGet, nil, &stacks)
+	err = n.doJSONWithToken(fmt.Sprintf("stacks?filters=%s", filterJSONString), http.MethodGet, http.Header{}, nil, &stacks)
 	return
 }
 
-func (n *portainerClientImp) CreateSwarmStack(stackName string, environmentVariables []portainer.Pair, stackFileContent string, swarmClusterId string, endpointId portainer.EndpointID) (stack portainer.Stack, err error) {
+func (n *portainerClientImp) CreateSwarmStack(stackName string, environmentVariables []portainer.Pair, stackFileContent string, swarmClusterID string, endpointID portainer.EndpointID) (stack portainer.Stack, err error) {
 	reqBody := StackCreateRequest{
 		Name:             stackName,
 		Env:              environmentVariables,
-		SwarmID:          swarmClusterId,
+		SwarmID:          swarmClusterID,
 		StackFileContent: stackFileContent,
 	}
 
-	err = n.doJSON(fmt.Sprintf("stacks?type=%v&method=%s&endpointId=%v", 1, "string", endpointId), http.MethodPost, &reqBody, &stack)
+	err = n.doJSONWithToken(fmt.Sprintf("stacks?type=%v&method=%s&endpointId=%v", 1, "string", endpointID), http.MethodPost, http.Header{}, &reqBody, &stack)
 	return
 }
 
-func (n *portainerClientImp) CreateComposeStack(stackName string, environmentVariables []portainer.Pair, stackFileContent string, endpointId portainer.EndpointID) (stack portainer.Stack, err error) {
+func (n *portainerClientImp) CreateComposeStack(stackName string, environmentVariables []portainer.Pair, stackFileContent string, endpointID portainer.EndpointID) (stack portainer.Stack, err error) {
 	reqBody := StackCreateRequest{
 		Name:             stackName,
 		Env:              environmentVariables,
 		StackFileContent: stackFileContent,
 	}
 
-	err = n.doJSON(fmt.Sprintf("stacks?type=%v&method=%s&endpointId=%v", 2, "string", endpointId), http.MethodPost, &reqBody, &stack)
+	err = n.doJSONWithToken(fmt.Sprintf("stacks?type=%v&method=%s&endpointId=%v", 2, "string", endpointID), http.MethodPost, http.Header{}, &reqBody, &stack)
 	return
 }
 
-func (n *portainerClientImp) UpdateStack(stack portainer.Stack, environmentVariables []portainer.Pair, stackFileContent string, prune bool, endpointId portainer.EndpointID) (err error) {
+func (n *portainerClientImp) UpdateStack(stack portainer.Stack, environmentVariables []portainer.Pair, stackFileContent string, prune bool, endpointID portainer.EndpointID) (err error) {
 	reqBody := StackUpdateRequest{
 		Env:              environmentVariables,
 		StackFileContent: stackFileContent,
 		Prune:            prune,
 	}
 
-	err = n.doJSON(fmt.Sprintf("stacks/%v?endpointId=%v", stack.ID, endpointId), http.MethodPut, &reqBody, nil)
+	err = n.doJSONWithToken(fmt.Sprintf("stacks/%v?endpointId=%v", stack.ID, endpointID), http.MethodPut, http.Header{}, &reqBody, nil)
 	return
 }
 
-func (n *portainerClientImp) DeleteStack(stackId portainer.StackID) (err error) {
-	err = n.doJSON(fmt.Sprintf("stacks/%d", stackId), http.MethodDelete, nil, nil)
+func (n *portainerClientImp) DeleteStack(stackID portainer.StackID) (err error) {
+	err = n.doJSONWithToken(fmt.Sprintf("stacks/%d", stackID), http.MethodDelete, http.Header{}, nil, nil)
 	return
 }
 
-func (n *portainerClientImp) GetStackFileContent(stackId portainer.StackID) (content string, err error) {
+func (n *portainerClientImp) GetStackFileContent(stackID portainer.StackID) (content string, err error) {
 	var respBody StackFileInspectResponse
 
-	err = n.doJSON(fmt.Sprintf("stacks/%v/file", stackId), http.MethodGet, nil, &respBody)
+	err = n.doJSONWithToken(fmt.Sprintf("stacks/%v/file", stackID), http.MethodGet, http.Header{}, nil, &respBody)
 	if err != nil {
 		return
 	}
@@ -295,21 +296,21 @@ func (n *portainerClientImp) GetStackFileContent(stackId portainer.StackID) (con
 	return
 }
 
-func (n *portainerClientImp) GetEndpointDockerInfo(endpointId portainer.EndpointID) (info map[string]interface{}, err error) {
-	err = n.doJSON(fmt.Sprintf("endpoints/%v/docker/info", endpointId), http.MethodGet, nil, &info)
+func (n *portainerClientImp) GetEndpointDockerInfo(endpointID portainer.EndpointID) (info map[string]interface{}, err error) {
+	err = n.doJSONWithToken(fmt.Sprintf("endpoints/%v/docker/info", endpointID), http.MethodGet, http.Header{}, nil, &info)
 	return
 }
 
 func (n *portainerClientImp) GetStatus() (status portainer.Status, err error) {
-	err = n.doJSON("status", http.MethodGet, nil, &status)
+	err = n.doJSONWithToken("status", http.MethodGet, http.Header{}, nil, &status)
 	return
 }
 
-// Create a new client
+// NewClient creates a new Portainer API client
 func NewClient(httpClient *http.Client, config Config) PortainerClient {
 	return &portainerClientImp{
 		httpClient: httpClient,
-		url:        config.Url,
+		url:        config.URL,
 		user:       config.User,
 		password:   config.Password,
 		token:      config.Token,

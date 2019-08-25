@@ -8,6 +8,7 @@ import (
 	"github.com/spf13/viper"
 )
 
+// LoadCofig loads the configuration file currently used by viper into a new viper instance
 func LoadCofig() (v *viper.Viper, err error) {
 	// Set config file name
 	var configFile string
@@ -34,6 +35,7 @@ func LoadCofig() (v *viper.Viper, err error) {
 	return
 }
 
+// CheckConfigKeyExists checks a given configuration key exists in the default viper
 func CheckConfigKeyExists(key string) (keyExists bool) {
 	for _, k := range viper.AllKeys() {
 		if k == key {

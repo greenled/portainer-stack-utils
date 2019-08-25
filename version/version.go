@@ -19,6 +19,7 @@ var (
 	buildDate string
 )
 
+// BuildVersionString returns the tool's version
 func BuildVersionString() string {
 	osArch := runtime.GOOS + "/" + runtime.GOARCH
 
@@ -33,6 +34,8 @@ func BuildVersionString() string {
 	return fmt.Sprintf("%s %s %s BuildDate: %s", programName, version, osArch, buildDate)
 }
 
+// BuildUseAgentString returns the tool's User-Agent in requests to the
+// Portainer API
 func BuildUseAgentString() string {
 	var theVersion = version
 	if theVersion == "" {

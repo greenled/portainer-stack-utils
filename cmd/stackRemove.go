@@ -22,7 +22,7 @@ var stackRemoveCmd = &cobra.Command{
 		common.CheckError(clientRetrievalErr)
 
 		stackName := args[0]
-		var endpointSwarmClusterId string
+		var endpointSwarmClusterID string
 		var stack portainer.Stack
 
 		var endpoint portainer.Endpoint
@@ -49,14 +49,14 @@ var stackRemoveCmd = &cobra.Command{
 			"endpoint": endpoint.Name,
 		}).Debug("Getting endpoint's Docker info")
 		var selectionErr, stackRetrievalErr error
-		endpointSwarmClusterId, selectionErr = common.GetEndpointSwarmClusterId(endpoint.ID)
+		endpointSwarmClusterID, selectionErr = common.GetEndpointSwarmClusterID(endpoint.ID)
 		if selectionErr == nil {
 			// It's a swarm cluster
 			logrus.WithFields(logrus.Fields{
 				"stack":    stackName,
 				"endpoint": endpoint.Name,
 			}).Debug("Getting stack")
-			stack, stackRetrievalErr = common.GetStackByName(stackName, endpointSwarmClusterId, endpoint.ID)
+			stack, stackRetrievalErr = common.GetStackByName(stackName, endpointSwarmClusterID, endpoint.ID)
 		} else if selectionErr == common.ErrStackClusterNotFound {
 			// It's not a swarm cluster
 			logrus.WithFields(logrus.Fields{
@@ -71,13 +71,13 @@ var stackRemoveCmd = &cobra.Command{
 
 		if stackRetrievalErr == nil {
 			// The stack exists
-			stackId := stack.ID
+			stackID := stack.ID
 
 			logrus.WithFields(logrus.Fields{
 				"stack":    stackName,
 				"endpoint": endpoint.Name,
 			}).Info("Removing stack")
-			err := portainerClient.DeleteStack(stackId)
+			err := portainerClient.DeleteStack(stackID)
 			common.CheckError(err)
 			logrus.WithFields(logrus.Fields{
 				"stack":    stack.Name,
