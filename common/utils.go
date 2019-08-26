@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"reflect"
 
+	"github.com/greenled/portainer-stack-utils/client"
+
 	portainer "github.com/portainer/portainer/api"
 	"github.com/sirupsen/logrus"
 )
@@ -63,7 +65,12 @@ func GetStackByName(name string, swarmID string, endpointID portainer.EndpointID
 		return
 	}
 
-	stacks, err := portainerClient.StackList(swarmID, endpointID)
+	stacks, err := portainerClient.StackList(client.StackListOptions{
+		Filter: client.StackListFilter{
+			SwarmID:    swarmID,
+			EndpointID: endpointID,
+		},
+	})
 	if err != nil {
 		return
 	}

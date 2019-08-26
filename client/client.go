@@ -19,6 +19,11 @@ type StackListFilter struct {
 	EndpointID portainer.EndpointID `json:"EndpointId,omitempty"`
 }
 
+// StackListOptions represents options passed to PortainerClient.StackList()
+type StackListOptions struct {
+	Filter StackListFilter
+}
+
 // Config represents a Portainer client configuration
 type Config struct {
 	URL           *url.URL
@@ -41,7 +46,7 @@ type PortainerClient interface {
 	EndpointGroupList() ([]portainer.EndpointGroup, error)
 
 	// Get stacks, optionally filtered by swarmId and endpointId
-	StackList(swarmID string, endpointID portainer.EndpointID) ([]portainer.Stack, error)
+	StackList(options StackListOptions) ([]portainer.Stack, error)
 
 	// Create swarm stack
 	StackCreateSwarm(stackName string, environmentVariables []portainer.Pair, stackFileContent string, swarmClusterID string, endpointID portainer.EndpointID) (stack portainer.Stack, err error)
@@ -231,13 +236,8 @@ func (n *portainerClientImp) EndpointGroupList() (endpointGroups []portainer.End
 	return
 }
 
-func (n *portainerClientImp) StackList(swarmID string, endpointID portainer.EndpointID) (stacks []portainer.Stack, err error) {
-	filter := StackListFilter{
-		SwarmID:    swarmID,
-		EndpointID: endpointID,
-	}
-
-	filterJSONBytes, _ := json.Marshal(filter)
+func (n *portainerClientImp) StackList(options StackListOptions) (stacks []portainer.Stack, err error) {
+	filterJSONBytes, _ := json.Marshal(options.Filter)
 	filterJSONString := string(filterJSONBytes)
 
 	err = n.doJSONWithToken(fmt.Sprintf("stacks?filters=%s", filterJSONString), http.MethodGet, http.Header{}, nil, &stacks)
