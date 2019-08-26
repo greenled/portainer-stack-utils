@@ -44,7 +44,7 @@ type PortainerClient interface {
 	StackList(swarmID string, endpointID portainer.EndpointID) ([]portainer.Stack, error)
 
 	// Create swarm stack
-	CreateSwarmStack(stackName string, environmentVariables []portainer.Pair, stackFileContent string, swarmClusterID string, endpointID portainer.EndpointID) (stack portainer.Stack, err error)
+	StackCreateSwarm(stackName string, environmentVariables []portainer.Pair, stackFileContent string, swarmClusterID string, endpointID portainer.EndpointID) (stack portainer.Stack, err error)
 
 	// Create compose stack
 	CreateComposeStack(stackName string, environmentVariables []portainer.Pair, stackFileContent string, endpointID portainer.EndpointID) (stack portainer.Stack, err error)
@@ -244,7 +244,7 @@ func (n *portainerClientImp) StackList(swarmID string, endpointID portainer.Endp
 	return
 }
 
-func (n *portainerClientImp) CreateSwarmStack(stackName string, environmentVariables []portainer.Pair, stackFileContent string, swarmClusterID string, endpointID portainer.EndpointID) (stack portainer.Stack, err error) {
+func (n *portainerClientImp) StackCreateSwarm(stackName string, environmentVariables []portainer.Pair, stackFileContent string, swarmClusterID string, endpointID portainer.EndpointID) (stack portainer.Stack, err error) {
 	reqBody := StackCreateRequest{
 		Name:             stackName,
 		Env:              environmentVariables,

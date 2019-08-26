@@ -135,7 +135,7 @@ var stackDeployCmd = &cobra.Command{
 					"stack":    stackName,
 					"endpoint": endpoint.Name,
 				}).Info("Creating stack")
-				stack, deploymentErr := portainerClient.CreateSwarmStack(stackName, loadedEnvironmentVariables, stackFileContent, endpointSwarmClusterID, endpoint.ID)
+				stack, deploymentErr := portainerClient.StackCreateSwarm(stackName, loadedEnvironmentVariables, stackFileContent, endpointSwarmClusterID, endpoint.ID)
 				common.CheckError(deploymentErr)
 				logrus.WithFields(logrus.Fields{
 					"stack":    stack.Name,
