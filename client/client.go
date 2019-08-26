@@ -62,7 +62,7 @@ type PortainerClient interface {
 	EndpointDockerInfo(endpointID portainer.EndpointID) (info map[string]interface{}, err error)
 
 	// Get Portainer status info
-	GetStatus() (portainer.Status, error)
+	Status() (portainer.Status, error)
 
 	// Run a function before sending a request to Portainer
 	BeforeRequest(hook func(req *http.Request) (err error))
@@ -301,7 +301,7 @@ func (n *portainerClientImp) EndpointDockerInfo(endpointID portainer.EndpointID)
 	return
 }
 
-func (n *portainerClientImp) GetStatus() (status portainer.Status, err error) {
+func (n *portainerClientImp) Status() (status portainer.Status, err error) {
 	err = n.doJSONWithToken("status", http.MethodGet, http.Header{}, nil, &status)
 	return
 }
