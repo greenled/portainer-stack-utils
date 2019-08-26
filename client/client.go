@@ -59,7 +59,7 @@ type PortainerClient interface {
 	StackFileInspect(stackID portainer.StackID) (content string, err error)
 
 	// Get endpoint Docker info
-	GetEndpointDockerInfo(endpointID portainer.EndpointID) (info map[string]interface{}, err error)
+	EndpointDockerInfo(endpointID portainer.EndpointID) (info map[string]interface{}, err error)
 
 	// Get Portainer status info
 	GetStatus() (portainer.Status, error)
@@ -296,7 +296,7 @@ func (n *portainerClientImp) StackFileInspect(stackID portainer.StackID) (conten
 	return
 }
 
-func (n *portainerClientImp) GetEndpointDockerInfo(endpointID portainer.EndpointID) (info map[string]interface{}, err error) {
+func (n *portainerClientImp) EndpointDockerInfo(endpointID portainer.EndpointID) (info map[string]interface{}, err error) {
 	err = n.doJSONWithToken(fmt.Sprintf("endpoints/%v/docker/info", endpointID), http.MethodGet, http.Header{}, nil, &info)
 	return
 }

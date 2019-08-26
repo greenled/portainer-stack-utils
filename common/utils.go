@@ -151,7 +151,7 @@ func GetEndpointSwarmClusterID(endpointID portainer.EndpointID) (endpointSwarmCl
 		return
 	}
 
-	result, err := portainerClient.GetEndpointDockerInfo(endpointID)
+	result, err := portainerClient.EndpointDockerInfo(endpointID)
 	if err != nil {
 		return
 	}
