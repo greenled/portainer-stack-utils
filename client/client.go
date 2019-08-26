@@ -3,52 +3,12 @@ package client
 import (
 	"bytes"
 	"encoding/json"
-	"errors"
-	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"net/url"
 
 	portainer "github.com/portainer/portainer/api"
 )
-
-// StackListFilter represents a filter for a stack list
-type StackListFilter struct {
-	SwarmID    string               `json:"SwarmId,omitempty"`
-	EndpointID portainer.EndpointID `json:"EndpointId,omitempty"`
-}
-
-// StackListOptions represents options passed to PortainerClient.StackList()
-type StackListOptions struct {
-	Filter StackListFilter
-}
-
-// StackCreateSwarmOptions represents options passed to PortainerClient.StackCreateSwarm()
-type StackCreateSwarmOptions struct {
-	StackName            string
-	EnvironmentVariables []portainer.Pair
-	StackFileContent     string
-	SwarmClusterID       string
-	EndpointID           portainer.EndpointID
-}
-
-// StackCreateComposeOptions represents options passed to PortainerClient.StackCreateCompose()
-type StackCreateComposeOptions struct {
-	StackName            string
-	EnvironmentVariables []portainer.Pair
-	StackFileContent     string
-	EndpointID           portainer.EndpointID
-}
-
-// StackUpdateOptions represents options passed to PortainerClient.StackUpdate()
-type StackUpdateOptions struct {
-	Stack                portainer.Stack
-	EnvironmentVariables []portainer.Pair
-	StackFileContent     string
-	Prune                bool
-	EndpointID           portainer.EndpointID
-}
 
 // Config represents a Portainer client configuration
 type Config struct {
@@ -111,27 +71,6 @@ type portainerClientImp struct {
 	userAgent          string
 	beforeRequestHooks []func(req *http.Request) (err error)
 	afterResponseHooks []func(resp *http.Response) (err error)
-}
-
-// Check if an http.Response object has errors
-func checkResponseForErrors(resp *http.Response) error {
-	if 300 <= resp.StatusCode {
-		// Guess it's a GenericError
-		respBody := GenericError{}
-		err := json.NewDecoder(resp.Body).Decode(&respBody)
-		if err != nil {
-			// It's not a GenericError
-			bodyBytes, err := ioutil.ReadAll(resp.Body)
-			defer resp.Body.Close()
-			if err != nil {
-				return err
-			}
-			resp.Body = ioutil.NopCloser(bytes.NewReader(bodyBytes))
-			return errors.New(string(bodyBytes))
-		}
-		return &respBody
-	}
-	return nil
 }
 
 // Do an http request
@@ -232,104 +171,6 @@ func (n *portainerClientImp) BeforeRequest(hook func(req *http.Request) (err err
 
 func (n *portainerClientImp) AfterResponse(hook func(resp *http.Response) (err error)) {
 	n.afterResponseHooks = append(n.afterResponseHooks, hook)
-}
-
-func (n *portainerClientImp) Auth() (token string, err error) {
-	reqBody := AuthenticateUserRequest{
-		Username: n.user,
-		Password: n.password,
-	}
-
-	respBody := AuthenticateUserResponse{}
-
-	err = n.doJSON("auth", http.MethodPost, http.Header{}, &reqBody, &respBody)
-	if err != nil {
-		return
-	}
-
-	token = respBody.Jwt
-
-	return
-}
-
-func (n *portainerClientImp) EndpointList() (endpoints []portainer.Endpoint, err error) {
-	err = n.doJSONWithToken("endpoints", http.MethodGet, http.Header{}, nil, &endpoints)
-	return
-}
-
-func (n *portainerClientImp) EndpointGroupList() (endpointGroups []portainer.EndpointGroup, err error) {
-	err = n.doJSONWithToken("endpoint_groups", http.MethodGet, http.Header{}, nil, &endpointGroups)
-	return
-}
-
-func (n *portainerClientImp) StackList(options StackListOptions) (stacks []portainer.Stack, err error) {
-	filterJSONBytes, _ := json.Marshal(options.Filter)
-	filterJSONString := string(filterJSONBytes)
-
-	err = n.doJSONWithToken(fmt.Sprintf("stacks?filters=%s", filterJSONString), http.MethodGet, http.Header{}, nil, &stacks)
-	return
-}
-
-func (n *portainerClientImp) StackCreateSwarm(options StackCreateSwarmOptions) (stack portainer.Stack, err error) {
-	reqBody := StackCreateRequest{
-		Name:             options.StackName,
-		Env:              options.EnvironmentVariables,
-		SwarmID:          options.SwarmClusterID,
-		StackFileContent: options.StackFileContent,
-	}
-
-	err = n.doJSONWithToken(fmt.Sprintf("stacks?type=%v&method=%s&endpointId=%v", 1, "string", options.EndpointID), http.MethodPost, http.Header{}, &reqBody, &stack)
-	return
-}
-
-func (n *portainerClientImp) StackCreateCompose(options StackCreateComposeOptions) (stack portainer.Stack, err error) {
-	reqBody := StackCreateRequest{
-		Name:             options.StackName,
-		Env:              options.EnvironmentVariables,
-		StackFileContent: options.StackFileContent,
-	}
-
-	err = n.doJSONWithToken(fmt.Sprintf("stacks?type=%v&method=%s&endpointId=%v", 2, "string", options.EndpointID), http.MethodPost, http.Header{}, &reqBody, &stack)
-	return
-}
-
-func (n *portainerClientImp) StackUpdate(options StackUpdateOptions) (err error) {
-	reqBody := StackUpdateRequest{
-		Env:              options.EnvironmentVariables,
-		StackFileContent: options.StackFileContent,
-		Prune:            options.Prune,
-	}
-
-	err = n.doJSONWithToken(fmt.Sprintf("stacks/%v?endpointId=%v", options.Stack.ID, options.EndpointID), http.MethodPut, http.Header{}, &reqBody, nil)
-	return
-}
-
-func (n *portainerClientImp) StackDelete(stackID portainer.StackID) (err error) {
-	err = n.doJSONWithToken(fmt.Sprintf("stacks/%d", stackID), http.MethodDelete, http.Header{}, nil, nil)
-	return
-}
-
-func (n *portainerClientImp) StackFileInspect(stackID portainer.StackID) (content string, err error) {
-	var respBody StackFileInspectResponse
-
-	err = n.doJSONWithToken(fmt.Sprintf("stacks/%v/file", stackID), http.MethodGet, http.Header{}, nil, &respBody)
-	if err != nil {
-		return
-	}
-
-	content = respBody.StackFileContent
-
-	return
-}
-
-func (n *portainerClientImp) EndpointDockerInfo(endpointID portainer.EndpointID) (info map[string]interface{}, err error) {
-	err = n.doJSONWithToken(fmt.Sprintf("endpoints/%v/docker/info", endpointID), http.MethodGet, http.Header{}, nil, &info)
-	return
-}
-
-func (n *portainerClientImp) Status() (status portainer.Status, err error) {
-	err = n.doJSONWithToken("status", http.MethodGet, http.Header{}, nil, &status)
-	return
 }
 
 // NewClient creates a new Portainer API client
