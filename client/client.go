@@ -33,6 +33,14 @@ type StackCreateSwarmOptions struct {
 	EndpointID           portainer.EndpointID
 }
 
+// StackCreateComposeOptions represents options passed to PortainerClient.StackCreateCompose()
+type StackCreateComposeOptions struct {
+	StackName            string
+	EnvironmentVariables []portainer.Pair
+	StackFileContent     string
+	EndpointID           portainer.EndpointID
+}
+
 // Config represents a Portainer client configuration
 type Config struct {
 	URL           *url.URL
@@ -61,7 +69,7 @@ type PortainerClient interface {
 	StackCreateSwarm(options StackCreateSwarmOptions) (stack portainer.Stack, err error)
 
 	// Create compose stack
-	StackCreateCompose(stackName string, environmentVariables []portainer.Pair, stackFileContent string, endpointID portainer.EndpointID) (stack portainer.Stack, err error)
+	StackCreateCompose(options StackCreateComposeOptions) (stack portainer.Stack, err error)
 
 	// Update stack
 	StackUpdate(stack portainer.Stack, environmentVariables []portainer.Pair, stackFileContent string, prune bool, endpointID portainer.EndpointID) error
@@ -265,14 +273,14 @@ func (n *portainerClientImp) StackCreateSwarm(options StackCreateSwarmOptions) (
 	return
 }
 
-func (n *portainerClientImp) StackCreateCompose(stackName string, environmentVariables []portainer.Pair, stackFileContent string, endpointID portainer.EndpointID) (stack portainer.Stack, err error) {
+func (n *portainerClientImp) StackCreateCompose(options StackCreateComposeOptions) (stack portainer.Stack, err error) {
 	reqBody := StackCreateRequest{
-		Name:             stackName,
-		Env:              environmentVariables,
-		StackFileContent: stackFileContent,
+		Name:             options.StackName,
+		Env:              options.EnvironmentVariables,
+		StackFileContent: options.StackFileContent,
 	}
 
-	err = n.doJSONWithToken(fmt.Sprintf("stacks?type=%v&method=%s&endpointId=%v", 2, "string", endpointID), http.MethodPost, http.Header{}, &reqBody, &stack)
+	err = n.doJSONWithToken(fmt.Sprintf("stacks?type=%v&method=%s&endpointId=%v", 2, "string", options.EndpointID), http.MethodPost, http.Header{}, &reqBody, &stack)
 	return
 }
 
