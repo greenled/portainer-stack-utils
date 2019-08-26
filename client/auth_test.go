@@ -42,7 +42,7 @@ func TestClientAuthenticates(t *testing.T) {
 		Password:  "a",
 		UserAgent: "GE007",
 	})
-	token, err := customClient.Auth()
+	token, err := customClient.AuthenticateUser()
 	assert.Nil(t, err)
 	assert.Equal(t, token, "somerandomtoken")
 }

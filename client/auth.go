@@ -13,7 +13,7 @@ type AuthenticateUserResponse struct {
 	Jwt string
 }
 
-func (n *portainerClientImp) Auth() (token string, err error) {
+func (n *portainerClientImp) AuthenticateUser() (token string, err error) {
 	reqBody := AuthenticateUserRequest{
 		Username: n.user,
 		Password: n.password,
