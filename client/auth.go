@@ -2,6 +2,12 @@ package client
 
 import "net/http"
 
+// AuthenticateUserOptions represents options passed to PortainerClient.AuthenticateUser()
+type AuthenticateUserOptions struct {
+	Username string
+	Password string
+}
+
 // AuthenticateUserRequest represents the body of a request to POST /auth
 type AuthenticateUserRequest struct {
 	Username string
@@ -13,10 +19,10 @@ type AuthenticateUserResponse struct {
 	Jwt string
 }
 
-func (n *portainerClientImp) AuthenticateUser() (token string, err error) {
+func (n *portainerClientImp) AuthenticateUser(options AuthenticateUserOptions) (token string, err error) {
 	reqBody := AuthenticateUserRequest{
-		Username: n.user,
-		Password: n.password,
+		Username: options.Username,
+		Password: options.Password,
 	}
 
 	respBody := AuthenticateUserResponse{}

@@ -23,7 +23,7 @@ type Config struct {
 // PortainerClient represents a Portainer API client
 type PortainerClient interface {
 	// AuthenticateUser a user to get an auth token
-	AuthenticateUser() (token string, err error)
+	AuthenticateUser(options AuthenticateUserOptions) (token string, err error)
 
 	// Get endpoints
 	EndpointList() ([]portainer.Endpoint, error)
@@ -155,7 +155,10 @@ func (n *portainerClientImp) doJSON(uri, method string, headers http.Header, req
 func (n *portainerClientImp) doJSONWithToken(uri, method string, headers http.Header, request interface{}, response interface{}) (err error) {
 	// Ensure there is an auth token
 	if n.token == "" {
-		n.token, err = n.AuthenticateUser()
+		n.token, err = n.AuthenticateUser(AuthenticateUserOptions{
+			Username: n.user,
+			Password: n.password,
+		})
 		if err != nil {
 			return
 		}
