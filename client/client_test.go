@@ -145,3 +145,106 @@ func Test_portainerClientImp_do(t *testing.T) {
 		})
 	}
 }
+
+func Test_portainerClientImp_doJSON(t *testing.T) {
+	type fields struct {
+		httpClient *http.Client
+		url        *url.URL
+		server     *httptest.Server
+	}
+	type args struct {
+		uri          string
+		method       string
+		headers      http.Header
+		requestBody  interface{}
+		responseBody interface{}
+	}
+	tests := []struct {
+		name         string
+		fields       fields
+		args         args
+		wantRespBody interface{}
+		wantErr      bool
+	}{
+		{
+			name: "request is made with application/json content type and expected JSON object as body",
+			fields: fields{
+				server: httptest.NewUnstartedServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+					assert.Equal(t, "/api/stacks", req.RequestURI)
+					assert.Equal(t, http.MethodPost, req.Method)
+					assert.Equal(t, "application/json", req.Header.Get("Content-Type"))
+
+					var body map[string]interface{}
+					err := readRequestBodyAsJSON(req, &body)
+					assert.Nil(t, err)
+
+					assert.Equal(t, map[string]interface{}{
+						"key1": "value1",
+					}, body)
+
+					writeResponseBodyAsJSON(w, map[string]interface{}{
+						"key2": "value2",
+					})
+				})),
+			},
+			args: args{
+				uri:     "stacks",
+				method:  http.MethodPost,
+				headers: http.Header{},
+				requestBody: map[string]interface{}{
+					"key1": "value1",
+				},
+				responseBody: map[string]interface{}{},
+			},
+			wantRespBody: map[string]interface{}{
+				"key2": "value2",
+			},
+		},
+		{
+			name: "invalid JSON object as request body causes an error",
+			fields: fields{
+				server: httptest.NewUnstartedServer(nil),
+			},
+			args: args{
+				uri:         "stacks",
+				method:      http.MethodPost,
+				headers:     http.Header{},
+				requestBody: func() {},
+			},
+			wantErr: true,
+		},
+		{
+			name: "invalid JSON object as response body causes an error",
+			fields: fields{
+				server: httptest.NewUnstartedServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+					fmt.Fprint(w, "not a JSON object")
+				})),
+			},
+			args: args{
+				uri:          "stacks",
+				method:       http.MethodPost,
+				headers:      http.Header{},
+				responseBody: map[string]interface{}{},
+			},
+			wantRespBody: map[string]interface{}{},
+			wantErr:      true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tt.fields.server.Start()
+			defer tt.fields.server.Close()
+
+			apiURL, _ := url.Parse(tt.fields.server.URL + "/api/")
+
+			n := &portainerClientImp{
+				httpClient: tt.fields.server.Client(),
+				url:        apiURL,
+			}
+
+			err := n.doJSON(tt.args.uri, tt.args.method, tt.args.headers, &tt.args.requestBody, &tt.args.responseBody)
+			assert.Equal(t, tt.wantErr, err != nil)
+			assert.Equal(t, tt.wantRespBody, tt.args.responseBody)
+		})
+	}
+}

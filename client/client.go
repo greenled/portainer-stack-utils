@@ -123,8 +123,8 @@ func (n *portainerClientImp) do(uri, method string, requestBody io.Reader, heade
 
 // Do a JSON http request
 func (n *portainerClientImp) doJSON(uri, method string, headers http.Header, requestBody interface{}, responseBody interface{}) error {
+	// Encode request body, if any
 	var body io.Reader
-
 	if requestBody != nil {
 		reqBodyBytes, err := json.Marshal(requestBody)
 		if err != nil {
@@ -133,6 +133,7 @@ func (n *portainerClientImp) doJSON(uri, method string, headers http.Header, req
 		body = bytes.NewReader(reqBodyBytes)
 	}
 
+	// Set content type header
 	headers.Set("Content-Type", "application/json")
 
 	resp, err := n.do(uri, method, body, headers)
@@ -140,6 +141,7 @@ func (n *portainerClientImp) doJSON(uri, method string, headers http.Header, req
 		return err
 	}
 
+	// Decode response body, if any
 	if responseBody != nil {
 		d := json.NewDecoder(resp.Body)
 		err := d.Decode(responseBody)
