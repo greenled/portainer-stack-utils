@@ -47,10 +47,10 @@ type PortainerClient interface {
 	StackCreateSwarm(stackName string, environmentVariables []portainer.Pair, stackFileContent string, swarmClusterID string, endpointID portainer.EndpointID) (stack portainer.Stack, err error)
 
 	// Create compose stack
-	CreateComposeStack(stackName string, environmentVariables []portainer.Pair, stackFileContent string, endpointID portainer.EndpointID) (stack portainer.Stack, err error)
+	StackCreateCompose(stackName string, environmentVariables []portainer.Pair, stackFileContent string, endpointID portainer.EndpointID) (stack portainer.Stack, err error)
 
 	// Update stack
-	UpdateStack(stack portainer.Stack, environmentVariables []portainer.Pair, stackFileContent string, prune bool, endpointID portainer.EndpointID) error
+	StackUpdate(stack portainer.Stack, environmentVariables []portainer.Pair, stackFileContent string, prune bool, endpointID portainer.EndpointID) error
 
 	// Delete stack
 	DeleteStack(stackID portainer.StackID) error
@@ -256,7 +256,7 @@ func (n *portainerClientImp) StackCreateSwarm(stackName string, environmentVaria
 	return
 }
 
-func (n *portainerClientImp) CreateComposeStack(stackName string, environmentVariables []portainer.Pair, stackFileContent string, endpointID portainer.EndpointID) (stack portainer.Stack, err error) {
+func (n *portainerClientImp) StackCreateCompose(stackName string, environmentVariables []portainer.Pair, stackFileContent string, endpointID portainer.EndpointID) (stack portainer.Stack, err error) {
 	reqBody := StackCreateRequest{
 		Name:             stackName,
 		Env:              environmentVariables,
@@ -267,7 +267,7 @@ func (n *portainerClientImp) CreateComposeStack(stackName string, environmentVar
 	return
 }
 
-func (n *portainerClientImp) UpdateStack(stack portainer.Stack, environmentVariables []portainer.Pair, stackFileContent string, prune bool, endpointID portainer.EndpointID) (err error) {
+func (n *portainerClientImp) StackUpdate(stack portainer.Stack, environmentVariables []portainer.Pair, stackFileContent string, prune bool, endpointID portainer.EndpointID) (err error) {
 	reqBody := StackUpdateRequest{
 		Env:              environmentVariables,
 		StackFileContent: stackFileContent,
