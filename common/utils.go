@@ -107,7 +107,7 @@ func GetEndpointGroupByName(name string) (endpointGroup portainer.EndpointGroup,
 		return
 	}
 
-	endpointGroups, err := portainerClient.GetEndpointGroups()
+	endpointGroups, err := portainerClient.EndpointGroupList()
 	if err != nil {
 		return
 	}

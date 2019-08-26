@@ -30,7 +30,7 @@ var endpointGroupListCmd = &cobra.Command{
 		common.CheckError(err)
 
 		logrus.Debug("Getting endpoint groups")
-		endpointGroups, err := client.GetEndpointGroups()
+		endpointGroups, err := client.EndpointGroupList()
 		common.CheckError(err)
 
 		switch viper.GetString("endpoint.group.list.format") {
