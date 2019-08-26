@@ -22,7 +22,7 @@ var loginCmd = &cobra.Command{
 		logrus.WithFields(logrus.Fields{
 			"user": user,
 		}).Debug("Getting auth token")
-		authToken, err := client.Authenticate()
+		authToken, err := client.AuthenticateUser()
 		common.CheckError(err)
 
 		if viper.GetBool("login.print") {

@@ -1,7 +1,6 @@
 package client
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -34,44 +33,6 @@ func TestNewClient(t *testing.T) {
 		URL: apiURL,
 	})
 	assert.NotNil(t, validClient)
-}
-
-func TestClientAuthenticates(t *testing.T) {
-	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-		var body map[string]interface{}
-		err := readRequestBodyAsJSON(req, &body)
-
-		assert.Equal(t, req.Method, http.MethodPost)
-		assert.Equal(t, req.RequestURI, "/api/auth")
-		assert.NotNil(t, req.Header["Content-Type"])
-		assert.NotNil(t, req.Header["Content-Type"][0])
-		assert.Equal(t, req.Header["Content-Type"][0], "application/json")
-		assert.NotNil(t, req.Header["User-Agent"])
-		assert.NotNil(t, req.Header["User-Agent"][0])
-		assert.Equal(t, req.Header["User-Agent"][0], "GE007")
-		assert.Nil(t, err)
-		assert.NotNil(t, body["Username"])
-		assert.Equal(t, body["Username"], "admin")
-		assert.NotNil(t, body["Password"])
-		assert.Equal(t, body["Password"], "a")
-
-		writeResponseBodyAsJSON(w, map[string]interface{}{
-			"jwt": "somerandomtoken",
-		})
-	}))
-	defer ts.Close()
-
-	apiURL, _ := url.Parse(ts.URL + "/api/")
-
-	customClient := NewClient(ts.Client(), Config{
-		URL:       apiURL,
-		User:      "admin",
-		Password:  "a",
-		UserAgent: "GE007",
-	})
-	token, err := customClient.Authenticate()
-	assert.Nil(t, err)
-	assert.Equal(t, token, "somerandomtoken")
 }
 
 func Test_portainerClientImp_do(t *testing.T) {
@@ -181,53 +142,6 @@ func Test_portainerClientImp_do(t *testing.T) {
 			if tt.wantRespCheck != nil {
 				assert.True(t, tt.wantRespCheck(gotResp))
 			}
-		})
-	}
-}
-
-func Test_checkResponseForErrors(t *testing.T) {
-	type args struct {
-		resp *http.Response
-	}
-	tests := []struct {
-		name    string
-		args    args
-		wantErr bool
-	}{
-		{
-			name: "generic error",
-			args: args{
-				resp: func() (resp *http.Response) {
-					resp = &http.Response{
-						StatusCode: http.StatusNotFound,
-					}
-					bodyBytes, _ := json.Marshal(map[string]interface{}{
-						"Err":     "Error",
-						"Details": "Not found",
-					})
-					resp.Body = ioutil.NopCloser(bytes.NewReader(bodyBytes))
-					return
-				}(),
-			},
-			wantErr: true,
-		},
-		{
-			name: "non generic error",
-			args: args{
-				resp: func() (resp *http.Response) {
-					resp = &http.Response{
-						StatusCode: http.StatusNotFound,
-						Body:       ioutil.NopCloser(bytes.NewReader([]byte("Err"))),
-					}
-					return
-				}(),
-			},
-			wantErr: true,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			assert.Equal(t, tt.wantErr, checkResponseForErrors(tt.args.resp) != nil)
 		})
 	}
 }

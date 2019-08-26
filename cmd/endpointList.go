@@ -30,7 +30,7 @@ var endpointListCmd = &cobra.Command{
 		common.CheckError(err)
 
 		logrus.Debug("Getting endpoints")
-		endpoints, err := client.GetEndpoints()
+		endpoints, err := client.EndpointList()
 		common.CheckError(err)
 
 		switch viper.GetString("endpoint.list.format") {

@@ -33,7 +33,7 @@ var stackListCmd = &cobra.Command{
 		portainerClient, err := common.GetClient()
 		common.CheckError(err)
 
-		endpoints, endpointsRetrievalErr := portainerClient.GetEndpoints()
+		endpoints, endpointsRetrievalErr := portainerClient.EndpointList()
 		common.CheckError(endpointsRetrievalErr)
 
 		var endpointSwarmClusterID string
@@ -53,14 +53,23 @@ var stackListCmd = &cobra.Command{
 				logrus.WithFields(logrus.Fields{
 					"endpoint": endpoint.Name,
 				}).Debug("Getting stacks")
-				stacks, err = portainerClient.GetStacks(endpointSwarmClusterID, endpoint.ID)
+				stacks, err = portainerClient.StackList(client.StackListOptions{
+					Filter: client.StackListFilter{
+						SwarmID:    endpointSwarmClusterID,
+						EndpointID: endpoint.ID,
+					},
+				})
 				common.CheckError(err)
 			} else if selectionErr == common.ErrStackClusterNotFound {
 				// It's not a swarm cluster
 				logrus.WithFields(logrus.Fields{
 					"endpoint": endpoint.Name,
 				}).Debug("Getting stacks")
-				stacks, err = portainerClient.GetStacks("", endpoint.ID)
+				stacks, err = portainerClient.StackList(client.StackListOptions{
+					Filter: client.StackListFilter{
+						EndpointID: endpoint.ID,
+					},
+				})
 				common.CheckError(err)
 			} else {
 				// Something else happened
@@ -68,7 +77,7 @@ var stackListCmd = &cobra.Command{
 			}
 		} else {
 			logrus.Debug("Getting stacks")
-			stacks, err = portainerClient.GetStacks("", 0)
+			stacks, err = portainerClient.StackList(client.StackListOptions{})
 			common.CheckError(err)
 		}
 

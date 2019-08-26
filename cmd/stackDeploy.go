@@ -3,6 +3,8 @@ package cmd
 import (
 	"io/ioutil"
 
+	"github.com/greenled/portainer-stack-utils/client"
+
 	portainer "github.com/portainer/portainer/api"
 
 	"github.com/sirupsen/logrus"
@@ -87,7 +89,7 @@ var stackDeployCmd = &cobra.Command{
 				logrus.WithFields(logrus.Fields{
 					"stack": retrievedStack.Name,
 				}).Debug("Getting stack file content")
-				stackFileContent, stackFileContentRetrievalErr = portainerClient.GetStackFileContent(retrievedStack.ID)
+				stackFileContent, stackFileContentRetrievalErr = portainerClient.StackFileInspect(retrievedStack.ID)
 				common.CheckError(stackFileContentRetrievalErr)
 			}
 
@@ -115,7 +117,13 @@ var stackDeployCmd = &cobra.Command{
 			logrus.WithFields(logrus.Fields{
 				"stack": retrievedStack.Name,
 			}).Info("Updating stack")
-			err := portainerClient.UpdateStack(retrievedStack, newEnvironmentVariables, stackFileContent, viper.GetBool("stack.deploy.prune"), endpoint.ID)
+			err := portainerClient.StackUpdate(client.StackUpdateOptions{
+				Stack:                retrievedStack,
+				EnvironmentVariables: newEnvironmentVariables,
+				StackFileContent:     stackFileContent,
+				Prune:                viper.GetBool("stack.deploy.prune"),
+				EndpointID:           endpoint.ID,
+			})
 			common.CheckError(err)
 		} else if stackRetrievalErr == common.ErrStackNotFound {
 			// We are deploying a new stack
@@ -135,7 +143,13 @@ var stackDeployCmd = &cobra.Command{
 					"stack":    stackName,
 					"endpoint": endpoint.Name,
 				}).Info("Creating stack")
-				stack, deploymentErr := portainerClient.CreateSwarmStack(stackName, loadedEnvironmentVariables, stackFileContent, endpointSwarmClusterID, endpoint.ID)
+				stack, deploymentErr := portainerClient.StackCreateSwarm(client.StackCreateSwarmOptions{
+					StackName:            stackName,
+					EnvironmentVariables: loadedEnvironmentVariables,
+					StackFileContent:     stackFileContent,
+					SwarmClusterID:       endpointSwarmClusterID,
+					EndpointID:           endpoint.ID,
+				})
 				common.CheckError(deploymentErr)
 				logrus.WithFields(logrus.Fields{
 					"stack":    stack.Name,
@@ -148,7 +162,12 @@ var stackDeployCmd = &cobra.Command{
 					"stack":    stackName,
 					"endpoint": endpoint.Name,
 				}).Info("Creating stack")
-				stack, deploymentErr := portainerClient.CreateComposeStack(stackName, loadedEnvironmentVariables, stackFileContent, endpoint.ID)
+				stack, deploymentErr := portainerClient.StackCreateCompose(client.StackCreateComposeOptions{
+					StackName:            stackName,
+					EnvironmentVariables: loadedEnvironmentVariables,
+					StackFileContent:     stackFileContent,
+					EndpointID:           endpoint.ID,
+				})
 				common.CheckError(deploymentErr)
 				logrus.WithFields(logrus.Fields{
 					"stack":    stack.Name,

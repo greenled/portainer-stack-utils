@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"reflect"
 
+	"github.com/greenled/portainer-stack-utils/client"
+
 	portainer "github.com/portainer/portainer/api"
 	"github.com/sirupsen/logrus"
 )
@@ -38,7 +40,7 @@ func GetDefaultEndpoint() (endpoint portainer.Endpoint, err error) {
 	}
 
 	logrus.Debug("Getting endpoints")
-	endpoints, err := portainerClient.GetEndpoints()
+	endpoints, err := portainerClient.EndpointList()
 	if err != nil {
 		return
 	}
@@ -63,7 +65,12 @@ func GetStackByName(name string, swarmID string, endpointID portainer.EndpointID
 		return
 	}
 
-	stacks, err := portainerClient.GetStacks(swarmID, endpointID)
+	stacks, err := portainerClient.StackList(client.StackListOptions{
+		Filter: client.StackListFilter{
+			SwarmID:    swarmID,
+			EndpointID: endpointID,
+		},
+	})
 	if err != nil {
 		return
 	}
@@ -85,7 +92,7 @@ func GetEndpointByName(name string) (endpoint portainer.Endpoint, err error) {
 		return
 	}
 
-	endpoints, err := portainerClient.GetEndpoints()
+	endpoints, err := portainerClient.EndpointList()
 	if err != nil {
 		return
 	}
@@ -107,7 +114,7 @@ func GetEndpointGroupByName(name string) (endpointGroup portainer.EndpointGroup,
 		return
 	}
 
-	endpointGroups, err := portainerClient.GetEndpointGroups()
+	endpointGroups, err := portainerClient.EndpointGroupList()
 	if err != nil {
 		return
 	}
@@ -151,7 +158,7 @@ func GetEndpointSwarmClusterID(endpointID portainer.EndpointID) (endpointSwarmCl
 		return
 	}
 
-	result, err := portainerClient.GetEndpointDockerInfo(endpointID)
+	result, err := portainerClient.EndpointDockerInfo(endpointID)
 	if err != nil {
 		return
 	}

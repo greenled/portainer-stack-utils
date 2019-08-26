@@ -26,7 +26,7 @@ var statusCmd = &cobra.Command{
 		client, err := common.GetClient()
 		common.CheckError(err)
 
-		respBody, err := client.GetStatus()
+		respBody, err := client.Status()
 		common.CheckError(err)
 
 		switch viper.GetString("status.format") {
