@@ -56,7 +56,7 @@ type PortainerClient interface {
 	StackDelete(stackID portainer.StackID) error
 
 	// Get stack file content
-	GetStackFileContent(stackID portainer.StackID) (content string, err error)
+	StackFileInspect(stackID portainer.StackID) (content string, err error)
 
 	// Get endpoint Docker info
 	GetEndpointDockerInfo(endpointID portainer.EndpointID) (info map[string]interface{}, err error)
@@ -283,7 +283,7 @@ func (n *portainerClientImp) StackDelete(stackID portainer.StackID) (err error) 
 	return
 }
 
-func (n *portainerClientImp) GetStackFileContent(stackID portainer.StackID) (content string, err error) {
+func (n *portainerClientImp) StackFileInspect(stackID portainer.StackID) (content string, err error) {
 	var respBody StackFileInspectResponse
 
 	err = n.doJSONWithToken(fmt.Sprintf("stacks/%v/file", stackID), http.MethodGet, http.Header{}, nil, &respBody)

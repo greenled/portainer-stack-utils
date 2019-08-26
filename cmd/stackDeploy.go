@@ -87,7 +87,7 @@ var stackDeployCmd = &cobra.Command{
 				logrus.WithFields(logrus.Fields{
 					"stack": retrievedStack.Name,
 				}).Debug("Getting stack file content")
-				stackFileContent, stackFileContentRetrievalErr = portainerClient.GetStackFileContent(retrievedStack.ID)
+				stackFileContent, stackFileContentRetrievalErr = portainerClient.StackFileInspect(retrievedStack.ID)
 				common.CheckError(stackFileContentRetrievalErr)
 			}
 
