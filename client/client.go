@@ -24,6 +24,15 @@ type StackListOptions struct {
 	Filter StackListFilter
 }
 
+// StackCreateSwarmOptions represents options passed to PortainerClient.StackCreateSwarm()
+type StackCreateSwarmOptions struct {
+	StackName            string
+	EnvironmentVariables []portainer.Pair
+	StackFileContent     string
+	SwarmClusterID       string
+	EndpointID           portainer.EndpointID
+}
+
 // Config represents a Portainer client configuration
 type Config struct {
 	URL           *url.URL
@@ -49,7 +58,7 @@ type PortainerClient interface {
 	StackList(options StackListOptions) ([]portainer.Stack, error)
 
 	// Create swarm stack
-	StackCreateSwarm(stackName string, environmentVariables []portainer.Pair, stackFileContent string, swarmClusterID string, endpointID portainer.EndpointID) (stack portainer.Stack, err error)
+	StackCreateSwarm(options StackCreateSwarmOptions) (stack portainer.Stack, err error)
 
 	// Create compose stack
 	StackCreateCompose(stackName string, environmentVariables []portainer.Pair, stackFileContent string, endpointID portainer.EndpointID) (stack portainer.Stack, err error)
@@ -244,15 +253,15 @@ func (n *portainerClientImp) StackList(options StackListOptions) (stacks []porta
 	return
 }
 
-func (n *portainerClientImp) StackCreateSwarm(stackName string, environmentVariables []portainer.Pair, stackFileContent string, swarmClusterID string, endpointID portainer.EndpointID) (stack portainer.Stack, err error) {
+func (n *portainerClientImp) StackCreateSwarm(options StackCreateSwarmOptions) (stack portainer.Stack, err error) {
 	reqBody := StackCreateRequest{
-		Name:             stackName,
-		Env:              environmentVariables,
-		SwarmID:          swarmClusterID,
-		StackFileContent: stackFileContent,
+		Name:             options.StackName,
+		Env:              options.EnvironmentVariables,
+		SwarmID:          options.SwarmClusterID,
+		StackFileContent: options.StackFileContent,
 	}
 
-	err = n.doJSONWithToken(fmt.Sprintf("stacks?type=%v&method=%s&endpointId=%v", 1, "string", endpointID), http.MethodPost, http.Header{}, &reqBody, &stack)
+	err = n.doJSONWithToken(fmt.Sprintf("stacks?type=%v&method=%s&endpointId=%v", 1, "string", options.EndpointID), http.MethodPost, http.Header{}, &reqBody, &stack)
 	return
 }
 

@@ -3,6 +3,8 @@ package cmd
 import (
 	"io/ioutil"
 
+	"github.com/greenled/portainer-stack-utils/client"
+
 	portainer "github.com/portainer/portainer/api"
 
 	"github.com/sirupsen/logrus"
@@ -135,7 +137,13 @@ var stackDeployCmd = &cobra.Command{
 					"stack":    stackName,
 					"endpoint": endpoint.Name,
 				}).Info("Creating stack")
-				stack, deploymentErr := portainerClient.StackCreateSwarm(stackName, loadedEnvironmentVariables, stackFileContent, endpointSwarmClusterID, endpoint.ID)
+				stack, deploymentErr := portainerClient.StackCreateSwarm(client.StackCreateSwarmOptions{
+					StackName:            stackName,
+					EnvironmentVariables: loadedEnvironmentVariables,
+					StackFileContent:     stackFileContent,
+					SwarmClusterID:       endpointSwarmClusterID,
+					EndpointID:           endpoint.ID,
+				})
 				common.CheckError(deploymentErr)
 				logrus.WithFields(logrus.Fields{
 					"stack":    stack.Name,
