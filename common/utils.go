@@ -63,7 +63,7 @@ func GetStackByName(name string, swarmID string, endpointID portainer.EndpointID
 		return
 	}
 
-	stacks, err := portainerClient.GetStacks(swarmID, endpointID)
+	stacks, err := portainerClient.StackList(swarmID, endpointID)
 	if err != nil {
 		return
 	}

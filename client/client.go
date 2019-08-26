@@ -41,7 +41,7 @@ type PortainerClient interface {
 	EndpointGroupList() ([]portainer.EndpointGroup, error)
 
 	// Get stacks, optionally filtered by swarmId and endpointId
-	GetStacks(swarmID string, endpointID portainer.EndpointID) ([]portainer.Stack, error)
+	StackList(swarmID string, endpointID portainer.EndpointID) ([]portainer.Stack, error)
 
 	// Create swarm stack
 	CreateSwarmStack(stackName string, environmentVariables []portainer.Pair, stackFileContent string, swarmClusterID string, endpointID portainer.EndpointID) (stack portainer.Stack, err error)
@@ -231,7 +231,7 @@ func (n *portainerClientImp) EndpointGroupList() (endpointGroups []portainer.End
 	return
 }
 
-func (n *portainerClientImp) GetStacks(swarmID string, endpointID portainer.EndpointID) (stacks []portainer.Stack, err error) {
+func (n *portainerClientImp) StackList(swarmID string, endpointID portainer.EndpointID) (stacks []portainer.Stack, err error) {
 	filter := StackListFilter{
 		SwarmID:    swarmID,
 		EndpointID: endpointID,
