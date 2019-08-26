@@ -33,7 +33,7 @@ var stackListCmd = &cobra.Command{
 		portainerClient, err := common.GetClient()
 		common.CheckError(err)
 
-		endpoints, endpointsRetrievalErr := portainerClient.GetEndpoints()
+		endpoints, endpointsRetrievalErr := portainerClient.EndpointList()
 		common.CheckError(endpointsRetrievalErr)
 
 		var endpointSwarmClusterID string

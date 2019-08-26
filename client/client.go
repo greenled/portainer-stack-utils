@@ -35,7 +35,7 @@ type PortainerClient interface {
 	Auth() (token string, err error)
 
 	// Get endpoints
-	GetEndpoints() ([]portainer.Endpoint, error)
+	EndpointList() ([]portainer.Endpoint, error)
 
 	// Get endpoint groups
 	GetEndpointGroups() ([]portainer.EndpointGroup, error)
@@ -221,7 +221,7 @@ func (n *portainerClientImp) Auth() (token string, err error) {
 	return
 }
 
-func (n *portainerClientImp) GetEndpoints() (endpoints []portainer.Endpoint, err error) {
+func (n *portainerClientImp) EndpointList() (endpoints []portainer.Endpoint, err error) {
 	err = n.doJSONWithToken("endpoints", http.MethodGet, http.Header{}, nil, &endpoints)
 	return
 }

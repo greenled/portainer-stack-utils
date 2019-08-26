@@ -38,7 +38,7 @@ func GetDefaultEndpoint() (endpoint portainer.Endpoint, err error) {
 	}
 
 	logrus.Debug("Getting endpoints")
-	endpoints, err := portainerClient.GetEndpoints()
+	endpoints, err := portainerClient.EndpointList()
 	if err != nil {
 		return
 	}
@@ -85,7 +85,7 @@ func GetEndpointByName(name string) (endpoint portainer.Endpoint, err error) {
 		return
 	}
 
-	endpoints, err := portainerClient.GetEndpoints()
+	endpoints, err := portainerClient.EndpointList()
 	if err != nil {
 		return
 	}
