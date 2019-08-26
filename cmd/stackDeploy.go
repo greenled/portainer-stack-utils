@@ -117,7 +117,13 @@ var stackDeployCmd = &cobra.Command{
 			logrus.WithFields(logrus.Fields{
 				"stack": retrievedStack.Name,
 			}).Info("Updating stack")
-			err := portainerClient.StackUpdate(retrievedStack, newEnvironmentVariables, stackFileContent, viper.GetBool("stack.deploy.prune"), endpoint.ID)
+			err := portainerClient.StackUpdate(client.StackUpdateOptions{
+				Stack:                retrievedStack,
+				EnvironmentVariables: newEnvironmentVariables,
+				StackFileContent:     stackFileContent,
+				Prune:                viper.GetBool("stack.deploy.prune"),
+				EndpointID:           endpoint.ID,
+			})
 			common.CheckError(err)
 		} else if stackRetrievalErr == common.ErrStackNotFound {
 			// We are deploying a new stack

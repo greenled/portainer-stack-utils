@@ -41,6 +41,15 @@ type StackCreateComposeOptions struct {
 	EndpointID           portainer.EndpointID
 }
 
+// StackUpdateOptions represents options passed to PortainerClient.StackUpdate()
+type StackUpdateOptions struct {
+	Stack                portainer.Stack
+	EnvironmentVariables []portainer.Pair
+	StackFileContent     string
+	Prune                bool
+	EndpointID           portainer.EndpointID
+}
+
 // Config represents a Portainer client configuration
 type Config struct {
 	URL           *url.URL
@@ -72,7 +81,7 @@ type PortainerClient interface {
 	StackCreateCompose(options StackCreateComposeOptions) (stack portainer.Stack, err error)
 
 	// Update stack
-	StackUpdate(stack portainer.Stack, environmentVariables []portainer.Pair, stackFileContent string, prune bool, endpointID portainer.EndpointID) error
+	StackUpdate(options StackUpdateOptions) error
 
 	// Delete stack
 	StackDelete(stackID portainer.StackID) error
@@ -284,14 +293,14 @@ func (n *portainerClientImp) StackCreateCompose(options StackCreateComposeOption
 	return
 }
 
-func (n *portainerClientImp) StackUpdate(stack portainer.Stack, environmentVariables []portainer.Pair, stackFileContent string, prune bool, endpointID portainer.EndpointID) (err error) {
+func (n *portainerClientImp) StackUpdate(options StackUpdateOptions) (err error) {
 	reqBody := StackUpdateRequest{
-		Env:              environmentVariables,
-		StackFileContent: stackFileContent,
-		Prune:            prune,
+		Env:              options.EnvironmentVariables,
+		StackFileContent: options.StackFileContent,
+		Prune:            options.Prune,
 	}
 
-	err = n.doJSONWithToken(fmt.Sprintf("stacks/%v?endpointId=%v", stack.ID, endpointID), http.MethodPut, http.Header{}, &reqBody, nil)
+	err = n.doJSONWithToken(fmt.Sprintf("stacks/%v?endpointId=%v", options.Stack.ID, options.EndpointID), http.MethodPut, http.Header{}, &reqBody, nil)
 	return
 }
 
