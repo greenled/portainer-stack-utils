@@ -31,8 +31,8 @@ type Config struct {
 
 // PortainerClient represents a Portainer API client
 type PortainerClient interface {
-	// Authenticate a user to get an auth token
-	Authenticate() (token string, err error)
+	// Auth a user to get an auth token
+	Auth() (token string, err error)
 
 	// Get endpoints
 	GetEndpoints() ([]portainer.Endpoint, error)
@@ -185,7 +185,7 @@ func (n *portainerClientImp) doJSON(uri, method string, headers http.Header, req
 func (n *portainerClientImp) doJSONWithToken(uri, method string, headers http.Header, request interface{}, response interface{}) (err error) {
 	// Ensure there is an auth token
 	if n.token == "" {
-		n.token, err = n.Authenticate()
+		n.token, err = n.Auth()
 		if err != nil {
 			return
 		}
@@ -203,7 +203,7 @@ func (n *portainerClientImp) AfterResponse(hook func(resp *http.Response) (err e
 	n.afterResponseHooks = append(n.afterResponseHooks, hook)
 }
 
-func (n *portainerClientImp) Authenticate() (token string, err error) {
+func (n *portainerClientImp) Auth() (token string, err error) {
 	reqBody := AuthenticateUserRequest{
 		Username: n.user,
 		Password: n.password,
