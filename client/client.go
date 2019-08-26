@@ -53,7 +53,7 @@ type PortainerClient interface {
 	StackUpdate(stack portainer.Stack, environmentVariables []portainer.Pair, stackFileContent string, prune bool, endpointID portainer.EndpointID) error
 
 	// Delete stack
-	DeleteStack(stackID portainer.StackID) error
+	StackDelete(stackID portainer.StackID) error
 
 	// Get stack file content
 	GetStackFileContent(stackID portainer.StackID) (content string, err error)
@@ -278,7 +278,7 @@ func (n *portainerClientImp) StackUpdate(stack portainer.Stack, environmentVaria
 	return
 }
 
-func (n *portainerClientImp) DeleteStack(stackID portainer.StackID) (err error) {
+func (n *portainerClientImp) StackDelete(stackID portainer.StackID) (err error) {
 	err = n.doJSONWithToken(fmt.Sprintf("stacks/%d", stackID), http.MethodDelete, http.Header{}, nil, nil)
 	return
 }

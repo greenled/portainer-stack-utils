@@ -77,7 +77,7 @@ var stackRemoveCmd = &cobra.Command{
 				"stack":    stackName,
 				"endpoint": endpoint.Name,
 			}).Info("Removing stack")
-			err := portainerClient.DeleteStack(stackID)
+			err := portainerClient.StackDelete(stackID)
 			common.CheckError(err)
 			logrus.WithFields(logrus.Fields{
 				"stack":    stack.Name,
