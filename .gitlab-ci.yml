@@ -91,6 +91,11 @@ test:portainer-1.20.2:
   variables:
     PORTAINER_VERSION: 1.20.2
 
+test:portainer-1.21.0:
+  <<: *test_definition
+  variables:
+    PORTAINER_VERSION: 1.21.0
+
 test:portainer-latest:
   <<: *test_definition
 
