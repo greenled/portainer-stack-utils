@@ -34,6 +34,8 @@
    - [Debug mode](#debug-mode)   
    - [Strict mode](#strict-mode)   
    - [Quiet mode](#quiet-mode)   
+   - [Job definition](#job-definition)   
+   - [`detect-job` option](#detect-job-option)   
 
 <!-- /MDTOC -->
 
@@ -289,6 +291,8 @@ mythirdstack
 ### `status`
 Check if the stack is running/deployed correctly
 
+If your stack has some services who acts as [jobs](#job-definition), see the [`--detect-job`](#detect-job-option) option for more details.
+
 #### Usage:
 `psu status [options]`
 
@@ -343,6 +347,8 @@ List services already deployed in the current stack.
 ### `tasks`
 List tasks in the current stack.
 
+If your stack has some services who acts as [jobs](#job-definition), see the [`--detect-job`](#detect-job-option) option for more details.
+
 #### Usage:
 `psu tasks [options]`
 
@@ -375,6 +381,8 @@ List tasks in the current stack.
 ### `tasks:healthy`
 
 List tasks who are running correctly in the current stack.
+
+If your stack has some services who acts as [jobs](#job-definition), see the [`--detect-job`](#detect-job-option) option for more details.
 
 #### Usage:
 `psu tasks:healthy [options]`
@@ -662,3 +670,23 @@ In quiet mode the script prints the minimum of informations or nothing.
 It's inspired by the `--quiet` option of [`docker images`](https://docs.docker.com/engine/reference/commandline/images/#options) command.
 
 Quiet mode can be enabled through `QUIET_MODE` envvar or `--quiet` option or `-q` flag.
+
+### Job definition
+
+Docker (or Portainer) doesn't have a true [Job](https://kubernetes.io/docs/concepts/workloads/controllers/jobs-run-to-completion/) mechanism like [Kubernetes](https://kubernetes.io).
+
+But `psu` use an equivalent Docker behavior, based on filtering tasks status with a specific container's [label](https://docs.docker.com/compose/compose-file/#labels-1) (`job-name`).
+Or when the service [`deploy.restart_policy.condition`](https://docs.docker.com/compose/compose-file/#restart_policy) option is set to `none`.
+
+The `psu` definition of a [Job](https://kubernetes.io/docs/concepts/workloads/controllers/jobs-run-to-completion/) is a Swarm [service](https://docs.docker.com/engine/swarm/how-swarm-mode-works/services/) who ensures that all it specified [task(s)](https://docs.docker.com/engine/swarm/how-swarm-mode-works/swarm-task-states/) successfully terminate.
+
+Jobs are useful when you have a service who wants to run a script (e.g. database migration).
+And shutdown this service when its script is successfully executed.
+
+See the `job` service in the [`docker-stack-web-app.yml`](https://gitlab.com/psuapp/psu/tree/v1.0.0/tests/dockerfiles/docker-stack-web-app.yml) file for a real use case.
+It has both a container's label `job-name` and a restart policy set to `none`.
+
+### `detect-job` option
+
+The `--detect-job` option (`true` by default) detects if a service has a restart policy set to `none` and considered this service as a job.
+If set to `false`, to considering a service as a job, you need to set a container's [label](https://docs.docker.com/compose/compose-file/#labels-1) named `job-name` with the value you want (e.g. `my-job-service-name`) in the docker compose/stack file.
