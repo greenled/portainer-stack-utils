@@ -248,3 +248,154 @@ func Test_portainerClientImp_doJSON(t *testing.T) {
 		})
 	}
 }
+
+func Test_portainerClientImp_doJSONWithToken(t *testing.T) {
+	type fields struct {
+		httpClient *http.Client
+		url        *url.URL
+		user       string
+		password   string
+		token      string
+		server     *httptest.Server
+	}
+	type args struct {
+		uri          string
+		method       string
+		headers      http.Header
+		requestBody  interface{}
+		responseBody interface{}
+	}
+	tests := []struct {
+		name         string
+		fields       fields
+		args         args
+		wantRespBody interface{}
+		wantErr      bool
+	}{
+		{
+			name: "when a token is present, it is used",
+			fields: fields{
+				token: "token",
+				server: httptest.NewUnstartedServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+					assert.Equal(t, "/api/stacks", req.RequestURI)
+					assert.Equal(t, http.MethodPost, req.Method)
+					assert.Equal(t, "Bearer token", req.Header.Get("Authorization"))
+
+					var body map[string]interface{}
+					err := readRequestBodyAsJSON(req, &body)
+					assert.Nil(t, err)
+
+					assert.Equal(t, map[string]interface{}{
+						"key1": "value1",
+					}, body)
+
+					writeResponseBodyAsJSON(w, map[string]interface{}{
+						"key2": "value2",
+					})
+				})),
+			},
+			args: args{
+				uri:     "stacks",
+				method:  http.MethodPost,
+				headers: http.Header{},
+				requestBody: map[string]interface{}{
+					"key1": "value1",
+				},
+				responseBody: map[string]interface{}{},
+			},
+			wantRespBody: map[string]interface{}{
+				"key2": "value2",
+			},
+		},
+		{
+			name: "when a token is not present, a new one is obtained and used",
+			fields: fields{
+				user:     "admin",
+				password: "a",
+				server: httptest.NewUnstartedServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+					switch req.RequestURI {
+					case "/api/auth":
+						assert.Equal(t, "", req.Header.Get("Authorization"))
+
+						writeResponseBodyAsJSON(w, map[string]interface{}{
+							"jwt": "token",
+						})
+					case "/api/stacks":
+						assert.Equal(t, "/api/stacks", req.RequestURI)
+						assert.Equal(t, http.MethodPost, req.Method)
+						assert.Equal(t, "Bearer token", req.Header.Get("Authorization"))
+
+						var body map[string]interface{}
+						err := readRequestBodyAsJSON(req, &body)
+						assert.Nil(t, err)
+
+						assert.Equal(t, map[string]interface{}{
+							"key1": "value1",
+						}, body)
+
+						writeResponseBodyAsJSON(w, map[string]interface{}{
+							"key2": "value2",
+						})
+					}
+				})),
+			},
+			args: args{
+				uri:     "stacks",
+				method:  http.MethodPost,
+				headers: http.Header{},
+				requestBody: map[string]interface{}{
+					"key1": "value1",
+				},
+				responseBody: map[string]interface{}{},
+			},
+			wantRespBody: map[string]interface{}{
+				"key2": "value2",
+			},
+		},
+		{
+			name: "when authentication error occurs, an error is returned",
+			fields: fields{
+				user:     "admin",
+				password: "a",
+				server: httptest.NewUnstartedServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+					w.WriteHeader(http.StatusUnprocessableEntity)
+					writeResponseBodyAsJSON(w, map[string]interface{}{
+						"Err":     "Invalid credentials",
+						"Details": "Unauthorized",
+					})
+				})),
+			},
+			args: args{
+				uri:     "stacks",
+				method:  http.MethodPost,
+				headers: http.Header{},
+				requestBody: map[string]interface{}{
+					"key1": "value1",
+				},
+				responseBody: map[string]interface{}{},
+			},
+			wantRespBody: map[string]interface{}{},
+			wantErr:      true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tt.fields.server.Start()
+			defer tt.fields.server.Close()
+
+			apiURL, _ := url.Parse(tt.fields.server.URL + "/api/")
+
+			n := &portainerClientImp{
+				httpClient: tt.fields.server.Client(),
+				url:        apiURL,
+				user:       tt.fields.user,
+				password:   tt.fields.password,
+				token:      tt.fields.token,
+			}
+
+			err := n.doJSONWithToken(tt.args.uri, tt.args.method, tt.args.headers, &tt.args.requestBody, &tt.args.responseBody)
+			assert.Equal(t, tt.wantErr, err != nil)
+			assert.Equal(t, tt.wantRespBody, tt.args.responseBody)
+		})
+	}
+}
