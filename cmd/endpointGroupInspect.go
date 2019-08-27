@@ -44,9 +44,9 @@ var endpointGroupInspectCmd = &cobra.Command{
 				common.CheckError(err)
 			case "json":
 				// Print endpoint group in a json format
-				endpointJsonBytes, err := json.Marshal(endpointGroup)
+				endpointJSONBytes, err := json.Marshal(endpointGroup)
 				common.CheckError(err)
-				fmt.Println(string(endpointJsonBytes))
+				fmt.Println(string(endpointJSONBytes))
 			default:
 				// Print endpoint group in a custom format
 				template, err := template.New("endpointGroupTpl").Parse(viper.GetString("endpoint.group.inspect.format"))

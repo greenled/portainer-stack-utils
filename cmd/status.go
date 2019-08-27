@@ -26,7 +26,7 @@ var statusCmd = &cobra.Command{
 		client, err := common.GetClient()
 		common.CheckError(err)
 
-		respBody, err := client.GetStatus()
+		respBody, err := client.Status()
 		common.CheckError(err)
 
 		switch viper.GetString("status.format") {
@@ -53,9 +53,9 @@ var statusCmd = &cobra.Command{
 			common.CheckError(flushErr)
 		case "json":
 			// Print status in a json format
-			statusJsonBytes, err := json.Marshal(respBody)
+			statusJSONBytes, err := json.Marshal(respBody)
 			common.CheckError(err)
-			fmt.Println(string(statusJsonBytes))
+			fmt.Println(string(statusJSONBytes))
 		default:
 			// Print status in a custom format
 			template, templateParsingErr := template.New("statusTpl").Parse(viper.GetString("status.format"))

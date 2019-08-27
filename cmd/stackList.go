@@ -33,31 +33,43 @@ var stackListCmd = &cobra.Command{
 		portainerClient, err := common.GetClient()
 		common.CheckError(err)
 
-		endpoints, endpointsRetrievalErr := portainerClient.GetEndpoints()
+		endpoints, endpointsRetrievalErr := portainerClient.EndpointList()
 		common.CheckError(endpointsRetrievalErr)
 
-		var endpointSwarmClusterId string
+		var endpointSwarmClusterID string
 		var stacks []portainer.Stack
 		if endpointName := viper.GetString("stack.list.endpoint"); endpointName != "" {
 			// Get endpoint by name
 			endpoint, endpointRetrievalErr := common.GetEndpointFromListByName(endpoints, endpointName)
 			common.CheckError(endpointRetrievalErr)
 
+			logrus.WithFields(logrus.Fields{
+				"endpoint": endpoint.Name,
+			}).Debug("Getting endpoint's Docker info")
 			var selectionErr error
-			endpointSwarmClusterId, selectionErr = common.GetEndpointSwarmClusterId(endpoint.ID)
+			endpointSwarmClusterID, selectionErr = common.GetEndpointSwarmClusterID(endpoint.ID)
 			if selectionErr == nil {
 				// It's a swarm cluster
 				logrus.WithFields(logrus.Fields{
 					"endpoint": endpoint.Name,
 				}).Debug("Getting stacks")
-				stacks, err = portainerClient.GetStacks(endpointSwarmClusterId, endpoint.ID)
+				stacks, err = portainerClient.StackList(client.StackListOptions{
+					Filter: client.StackListFilter{
+						SwarmID:    endpointSwarmClusterID,
+						EndpointID: endpoint.ID,
+					},
+				})
 				common.CheckError(err)
 			} else if selectionErr == common.ErrStackClusterNotFound {
 				// It's not a swarm cluster
 				logrus.WithFields(logrus.Fields{
 					"endpoint": endpoint.Name,
 				}).Debug("Getting stacks")
-				stacks, err = portainerClient.GetStacks("", endpoint.ID)
+				stacks, err = portainerClient.StackList(client.StackListOptions{
+					Filter: client.StackListFilter{
+						EndpointID: endpoint.ID,
+					},
+				})
 				common.CheckError(err)
 			} else {
 				// Something else happened
@@ -65,7 +77,7 @@ var stackListCmd = &cobra.Command{
 			}
 		} else {
 			logrus.Debug("Getting stacks")
-			stacks, err = portainerClient.GetStacks("", 0)
+			stacks, err = portainerClient.StackList(client.StackListOptions{})
 			common.CheckError(err)
 		}
 
@@ -80,13 +92,13 @@ var stackListCmd = &cobra.Command{
 			})
 			common.CheckError(err)
 			for _, s := range stacks {
-				stackEndpoint, err := common.GetEndpointFromListById(endpoints, s.EndpointID)
+				stackEndpoint, err := common.GetEndpointFromListByID(endpoints, s.EndpointID)
 				common.CheckError(err)
 				_, err = fmt.Fprintln(writer, fmt.Sprintf(
 					"%v\t%s\t%v\t%s",
 					s.ID,
 					s.Name,
-					client.GetTranslatedStackType(s),
+					client.GetTranslatedStackType(s.Type),
 					stackEndpoint.Name,
 				))
 				common.CheckError(err)
@@ -95,9 +107,9 @@ var stackListCmd = &cobra.Command{
 			common.CheckError(flushErr)
 		case "json":
 			// Print stacks in a json format
-			stacksJsonBytes, err := json.Marshal(stacks)
+			stacksJSONBytes, err := json.Marshal(stacks)
 			common.CheckError(err)
-			fmt.Println(string(stacksJsonBytes))
+			fmt.Println(string(stacksJSONBytes))
 		default:
 			// Print stacks in a custom format
 			template, templateParsingErr := template.New("stackTpl").Parse(viper.GetString("stack.list.format"))

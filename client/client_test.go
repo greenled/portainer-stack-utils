@@ -3,6 +3,7 @@ package client
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -12,62 +13,389 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func readRequestBodyAsJson(req *http.Request, body *map[string]interface{}) (err error) {
+func readRequestBodyAsJSON(req *http.Request, body *map[string]interface{}) (err error) {
 	bodyBytes, err := ioutil.ReadAll(req.Body)
 	defer req.Body.Close()
 	err = json.Unmarshal(bodyBytes, body)
 	return
 }
 
-func writeResponseBodyAsJson(w http.ResponseWriter, body map[string]interface{}) (err error) {
+func writeResponseBodyAsJSON(w http.ResponseWriter, body map[string]interface{}) (err error) {
 	bodyBytes, err := json.Marshal(body)
 	fmt.Fprintln(w, string(bodyBytes))
 	return
 }
 
 func TestNewClient(t *testing.T) {
-	apiUrl, _ := url.Parse("http://validurl.com/api")
+	apiURL, _ := url.Parse("http://validurl.com/api")
 
 	validClient := NewClient(http.DefaultClient, Config{
-		Url: apiUrl,
+		URL: apiURL,
 	})
 	assert.NotNil(t, validClient)
 }
 
-func TestClientAuthenticates(t *testing.T) {
-	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-		var body map[string]interface{}
-		err := readRequestBodyAsJson(req, &body)
+func Test_portainerClientImp_do(t *testing.T) {
+	type fields struct {
+		user               string
+		password           string
+		token              string
+		userAgent          string
+		beforeRequestHooks []func(req *http.Request) (err error)
+		afterResponseHooks []func(resp *http.Response) (err error)
+		server             *httptest.Server
+		beforeFunctionCall func(t *testing.T, tt *fields)
+	}
+	type args struct {
+		uri         string
+		method      string
+		requestBody io.Reader
+		headers     http.Header
+	}
+	tests := []struct {
+		name          string
+		fields        fields
+		args          args
+		wantRespCheck func(resp *http.Response) bool
+		wantErr       bool
+	}{
+		{
+			name: "error on bad URI",
+			fields: fields{
+				server: httptest.NewUnstartedServer(nil),
+			},
+			args: args{
+				uri: string(0x7f),
+			},
+			wantErr: true,
+		},
+		{
+			name: "error on bad method",
+			fields: fields{
+				server: httptest.NewUnstartedServer(nil),
+			},
+			args: args{
+				method: "WOLOLO?",
+			},
+			wantErr: true,
+		},
+		{
+			name: "extra headers are added",
+			fields: fields{
+				server: httptest.NewUnstartedServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+					assert.Equal(t, req.Header.Get("Some-Header"), "value")
+				})),
+			},
+			args: args{
+				headers: http.Header{
+					"Some-Header": []string{
+						"value",
+					},
+				},
+			},
+		},
+		{
+			name: "returns error on http error",
+			fields: fields{
+				token:  "token",
+				server: httptest.NewUnstartedServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {})),
+				beforeFunctionCall: func(t *testing.T, tt *fields) {
+					tt.server.Close()
+				},
+			},
+			wantErr: true,
+		},
+		{
+			name: "returns error on response error",
+			fields: fields{
+				server: httptest.NewUnstartedServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+					w.WriteHeader(http.StatusInternalServerError)
+				})),
+			},
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tt.fields.server.Start()
+			defer tt.fields.server.Close()
 
-		assert.Equal(t, req.Method, http.MethodPost)
-		assert.Equal(t, req.RequestURI, "/api/auth")
-		assert.NotNil(t, req.Header["Content-Type"])
-		assert.NotNil(t, req.Header["Content-Type"][0])
-		assert.Equal(t, req.Header["Content-Type"][0], "application/json")
-		assert.NotNil(t, req.Header["User-Agent"])
-		assert.NotNil(t, req.Header["User-Agent"][0])
-		assert.Equal(t, req.Header["User-Agent"][0], "GE007")
-		assert.Nil(t, err)
-		assert.NotNil(t, body["Username"])
-		assert.Equal(t, body["Username"], "admin")
-		assert.NotNil(t, body["Password"])
-		assert.Equal(t, body["Password"], "a")
+			apiURL, _ := url.Parse(tt.fields.server.URL + "/api/")
 
-		writeResponseBodyAsJson(w, map[string]interface{}{
-			"jwt": "somerandomtoken",
+			n := &portainerClientImp{
+				httpClient:         tt.fields.server.Client(),
+				url:                apiURL,
+				user:               tt.fields.user,
+				password:           tt.fields.password,
+				token:              tt.fields.token,
+				userAgent:          tt.fields.userAgent,
+				beforeRequestHooks: tt.fields.beforeRequestHooks,
+				afterResponseHooks: tt.fields.afterResponseHooks,
+			}
+
+			if tt.fields.beforeFunctionCall != nil {
+				tt.fields.beforeFunctionCall(t, &tt.fields)
+			}
+			gotResp, err := n.do(tt.args.uri, tt.args.method, tt.args.requestBody, tt.args.headers)
+
+			assert.Equal(t, tt.wantErr, err != nil)
+			if tt.wantRespCheck != nil {
+				assert.True(t, tt.wantRespCheck(gotResp))
+			}
 		})
-	}))
-	defer ts.Close()
+	}
+}
 
-	apiUrl, _ := url.Parse(ts.URL + "/api/")
+func Test_portainerClientImp_doJSON(t *testing.T) {
+	type fields struct {
+		httpClient *http.Client
+		url        *url.URL
+		server     *httptest.Server
+	}
+	type args struct {
+		uri          string
+		method       string
+		headers      http.Header
+		requestBody  interface{}
+		responseBody interface{}
+	}
+	tests := []struct {
+		name         string
+		fields       fields
+		args         args
+		wantRespBody interface{}
+		wantErr      bool
+	}{
+		{
+			name: "request is made with application/json content type and expected JSON object as body",
+			fields: fields{
+				server: httptest.NewUnstartedServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+					assert.Equal(t, "/api/stacks", req.RequestURI)
+					assert.Equal(t, http.MethodPost, req.Method)
+					assert.Equal(t, "application/json", req.Header.Get("Content-Type"))
 
-	customClient := NewClient(ts.Client(), Config{
-		Url:       apiUrl,
-		User:      "admin",
-		Password:  "a",
-		UserAgent: "GE007",
-	})
-	token, err := customClient.Authenticate()
-	assert.Nil(t, err)
-	assert.Equal(t, token, "somerandomtoken")
+					var body map[string]interface{}
+					err := readRequestBodyAsJSON(req, &body)
+					assert.Nil(t, err)
+
+					assert.Equal(t, map[string]interface{}{
+						"key1": "value1",
+					}, body)
+
+					writeResponseBodyAsJSON(w, map[string]interface{}{
+						"key2": "value2",
+					})
+				})),
+			},
+			args: args{
+				uri:     "stacks",
+				method:  http.MethodPost,
+				headers: http.Header{},
+				requestBody: map[string]interface{}{
+					"key1": "value1",
+				},
+				responseBody: map[string]interface{}{},
+			},
+			wantRespBody: map[string]interface{}{
+				"key2": "value2",
+			},
+		},
+		{
+			name: "invalid JSON object as request body causes an error",
+			fields: fields{
+				server: httptest.NewUnstartedServer(nil),
+			},
+			args: args{
+				uri:         "stacks",
+				method:      http.MethodPost,
+				headers:     http.Header{},
+				requestBody: func() {},
+			},
+			wantErr: true,
+		},
+		{
+			name: "invalid JSON object as response body causes an error",
+			fields: fields{
+				server: httptest.NewUnstartedServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+					fmt.Fprint(w, "not a JSON object")
+				})),
+			},
+			args: args{
+				uri:          "stacks",
+				method:       http.MethodPost,
+				headers:      http.Header{},
+				responseBody: map[string]interface{}{},
+			},
+			wantRespBody: map[string]interface{}{},
+			wantErr:      true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tt.fields.server.Start()
+			defer tt.fields.server.Close()
+
+			apiURL, _ := url.Parse(tt.fields.server.URL + "/api/")
+
+			n := &portainerClientImp{
+				httpClient: tt.fields.server.Client(),
+				url:        apiURL,
+			}
+
+			err := n.doJSON(tt.args.uri, tt.args.method, tt.args.headers, &tt.args.requestBody, &tt.args.responseBody)
+			assert.Equal(t, tt.wantErr, err != nil)
+			assert.Equal(t, tt.wantRespBody, tt.args.responseBody)
+		})
+	}
+}
+
+func Test_portainerClientImp_doJSONWithToken(t *testing.T) {
+	type fields struct {
+		httpClient *http.Client
+		url        *url.URL
+		user       string
+		password   string
+		token      string
+		server     *httptest.Server
+	}
+	type args struct {
+		uri          string
+		method       string
+		headers      http.Header
+		requestBody  interface{}
+		responseBody interface{}
+	}
+	tests := []struct {
+		name         string
+		fields       fields
+		args         args
+		wantRespBody interface{}
+		wantErr      bool
+	}{
+		{
+			name: "when a token is present, it is used",
+			fields: fields{
+				token: "token",
+				server: httptest.NewUnstartedServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+					assert.Equal(t, "/api/stacks", req.RequestURI)
+					assert.Equal(t, http.MethodPost, req.Method)
+					assert.Equal(t, "Bearer token", req.Header.Get("Authorization"))
+
+					var body map[string]interface{}
+					err := readRequestBodyAsJSON(req, &body)
+					assert.Nil(t, err)
+
+					assert.Equal(t, map[string]interface{}{
+						"key1": "value1",
+					}, body)
+
+					writeResponseBodyAsJSON(w, map[string]interface{}{
+						"key2": "value2",
+					})
+				})),
+			},
+			args: args{
+				uri:     "stacks",
+				method:  http.MethodPost,
+				headers: http.Header{},
+				requestBody: map[string]interface{}{
+					"key1": "value1",
+				},
+				responseBody: map[string]interface{}{},
+			},
+			wantRespBody: map[string]interface{}{
+				"key2": "value2",
+			},
+		},
+		{
+			name: "when a token is not present, a new one is obtained and used",
+			fields: fields{
+				user:     "admin",
+				password: "a",
+				server: httptest.NewUnstartedServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+					switch req.RequestURI {
+					case "/api/auth":
+						assert.Equal(t, "", req.Header.Get("Authorization"))
+
+						writeResponseBodyAsJSON(w, map[string]interface{}{
+							"jwt": "token",
+						})
+					case "/api/stacks":
+						assert.Equal(t, "/api/stacks", req.RequestURI)
+						assert.Equal(t, http.MethodPost, req.Method)
+						assert.Equal(t, "Bearer token", req.Header.Get("Authorization"))
+
+						var body map[string]interface{}
+						err := readRequestBodyAsJSON(req, &body)
+						assert.Nil(t, err)
+
+						assert.Equal(t, map[string]interface{}{
+							"key1": "value1",
+						}, body)
+
+						writeResponseBodyAsJSON(w, map[string]interface{}{
+							"key2": "value2",
+						})
+					}
+				})),
+			},
+			args: args{
+				uri:     "stacks",
+				method:  http.MethodPost,
+				headers: http.Header{},
+				requestBody: map[string]interface{}{
+					"key1": "value1",
+				},
+				responseBody: map[string]interface{}{},
+			},
+			wantRespBody: map[string]interface{}{
+				"key2": "value2",
+			},
+		},
+		{
+			name: "when authentication error occurs, an error is returned",
+			fields: fields{
+				user:     "admin",
+				password: "a",
+				server: httptest.NewUnstartedServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+					w.WriteHeader(http.StatusUnprocessableEntity)
+					writeResponseBodyAsJSON(w, map[string]interface{}{
+						"Err":     "Invalid credentials",
+						"Details": "Unauthorized",
+					})
+				})),
+			},
+			args: args{
+				uri:     "stacks",
+				method:  http.MethodPost,
+				headers: http.Header{},
+				requestBody: map[string]interface{}{
+					"key1": "value1",
+				},
+				responseBody: map[string]interface{}{},
+			},
+			wantRespBody: map[string]interface{}{},
+			wantErr:      true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tt.fields.server.Start()
+			defer tt.fields.server.Close()
+
+			apiURL, _ := url.Parse(tt.fields.server.URL + "/api/")
+
+			n := &portainerClientImp{
+				httpClient: tt.fields.server.Client(),
+				url:        apiURL,
+				user:       tt.fields.user,
+				password:   tt.fields.password,
+				token:      tt.fields.token,
+			}
+
+			err := n.doJSONWithToken(tt.args.uri, tt.args.method, tt.args.headers, &tt.args.requestBody, &tt.args.responseBody)
+			assert.Equal(t, tt.wantErr, err != nil)
+			assert.Equal(t, tt.wantRespBody, tt.args.responseBody)
+		})
+	}
 }
