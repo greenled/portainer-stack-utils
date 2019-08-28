@@ -132,6 +132,7 @@ generate-docs:
     - cp -r docs/. public/$CI_COMMIT_REF_SLUG
     - mkdir public/$CI_COMMIT_REF_SLUG/repo
     - cp *.md public/$CI_COMMIT_REF_SLUG/repo
+    - cp LICENSE public/$CI_COMMIT_REF_SLUG/repo/LICENSE.md
     - bash scripts/push-to-gitlab-pages.sh
   only:
     variables:
