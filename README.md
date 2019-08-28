@@ -164,7 +164,7 @@ This is particularly useful for [CI](https://en.wikipedia.org/wiki/Continuous_in
 - `PORTAINER_PASSWORD` (string, required): Password
 - `PORTAINER_URL` (string, required): URL to Portainer
 - `PORTAINER_STACK_NAME` (string, required): Stack name
-- `DOCKER_COMPOSE_FILE` (string, required if action=deploy): Path to doker-compose file
+- `DOCKER_COMPOSE_FILE` (string, required if action=deploy): Path to docker-compose file
 
 For detailed instructions, see the full [envvars list](docs/README.md#available-environment-variables).
 
