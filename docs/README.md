@@ -149,6 +149,12 @@ Deploy/update the given stack.
 #### Usage:
 `psu deploy [options]`
 
+#### Examples:
+
+```bash
+psu deploy --user admin --password password --url https://portainer.local --name mystack --compose-file /path/to/docker-compose.yml --env-file /path/to/env_vars_file
+```
+
 #### Required options:
 | Flag       | Option                           | Description |
 | ---------- | -------------------------------- | ----------- |
@@ -183,6 +189,12 @@ Remove/undeploy the given stack.
 
 #### Usage:
 `psu rm [options]`
+
+#### Examples:
+
+```bash
+psu rm --user admin --password password --url https://portainer.local --name mystack
+```
 
 #### Required options:
 | Flag       | Option                           | Description |
@@ -294,8 +306,33 @@ Check if the stack is running/deployed correctly
 
 If your stack has some services who acts as [jobs](#job), see the [`--detect-job`](#detect-job-option) option for more details.
 
+This action is very useful in CI/CD pipelines, it's equivalent to the [`kubectl rollout status`](https://kubernetes.io/docs/reference/generated/kubectl/kubectl-commands#-em-status-em-) command of Kubernetes.
+
 #### Usage:
 `psu status [options]`
+
+#### Examples:
+
+```bash
+psu status --user admin --password password --url https://portainer.local --name mystack
+```
+
+This command outputs nothing if the stack is correctly running or deployed.
+
+It also has an exit code (or exit status).
+The exit code value return based on a command or program will successfully execute _(return 0)_ or not _(return 1 or higher)_.
+
+```bash
+psu status --user admin --password password --url https://portainer.local --name mystack --timeout 20
+
+if [ $? -eq 0 ]; then
+  echo "[OK] This stack is running/deployed correctly"
+else
+  echo "[ERROR] This stack isn't running/deployed correctly!"
+fi
+```
+
+For more informations about exit code, you can read this [article](https://tecadmin.net/tutorial/bash-scripting/bash-exit-codes/) and this [Wikipedia page](https://en.wikipedia.org/wiki/Exit_status)
 
 #### Required options:
 | Flag       | Option                           | Description |
