@@ -19,6 +19,7 @@
       - [YAML configuration file](#yaml-configuration-file)
       - [JSON configuration file](#json-configuration-file)
   - [Environment variables for deployed stacks](#environment-variables-for-deployed-stacks)
+  - [Endpoint's Docker API proxy](#endpoints-docker-api-proxy)
   - [Log level](#log-level)
   - [Exit statuses](#exit-statuses)
 - [Contributing](#contributing)
@@ -159,6 +160,26 @@ psu stack deploy django-stack -c /path/to/docker-compose.yml
 echo "stack.deploy.env-file: .env" > .config.yml
 psu stack deploy django-stack -c /path/to/docker-compose.yml --config .config.yml
 ```
+
+### Endpoint's Docker API proxy
+
+If you want finer-grained control over an endpoint's Docker daemon you can expose it through a proxy and configure a local Docker client to use it.
+
+First, expose the endpoint's Docker API:
+
+```bash
+psu proxy --endpoint primary --address 127.0.0.1:2375
+```
+
+Then (in a different shell), configure a local Docker client to use the exposed API:
+
+```bash
+export DOCKER_HOST=tcp://127.0.0.1:2375
+```
+
+Now you can run `docker ...` commands in the `primary` endpoint as in a local Docker installation, **with the added benefit of using Portainer's RBAC**.
+
+*Note that creating stacks through `docker stack ...` instead of `psu stack ...` will give you *limited* control over them, as they are created outside of Portainer.*
 
 ### Log level
 

@@ -60,6 +60,9 @@ type PortainerClient interface {
 
 	// Run a function after receiving a response from Portainer
 	AfterResponse(hook func(resp *http.Response) (err error))
+
+	// Proxy proxies a request to /endpoint/{id}/docker and returns its result
+	Proxy(endpointID portainer.EndpointID, req *http.Request) (resp *http.Response, err error)
 }
 
 type portainerClientImp struct {
@@ -119,6 +122,22 @@ func (n *portainerClientImp) do(uri, method string, requestBody io.Reader, heade
 	}
 
 	return
+}
+
+func (n *portainerClientImp) doWithToken(uri, method string, requestBody io.Reader, headers http.Header) (resp *http.Response, err error) {
+	// Ensure there is an auth token
+	if n.token == "" {
+		n.token, err = n.AuthenticateUser(AuthenticateUserOptions{
+			Username: n.user,
+			Password: n.password,
+		})
+		if err != nil {
+			return
+		}
+	}
+	headers.Set("Authorization", "Bearer "+n.token)
+
+	return n.do(uri, method, requestBody, headers)
 }
 
 // Do a JSON http request
