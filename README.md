@@ -181,6 +181,10 @@ Now you can run `docker ...` commands in the `primary` endpoint as in a local Do
 
 *Note that creating stacks through `docker stack ...` instead of `psu stack ...` will give you *limited* control over them, as they are created outside of Portainer.*
 
+#### Known limitations
+
+- Docker commands requiring a websocket connection (like `docker attach`, `docker exec`, `docker system events`) are known to fail with an `unable to upgrade to tcp, received 200` error or just hang up.
+
 ### Log level
 
 You can control how much noise you want the program to do by setting the log level. There are seven log levels:
