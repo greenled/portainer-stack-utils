@@ -105,15 +105,6 @@ func Test_portainerClientImp_do(t *testing.T) {
 			},
 			wantErr: true,
 		},
-		{
-			name: "returns error on response error",
-			fields: fields{
-				server: httptest.NewUnstartedServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-					w.WriteHeader(http.StatusInternalServerError)
-				})),
-			},
-			wantErr: true,
-		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -228,6 +219,20 @@ func Test_portainerClientImp_doJSON(t *testing.T) {
 			},
 			wantRespBody: map[string]interface{}{},
 			wantErr:      true,
+		},
+		{
+			name: "returns error on response error",
+			fields: fields{
+				server: httptest.NewUnstartedServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+					w.WriteHeader(http.StatusInternalServerError)
+				})),
+			},
+			args: args{
+				uri:     "stacks",
+				method:  http.MethodPost,
+				headers: http.Header{},
+			},
+			wantErr: true,
 		},
 	}
 	for _, tt := range tests {

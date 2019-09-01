@@ -116,11 +116,6 @@ func (n *portainerClientImp) do(uri, method string, requestBody io.Reader, heade
 		}
 	}
 
-	err = checkResponseForErrors(resp)
-	if err != nil {
-		return
-	}
-
 	return
 }
 
@@ -156,6 +151,11 @@ func (n *portainerClientImp) doJSON(uri, method string, headers http.Header, req
 	headers.Set("Content-Type", "application/json")
 
 	resp, err := n.do(uri, method, body, headers)
+	if err != nil {
+		return err
+	}
+
+	err = checkResponseForErrors(resp)
 	if err != nil {
 		return err
 	}
