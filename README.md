@@ -9,6 +9,8 @@
 ## Table of contents
 
 - [Overview](#overview)
+  - [Mission](#mission)
+  - [Vision](#vision)
 - [Supported Portainer API](#supported-portainer-api)
 - [How to install](#how-to-install)
 - [How to use](#how-to-use)
@@ -30,6 +32,18 @@
 Portainer Stack Utils is a CLI client for [Portainer](https://portainer.io/) written in Go.
 
 **Attention:** The `master` branch contains the next major version, still unstable and under heavy development. A more stable (and also older) version is available as a Bash script in [release 0.1.1](https://github.com/greenled/portainer-stack-utils/releases/0.1.1), and also as a [Docker image](https://hub.docker.com/r/greenled/portainer-stack-utils). There is ongoing work in `1-0-next` branch to enhace that Bash version.
+
+### Mission
+
+To provide an **easy** and **extensible** way of interacting with Portainer in automated, non-interactive environments.
+
+### Vision
+
+By December 2019 Portainer Stack Utils:
+
+- [ ] Has a stable API
+- [ ] Doubles its [GitHub stargazers](https://github.com/greenled/portainer-stack-utils/stargazes) (+50)
+- [ ] Triples its [DockerHub downloads](https://hub.docker.com/r/greenled/portainer-stack-utils) (+900)
 
 ## Supported Portainer API
 
