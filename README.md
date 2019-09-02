@@ -198,7 +198,7 @@ Now you can run `docker ...` commands in the `primary` endpoint as in a local Do
 
 #### Known limitations
 
-- Docker commands requiring a websocket connection (like `docker attach`, `docker exec`, `docker system events`) are known to fail with an `unable to upgrade to tcp, received 200` error or just hang up.
+- Docker commands requiring a websocket connection (like `docker attach`, `docker exec`, `docker system events`) are known to fail with an `unable to upgrade to tcp, received 200` error or just hang up (see #31).
 
 ### Log level
 
