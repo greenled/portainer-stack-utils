@@ -22,6 +22,7 @@
       - [JSON configuration file](#json-configuration-file)
   - [Environment variables for deployed stacks](#environment-variables-for-deployed-stacks)
   - [Endpoint's Docker API proxy](#endpoints-docker-api-proxy)
+    - [Known limitations](#known-limitations)
   - [Log level](#log-level)
   - [Exit statuses](#exit-statuses)
 - [Contributing](#contributing)
