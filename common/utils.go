@@ -18,6 +18,7 @@ const (
 	ErrEndpointGroupNotFound     = Error("Endpoint group not found")
 	ErrSeveralEndpointsAvailable = Error("Several endpoints available")
 	ErrNoEndpointsAvailable      = Error("No endpoints available")
+	ErrUserNotFound              = Error("User not found")
 )
 
 const (
@@ -213,5 +214,30 @@ func repr(t reflect.Type, margin, beforeMargin string) (r string) {
 	default:
 		r = fmt.Sprintf("%s", t.Name())
 	}
+	return
+}
+
+// GetUserByName returns an user by its name from the list of all users
+func GetUserByName(name string) (user portainer.User, err error) {
+	portainerClient, err := GetClient()
+	if err != nil {
+		return
+	}
+
+	// Get users list
+	users, err := portainerClient.UserList()
+
+	// Find user
+	for _, listUser := range users {
+		if listUser.Username == name {
+			// User found
+			user = listUser
+			return
+		}
+	}
+
+	// User not found
+	err = ErrUserNotFound
+
 	return
 }
