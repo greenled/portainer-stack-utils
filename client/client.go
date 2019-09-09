@@ -63,6 +63,9 @@ type PortainerClient interface {
 
 	// Proxy proxies a request to /endpoint/{id}/docker and returns its result
 	Proxy(endpointID portainer.EndpointID, req *http.Request) (resp *http.Response, err error)
+
+	// GetUsername returns the user name used by the client
+	GetUsername() string
 }
 
 type portainerClientImp struct {
@@ -195,6 +198,10 @@ func (n *portainerClientImp) BeforeRequest(hook func(req *http.Request) (err err
 
 func (n *portainerClientImp) AfterResponse(hook func(resp *http.Response) (err error)) {
 	n.afterResponseHooks = append(n.afterResponseHooks, hook)
+}
+
+func (n *portainerClientImp) GetUsername() string {
+	return n.user
 }
 
 // NewClient creates a new Portainer API client
