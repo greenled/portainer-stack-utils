@@ -64,6 +64,9 @@ type PortainerClient interface {
 	// Proxy proxies a request to /endpoint/{id}/docker and returns its result
 	Proxy(endpointID portainer.EndpointID, req *http.Request) (resp *http.Response, err error)
 
+	// UserList retrieves a list of users
+	UserList() (users []portainer.User, err error)
+
 	// GetUsername returns the user name used by the client
 	GetUsername() string
 }
