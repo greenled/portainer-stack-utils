@@ -69,6 +69,9 @@ type PortainerClient interface {
 
 	// GetUsername returns the user name used by the client
 	GetUsername() string
+
+	// DoJSONWithToken makes an HTTP request with a JSON body and an auth token
+	DoJSONWithToken(uri, method string, headers http.Header, request interface{}, response interface{}) (err error)
 }
 
 type portainerClientImp struct {
@@ -178,8 +181,7 @@ func (n *portainerClientImp) doJSON(uri, method string, headers http.Header, req
 	return nil
 }
 
-// Do a JSON http request with an auth token
-func (n *portainerClientImp) doJSONWithToken(uri, method string, headers http.Header, request interface{}, response interface{}) (err error) {
+func (n *portainerClientImp) DoJSONWithToken(uri, method string, headers http.Header, request interface{}, response interface{}) (err error) {
 	// Ensure there is an auth token
 	if n.token == "" {
 		n.token, err = n.AuthenticateUser(AuthenticateUserOptions{

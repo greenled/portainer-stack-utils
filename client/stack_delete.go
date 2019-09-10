@@ -8,6 +8,6 @@ import (
 )
 
 func (n *portainerClientImp) StackDelete(stackID portainer.StackID) (err error) {
-	err = n.doJSONWithToken(fmt.Sprintf("stacks/%d", stackID), http.MethodDelete, http.Header{}, nil, nil)
+	err = n.DoJSONWithToken(fmt.Sprintf("stacks/%d", stackID), http.MethodDelete, http.Header{}, nil, nil)
 	return
 }

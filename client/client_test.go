@@ -398,7 +398,7 @@ func Test_portainerClientImp_doJSONWithToken(t *testing.T) {
 				token:      tt.fields.token,
 			}
 
-			err := n.doJSONWithToken(tt.args.uri, tt.args.method, tt.args.headers, &tt.args.requestBody, &tt.args.responseBody)
+			err := n.DoJSONWithToken(tt.args.uri, tt.args.method, tt.args.headers, &tt.args.requestBody, &tt.args.responseBody)
 			assert.Equal(t, tt.wantErr, err != nil)
 			assert.Equal(t, tt.wantRespBody, tt.args.responseBody)
 		})

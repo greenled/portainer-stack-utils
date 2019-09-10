@@ -7,6 +7,6 @@ import (
 )
 
 func (n *portainerClientImp) EndpointList() (endpoints []portainer.Endpoint, err error) {
-	err = n.doJSONWithToken("endpoints", http.MethodGet, http.Header{}, nil, &endpoints)
+	err = n.DoJSONWithToken("endpoints", http.MethodGet, http.Header{}, nil, &endpoints)
 	return
 }
