@@ -64,6 +64,15 @@ type PortainerClient interface {
 	// Proxy proxies a request to /endpoint/{id}/docker and returns its result
 	Proxy(endpointID portainer.EndpointID, req *http.Request) (resp *http.Response, err error)
 
+	// ResourceControlCreate creates a resource control
+	ResourceControlCreate(options ResourceControlCreateOptions) (resourceControl portainer.ResourceControl, err error)
+
+	// ResourceControlUpdate updates a resource control
+	ResourceControlUpdate(options ResourceControlUpdateOptions) (resourceControl portainer.ResourceControl, err error)
+
+	// ResourceControlDelete deletes a resource control
+	ResourceControlDelete(resourceControlID portainer.ResourceControlID) (err error)
+
 	// UserList retrieves a list of users
 	UserList() (users []portainer.User, err error)
 
