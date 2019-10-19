@@ -934,16 +934,9 @@ deploy() {
   fi
   # Read docker-compose file content
   local docker_compose_file_content
-  docker_compose_file_content=$(cat "$DOCKER_COMPOSE_FILE")
-
-  # Remove carriage returns
-  docker_compose_file_content="${docker_compose_file_content//$'\r'/''}"
-
-  # Escape double quotes
-  docker_compose_file_content="${docker_compose_file_content//$'"'/'\"'}"
-
-  # Escape newlines
-  docker_compose_file_content="${docker_compose_file_content//$'\n'/'\n'}"
+  docker_compose_file_content="$( jq -Rscjr '{StackFileContent: . }' $DOCKER_COMPOSE_FILE | tail -c +2 | head -c -1 )"
+  echo_debug "DOCKER_COMPOSE_FILE -> $DOCKER_COMPOSE_FILE"
+  echo_debug "docker_compose_file_content -> $docker_compose_file_content"
 
   # If the stack does not exist
   if [ -z "$STACK" ]; then
@@ -972,8 +965,8 @@ deploy() {
       if [ -n "$ENVIRONMENT_VARIABLES_FILE" ]; then
         stack_envvars=$(env_file_to_json)
       fi
-      local data_prefix="{\"Name\":\"$PORTAINER_STACK_NAME\",\"StackFileContent\":\""
-      local data_suffix="\",\"Env\":"$stack_envvars"}"
+      local data_prefix="{\"Name\":\"$PORTAINER_STACK_NAME\","
+      local data_suffix=",\"Env\":"$stack_envvars"}"
       echo "$data_prefix$docker_compose_file_content$data_suffix" > json.tmp
       echo_debug_safe_json "Stack JSON -> $(echo $data_prefix$docker_compose_file_content$data_suffix | jq -C .)" "$data_prefix$docker_compose_file_content$data_suffix"
 
@@ -1002,8 +995,8 @@ deploy() {
       if [ -n "$ENVIRONMENT_VARIABLES_FILE" ]; then
         stack_envvars=$(env_file_to_json)
       fi
-      local data_prefix="{\"Name\":\"$PORTAINER_STACK_NAME\",\"SwarmID\":\"$swarm_id\",\"StackFileContent\":\""
-      local data_suffix="\",\"Env\":"$stack_envvars"}"
+      local data_prefix="{\"Name\":\"$PORTAINER_STACK_NAME\",\"SwarmID\":\"$swarm_id\","
+      local data_suffix=",\"Env\":"$stack_envvars"}"
       echo "$data_prefix$docker_compose_file_content$data_suffix" > json.tmp
       echo_debug_safe_json "Stack JSON -> $(echo $data_prefix$docker_compose_file_content$data_suffix | jq -C .)" "$data_prefix$docker_compose_file_content$data_suffix"
 
@@ -1043,8 +1036,8 @@ deploy() {
       new_stack_envvars=$(env_file_to_json)
       stack_envvars="$(echo "${new_stack_envvars}${stack_envvars}" | jq -sjc 'add | unique_by(.name)')"
     fi
-    local data_prefix="{\"Id\":\"$stack_id\",\"StackFileContent\":\""
-    local data_suffix="\",\"Env\":"$stack_envvars",\"Prune\":$PORTAINER_PRUNE}"
+    local data_prefix="{\"Id\":\"$stack_id\","
+    local data_suffix=",\"Env\":"$stack_envvars",\"Prune\":$PORTAINER_PRUNE}"
     echo "$data_prefix$docker_compose_file_content$data_suffix" > json.tmp
     echo_debug_safe_json "Stack JSON -> $(echo $data_prefix$docker_compose_file_content$data_suffix | jq -C .)" "$data_prefix$docker_compose_file_content$data_suffix"
 
