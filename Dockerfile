@@ -1,10 +1,10 @@
 FROM alpine:3.10
 
 RUN apk add --no-cache \
-      bash ca-certificates gettext httpie jq \
+      bash ca-certificates gettext jq \
       py3-pip python3-dev libc-dev libffi-dev openssl-dev gcc make; \
     \
-    pip3 --no-cache-dir install docker-compose; \
+    pip3 --no-cache-dir install docker-compose httpie; \
     \
     apk del python3-dev libc-dev libffi-dev openssl-dev gcc make; \
     rm -rf /tmp/src
