@@ -82,11 +82,6 @@ build:debian-core:
     - registry_login
     - bash scripts/test.sh
 
-test:portainer-1.19.2:
-  <<: *test_definition
-  variables:
-    PORTAINER_VERSION: 1.19.2
-
 test:portainer-1.20.2:
   <<: *test_definition
   variables:
