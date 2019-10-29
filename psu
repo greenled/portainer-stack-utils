@@ -567,7 +567,7 @@ inputs() {
         if [ "$insecure" == "true" ]; then
           HTTPIE_VERIFY_SSL="no"
         else
-          HTTPIE_VERIFY_SSL="yes"
+          HTTPIE_VERIFY_SSL="${HTTPIE_VERIFY_SSL:-"yes"}"
         fi
         if [ "$HTTPIE_VERIFY_SSL" == "no" ] && [ -z "$PYTHONWARNINGS" ]; then
           # Fix httpie with Debian and Ubuntu

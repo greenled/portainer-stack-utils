@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- If the `--insecure` option is set to `false` and the `HTTPIE_VERIFY_SSL` environment variable is set, we keep its value instead of overwrite it to `yes`.
+  Useful when we want to use Custom <abbr title="Certificate Authority">CA</abbr> (e.g. `HTTPIE_VERIFY_SSL=/etc/ssl/certs/ca-certificates.crt`). For more information, you can read the [HTTPie docs](https://httpie.org/doc/1.0.3#custom-ca-bundle)
+
 ## [1.0.0] - 2019-07-25
 ### Added
 - New actions: `ls`, `status`, `services`, `tasks`, `tasks:healthy`, `containers`, `login`, `lint`, `inspect`, `system:info`, `actions`, `help` and `version`
