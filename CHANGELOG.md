@@ -6,6 +6,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.2] - 2019-10-29
+### Changed
+- Delegated compose file loading and escaping to jq [#33](https://github.com/greenled/portainer-stack-utils/pull/33)
+
+### Fixed
+- Fixed compose file backslash escaping [#33](https://github.com/greenled/portainer-stack-utils/pull/33)
+
 ## [0.1.1] - 2019-06-05
 ### Fixed
 - Fixed error when environment variables loaded from file contain spaces in their values [#14](https://github.com/greenled/portainer-stack-utils/pull/14)
@@ -23,6 +30,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Debug mode
 - Strict mode
 
-[Unreleased]: https://github.com/greenled/portainer-stack-utils/compare/0.1.1...HEAD
+[unreleased]: https://github.com/greenled/portainer-stack-utils/compare/0.1.2...HEAD
+[0.1.2]: https://github.com/greenled/portainer-stack-utils/releases/tag/0.1.2
 [0.1.1]: https://github.com/greenled/portainer-stack-utils/releases/tag/0.1.1
 [0.1.0]: https://github.com/greenled/portainer-stack-utils/releases/tag/0.1.0
