@@ -6,6 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.1] - 2019-10-29
 ### Fixed
 - If the `--insecure` option is set to `false` and the `HTTPIE_VERIFY_SSL` environment variable is set, we keep its value instead of overwrite it to `yes`.
   Useful when we want to use Custom <abbr title="Certificate Authority">CA</abbr> (e.g. `HTTPIE_VERIFY_SSL=/etc/ssl/certs/ca-certificates.crt`). For more information, you can read the [HTTPie docs](https://httpie.org/doc/1.0.3#custom-ca-bundle)
@@ -46,7 +47,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Debug mode
 - Strict mode
 
-[Unreleased]: https://gitlab.com/psuapp/psu/compare/v1.0.0...master
+[Unreleased]: https://gitlab.com/psuapp/psu/compare/v1.0.1...master
+[1.0.1]: https://gitlab.com/psuapp/psu/-/tags/v1.0.1
 [1.0.0]: https://gitlab.com/psuapp/psu/-/tags/v1.0.0
 [0.1.1]: https://gitlab.com/psuapp/psu/-/tags/v0.1.1
 [0.1.0]: https://gitlab.com/psuapp/psu/-/tags/v0.1.0
