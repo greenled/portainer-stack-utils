@@ -16,6 +16,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `config get` command to get configuration options.
 - `config list|ls` command to print configuration options.
   - `--format` flag to select output format from "table", "json" or a custom Go template. Defaults to "table".
+- `container access` command to set access control for containers.
+  - `--admins` flag to limit access to administrators.
+  - `--private` flag to limit access to current user.
+  - `--public` flag to give access to all users.
 - `endpoint list|ls` command to print endpoints.
   - `--format` flag to select output format from "table", "json" or a custom Go template. Defaults to "table".
 - `endpoint group inspect` command to print endpoint group info.
@@ -27,6 +31,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `help` command to print global help.
 - `login` command to authenticate against Portainer server.
   - `--print` flag to print the retrieved auth token.
+- `network access` command to set access control for networks.
+  - `--admins` flag to limit access to administrators.
+  - `--private` flag to limit access to current user.
+  - `--public` flag to give access to all users.
+- `secret access` command to set access control for secrets.
+  - `--admins` flag to limit access to administrators.
+  - `--private` flag to limit access to current user.
+  - `--public` flag to give access to all users.
+- `service access` command to set access control for services.
+  - `--admins` flag to limit access to administrators.
+  - `--private` flag to limit access to current user.
+  - `--public` flag to give access to all users.
+- `stack access` command to set access control for stacks.
+  - `--admins` flag to limit access to administrators.
+  - `--private` flag to limit access to current user.
+  - `--public` flag to give access to all users.
 - `stack deploy|up|create` command to deploy/update a stack.
   - `--endpoint` flag to set the endpoint to use.
   - `-e, --env-file` flag to set the file with environment variables to use with the stack.
@@ -44,6 +64,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `--strict` flag to fail if the stack does not exist.
 - `status` command to show Portainer server status.
   - `--format` flag to select output format from "table", "json" or a custom Go template. Defaults to "table".
+- `volume access` command to set access control for volumes.
+  - `--admins` flag to limit access to administrators.
+  - `--private` flag to limit access to current user.
+  - `--public` flag to give access to all users.
 - `-h, --help` flags on each command to print its help.
 - `-A, --auth-token` global flag to set Portainer auth token.
 - `--config` global flag to set the path to a configuration file. Supported file formats are JSON, TOML, YAML, HCL, envfile and Java properties config files. Defaults to "$HOME/.psu.yaml".
