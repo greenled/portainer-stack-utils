@@ -23,6 +23,6 @@ func (n *portainerClientImp) StackList(options StackListOptions) (stacks []porta
 	filterJSONBytes, _ := json.Marshal(options.Filter)
 	filterJSONString := string(filterJSONBytes)
 
-	err = n.doJSONWithToken(fmt.Sprintf("stacks?filters=%s", filterJSONString), http.MethodGet, http.Header{}, nil, &stacks)
+	err = n.DoJSONWithToken(fmt.Sprintf("stacks?filters=%s", filterJSONString), http.MethodGet, http.Header{}, nil, &stacks)
 	return
 }

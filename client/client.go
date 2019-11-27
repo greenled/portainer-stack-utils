@@ -63,6 +63,24 @@ type PortainerClient interface {
 
 	// Proxy proxies a request to /endpoint/{id}/docker and returns its result
 	Proxy(endpointID portainer.EndpointID, req *http.Request) (resp *http.Response, err error)
+
+	// ResourceControlCreate creates a resource control
+	ResourceControlCreate(options ResourceControlCreateOptions) (resourceControl portainer.ResourceControl, err error)
+
+	// ResourceControlUpdate updates a resource control
+	ResourceControlUpdate(options ResourceControlUpdateOptions) (resourceControl portainer.ResourceControl, err error)
+
+	// ResourceControlDelete deletes a resource control
+	ResourceControlDelete(resourceControlID portainer.ResourceControlID) (err error)
+
+	// UserList retrieves a list of users
+	UserList() (users []portainer.User, err error)
+
+	// GetUsername returns the user name used by the client
+	GetUsername() string
+
+	// DoJSONWithToken makes an HTTP request with a JSON body and an auth token
+	DoJSONWithToken(uri, method string, headers http.Header, request interface{}, response interface{}) (err error)
 }
 
 type portainerClientImp struct {
@@ -116,6 +134,9 @@ func (n *portainerClientImp) do(uri, method string, requestBody io.Reader, heade
 		}
 	}
 
+	// Check for HTTP error status codes
+	err = getResponseHTTPError(resp)
+
 	return
 }
 
@@ -155,11 +176,6 @@ func (n *portainerClientImp) doJSON(uri, method string, headers http.Header, req
 		return err
 	}
 
-	err = checkResponseForErrors(resp)
-	if err != nil {
-		return err
-	}
-
 	// Decode response body, if any
 	if responseBody != nil {
 		d := json.NewDecoder(resp.Body)
@@ -172,8 +188,7 @@ func (n *portainerClientImp) doJSON(uri, method string, headers http.Header, req
 	return nil
 }
 
-// Do a JSON http request with an auth token
-func (n *portainerClientImp) doJSONWithToken(uri, method string, headers http.Header, request interface{}, response interface{}) (err error) {
+func (n *portainerClientImp) DoJSONWithToken(uri, method string, headers http.Header, request interface{}, response interface{}) (err error) {
 	// Ensure there is an auth token
 	if n.token == "" {
 		n.token, err = n.AuthenticateUser(AuthenticateUserOptions{
@@ -195,6 +210,10 @@ func (n *portainerClientImp) BeforeRequest(hook func(req *http.Request) (err err
 
 func (n *portainerClientImp) AfterResponse(hook func(resp *http.Response) (err error)) {
 	n.afterResponseHooks = append(n.afterResponseHooks, hook)
+}
+
+func (n *portainerClientImp) GetUsername() string {
+	return n.user
 }
 
 // NewClient creates a new Portainer API client

@@ -7,6 +7,6 @@ import (
 )
 
 func (n *portainerClientImp) EndpointGroupList() (endpointGroups []portainer.EndpointGroup, err error) {
-	err = n.doJSONWithToken("endpoint_groups", http.MethodGet, http.Header{}, nil, &endpointGroups)
+	err = n.DoJSONWithToken("endpoint_groups", http.MethodGet, http.Header{}, nil, &endpointGroups)
 	return
 }

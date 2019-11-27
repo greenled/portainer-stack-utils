@@ -15,7 +15,7 @@ type StackFileInspectResponse struct {
 func (n *portainerClientImp) StackFileInspect(stackID portainer.StackID) (content string, err error) {
 	var respBody StackFileInspectResponse
 
-	err = n.doJSONWithToken(fmt.Sprintf("stacks/%v/file", stackID), http.MethodGet, http.Header{}, nil, &respBody)
+	err = n.DoJSONWithToken(fmt.Sprintf("stacks/%v/file", stackID), http.MethodGet, http.Header{}, nil, &respBody)
 	if err != nil {
 		return
 	}

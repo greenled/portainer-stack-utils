@@ -1,10 +1,6 @@
 package client
 
 import (
-	"bytes"
-	"encoding/json"
-	"io/ioutil"
-	"net/http"
 	"testing"
 
 	portainer "github.com/portainer/portainer/api"
@@ -45,53 +41,6 @@ func TestGetTranslatedStackType(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			assert.Equal(t, tt.want, GetTranslatedStackType(tt.args.t))
-		})
-	}
-}
-
-func Test_checkResponseForErrors(t *testing.T) {
-	type args struct {
-		resp *http.Response
-	}
-	tests := []struct {
-		name    string
-		args    args
-		wantErr bool
-	}{
-		{
-			name: "generic error",
-			args: args{
-				resp: func() (resp *http.Response) {
-					resp = &http.Response{
-						StatusCode: http.StatusNotFound,
-					}
-					bodyBytes, _ := json.Marshal(map[string]interface{}{
-						"Err":     "Error",
-						"Details": "Not found",
-					})
-					resp.Body = ioutil.NopCloser(bytes.NewReader(bodyBytes))
-					return
-				}(),
-			},
-			wantErr: true,
-		},
-		{
-			name: "non generic error",
-			args: args{
-				resp: func() (resp *http.Response) {
-					resp = &http.Response{
-						StatusCode: http.StatusNotFound,
-						Body:       ioutil.NopCloser(bytes.NewReader([]byte("Err"))),
-					}
-					return
-				}(),
-			},
-			wantErr: true,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			assert.Equal(t, tt.wantErr, checkResponseForErrors(tt.args.resp) != nil)
 		})
 	}
 }

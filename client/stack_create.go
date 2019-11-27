@@ -39,7 +39,7 @@ func (n *portainerClientImp) StackCreateCompose(options StackCreateComposeOption
 		StackFileContent: options.StackFileContent,
 	}
 
-	err = n.doJSONWithToken(fmt.Sprintf("stacks?type=%v&method=%s&endpointId=%v", 2, "string", options.EndpointID), http.MethodPost, http.Header{}, &reqBody, &stack)
+	err = n.DoJSONWithToken(fmt.Sprintf("stacks?type=%v&method=%s&endpointId=%v", 2, "string", options.EndpointID), http.MethodPost, http.Header{}, &reqBody, &stack)
 	return
 }
 
@@ -51,6 +51,6 @@ func (n *portainerClientImp) StackCreateSwarm(options StackCreateSwarmOptions) (
 		StackFileContent: options.StackFileContent,
 	}
 
-	err = n.doJSONWithToken(fmt.Sprintf("stacks?type=%v&method=%s&endpointId=%v", 1, "string", options.EndpointID), http.MethodPost, http.Header{}, &reqBody, &stack)
+	err = n.DoJSONWithToken(fmt.Sprintf("stacks?type=%v&method=%s&endpointId=%v", 1, "string", options.EndpointID), http.MethodPost, http.Header{}, &reqBody, &stack)
 	return
 }

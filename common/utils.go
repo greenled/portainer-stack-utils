@@ -2,6 +2,7 @@ package common
 
 import (
 	"fmt"
+	"net/http"
 	"reflect"
 
 	"github.com/greenled/portainer-stack-utils/client"
@@ -18,6 +19,8 @@ const (
 	ErrEndpointGroupNotFound     = Error("Endpoint group not found")
 	ErrSeveralEndpointsAvailable = Error("Several endpoints available")
 	ErrNoEndpointsAvailable      = Error("No endpoints available")
+	ErrUserNotFound              = Error("User not found")
+	ErrAccessControlNotFound     = Error("Access control not found")
 )
 
 const (
@@ -214,4 +217,117 @@ func repr(t reflect.Type, margin, beforeMargin string) (r string) {
 		r = fmt.Sprintf("%s", t.Name())
 	}
 	return
+}
+
+// GetUserByName returns an user by its name from the list of all users
+func GetUserByName(name string) (user portainer.User, err error) {
+	portainerClient, err := GetClient()
+	if err != nil {
+		return
+	}
+
+	// Get users list
+	users, err := portainerClient.UserList()
+
+	// Find user
+	for _, listUser := range users {
+		if listUser.Username == name {
+			// User found
+			user = listUser
+			return
+		}
+	}
+
+	// User not found
+	err = ErrUserNotFound
+
+	return
+}
+
+// GetDockerResourcePortainerAccessControl retrieves a Docker resource's Portainer access control (if any)
+func GetDockerResourcePortainerAccessControl(endpointID portainer.EndpointID, resourceID string, resourceControlType client.ResourceType) (resourceControl portainer.ResourceControl, err error) {
+	portainerClient, err := GetClient()
+	if err != nil {
+		return
+	}
+
+	pddr := portainerDecoratedDockerResource{}
+
+	err = portainerClient.DoJSONWithToken(fmt.Sprintf("endpoints/%d/docker/%ss/%s", endpointID, resourceControlType, resourceID), http.MethodGet, http.Header{}, nil, &pddr)
+	if err != nil {
+		return
+	}
+
+	if pddr.hasAccessControl() {
+		resourceControl = pddr.Portainer.ResourceControl
+	} else {
+		err = ErrAccessControlNotFound
+	}
+
+	return
+}
+
+// GetStackPortainerAccessControl retrieves a stacks's Portainer access control (if any)
+func GetStackPortainerAccessControl(endpointID portainer.EndpointID, stackName string) (resourceControl portainer.ResourceControl, err error) {
+	endpointSwarmClusterID, err := GetEndpointSwarmClusterID(endpointID)
+	if err != nil && err != ErrStackClusterNotFound {
+		return
+	}
+
+	stack, err := GetStackByName(stackName, endpointSwarmClusterID, endpointID)
+	if err != nil {
+		return
+	}
+
+	portainerClient, err := GetClient()
+	if err != nil {
+		return
+	}
+
+	ds := decoratedStack{}
+
+	err = portainerClient.DoJSONWithToken(fmt.Sprintf("stacks/%d", stack.ID), http.MethodGet, http.Header{}, nil, &ds)
+	if err != nil {
+		return
+	}
+
+	if ds.hasAccessControl() {
+		resourceControl = ds.ResourceControl
+	} else {
+		err = ErrAccessControlNotFound
+	}
+
+	return
+}
+
+// portainerDecoratedDockerResource represents a Docker resource decorated by Portainer
+type portainerDecoratedDockerResource struct {
+	Portainer struct {
+		ResourceControl portainer.ResourceControl
+	}
+}
+
+// hasAccessControl checks if a decorated Docker resource has an access control.
+// Access control is a Portainer thing, not a Docker one.
+func (ddr *portainerDecoratedDockerResource) hasAccessControl() bool {
+	// Docker resources returned by Portainer API may have a Portainer
+	// field with Portainer-related data. Such Portainer field may have a
+	// ResourceControl field, and when such ResourceControl field's ID field
+	// equals 0 it means the docker resource has no access control set.
+	return ddr.Portainer.ResourceControl.ID != 0
+}
+
+// decoratedStack represents a portainer.Stack decorated with a ResourceControl field.
+// Portainer API decorates stacks with this field.
+type decoratedStack struct {
+	portainer.Stack
+	ResourceControl portainer.ResourceControl
+}
+
+// hasAccessControl checks if a decorated stack has a resource control
+func (ds *decoratedStack) hasAccessControl() bool {
+	// Stacks returned by Portainer API always have a ResourceControl
+	// field, but if such ResourceControl field's ID field equals 0 it
+	// means the stack has no resource control set.
+	return ds.ResourceControl.ID != 0
 }

@@ -30,6 +30,6 @@ func (n *portainerClientImp) StackUpdate(options StackUpdateOptions) (err error)
 		Prune:            options.Prune,
 	}
 
-	err = n.doJSONWithToken(fmt.Sprintf("stacks/%v?endpointId=%v", options.Stack.ID, options.EndpointID), http.MethodPut, http.Header{}, &reqBody, nil)
+	err = n.DoJSONWithToken(fmt.Sprintf("stacks/%v?endpointId=%v", options.Stack.ID, options.EndpointID), http.MethodPut, http.Header{}, &reqBody, nil)
 	return
 }
