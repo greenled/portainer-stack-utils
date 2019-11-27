@@ -267,6 +267,39 @@ func GetDockerResourcePortainerAccessControl(endpointID portainer.EndpointID, re
 	return
 }
 
+// GetStackPortainerAccessControl retrieves a stacks's Portainer access control (if any)
+func GetStackPortainerAccessControl(endpointID portainer.EndpointID, stackName string) (resourceControl portainer.ResourceControl, err error) {
+	endpointSwarmClusterID, err := GetEndpointSwarmClusterID(endpointID)
+	if err != nil && err != ErrStackClusterNotFound {
+		return
+	}
+
+	stack, err := GetStackByName(stackName, endpointSwarmClusterID, endpointID)
+	if err != nil {
+		return
+	}
+
+	portainerClient, err := GetClient()
+	if err != nil {
+		return
+	}
+
+	ds := decoratedStack{}
+
+	err = portainerClient.DoJSONWithToken(fmt.Sprintf("stacks/%d", stack.ID), http.MethodGet, http.Header{}, nil, &ds)
+	if err != nil {
+		return
+	}
+
+	if ds.hasAccessControl() {
+		resourceControl = ds.ResourceControl
+	} else {
+		err = ErrAccessControlNotFound
+	}
+
+	return
+}
+
 // portainerDecoratedDockerResource represents a Docker resource decorated by Portainer
 type portainerDecoratedDockerResource struct {
 	Portainer struct {
@@ -282,4 +315,19 @@ func (ddr *portainerDecoratedDockerResource) hasAccessControl() bool {
 	// ResourceControl field, and when such ResourceControl field's ID field
 	// equals 0 it means the docker resource has no access control set.
 	return ddr.Portainer.ResourceControl.ID != 0
+}
+
+// decoratedStack represents a portainer.Stack decorated with a ResourceControl field.
+// Portainer API decorates stacks with this field.
+type decoratedStack struct {
+	portainer.Stack
+	ResourceControl portainer.ResourceControl
+}
+
+// hasAccessControl checks if a decorated stack has a resource control
+func (ds *decoratedStack) hasAccessControl() bool {
+	// Stacks returned by Portainer API always have a ResourceControl
+	// field, but if such ResourceControl field's ID field equals 0 it
+	// means the stack has no resource control set.
+	return ds.ResourceControl.ID != 0
 }
