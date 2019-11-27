@@ -16,6 +16,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `setting get` command to get configuration options.
 - `setting list|ls` command to print configuration options.
   - `--format` flag to select output format from "table", "json" or a custom Go template. Defaults to "table".
+- `config access` command to set access control for configs.
+  - `--admins` flag to limit access to administrators.
+  - `--private` flag to limit access to current user.
+  - `--public` flag to give access to all users.
 - `container access` command to set access control for containers.
   - `--admins` flag to limit access to administrators.
   - `--private` flag to limit access to current user.
