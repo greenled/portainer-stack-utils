@@ -14,7 +14,7 @@ import (
 	"github.com/spf13/viper"
 )
 
-var cfgFile string
+var settingsFile string
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
@@ -33,12 +33,12 @@ func Execute() {
 }
 
 func init() {
-	cobra.OnInitialize(initConfig, initLogger)
+	cobra.OnInitialize(initSettings, initLogger)
 
 	rootCmd.SetVersionTemplate("{{ version }}\n")
 	cobra.AddTemplateFunc("version", version.BuildVersionString)
 
-	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "Config file. (default \"$HOME/.psu.yaml)\"")
+	rootCmd.PersistentFlags().StringVar(&settingsFile, "settings-file", "", "Settings file. (default \"$HOME/.psu.yaml)\"")
 	rootCmd.PersistentFlags().StringP("log-level", "v", "info", "Log level. One of trace, debug, info, warning, error, fatal or panic.")
 	rootCmd.PersistentFlags().String("log-format", "text", "Log format. One of text or json.")
 	rootCmd.PersistentFlags().BoolP("insecure", "i", false, "Skip Portainer SSL certificate verification.")
@@ -47,7 +47,7 @@ func init() {
 	rootCmd.PersistentFlags().StringP("password", "p", "", "Portainer password.")
 	rootCmd.PersistentFlags().StringP("auth-token", "A", "", "Portainer auth token.")
 	rootCmd.PersistentFlags().DurationP("timeout", "t", 0, "Waiting time before aborting (like 100ms, 30s, 1h20m).")
-	viper.BindPFlag("config", rootCmd.PersistentFlags().Lookup("config"))
+	viper.BindPFlag("settings-file", rootCmd.PersistentFlags().Lookup("settings-file"))
 	viper.BindPFlag("log-level", rootCmd.PersistentFlags().Lookup("log-level"))
 	viper.BindPFlag("log-format", rootCmd.PersistentFlags().Lookup("log-format"))
 	viper.BindPFlag("insecure", rootCmd.PersistentFlags().Lookup("insecure"))
@@ -58,11 +58,11 @@ func init() {
 	viper.BindPFlag("auth-token", rootCmd.PersistentFlags().Lookup("auth-token"))
 }
 
-// initConfig reads in config file and ENV variables if set.
-func initConfig() {
-	if cfgFile != "" {
-		// Use config file from the flag.
-		viper.SetConfigFile(cfgFile)
+// initSettings reads in setting file and ENV variables if set.
+func initSettings() {
+	if settingsFile != "" {
+		// Use setting file from the flag.
+		viper.SetConfigFile(settingsFile)
 	} else {
 		// Find home directory.
 		home, err := homedir.Dir()
@@ -71,7 +71,7 @@ func initConfig() {
 			os.Exit(1)
 		}
 
-		// Search config in home directory with name ".psu" (without extension).
+		// Search settings file in home directory with name ".psu" (without extension).
 		viper.AddConfigPath(home)
 		viper.SetConfigName(".psu")
 	}
@@ -82,7 +82,7 @@ func initConfig() {
 	replacer := strings.NewReplacer("-", "_", ".", "_")
 	viper.SetEnvKeyReplacer(replacer)
 
-	// If a config file is found, read it in.
+	// If a setting file is found, read it in.
 	viper.ReadInConfig()
 }
 

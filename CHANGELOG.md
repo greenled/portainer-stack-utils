@@ -12,9 +12,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - A Custom User-Agent header is sent on requests to the Portainer server to identify the client.
 - Supported platforms and architectures linux 32/64 bit, darwin 32/64 bit, windows 32/64 bit, and arm7 32/64 bit.
 - `completion` command to print Bash completion script.
-- `config set` command to set configuration options.
-- `config get` command to get configuration options.
-- `config list|ls` command to print configuration options.
+- `setting set` command to set configuration options.
+- `setting get` command to get configuration options.
+- `setting list|ls` command to print configuration options.
   - `--format` flag to select output format from "table", "json" or a custom Go template. Defaults to "table".
 - `container access` command to set access control for containers.
   - `--admins` flag to limit access to administrators.
@@ -70,7 +70,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `--public` flag to give access to all users.
 - `-h, --help` flags on each command to print its help.
 - `-A, --auth-token` global flag to set Portainer auth token.
-- `--config` global flag to set the path to a configuration file. Supported file formats are JSON, TOML, YAML, HCL, envfile and Java properties config files. Defaults to "$HOME/.psu.yaml".
+- `--settings` global flag to set the path to a configuration file. Supported file formats are JSON, TOML, YAML, HCL, envfile and Java properties config files. Defaults to "$HOME/.psu.yaml".
 - `-h, --help` global flag to print global help.
 - `--log-format` global flag to set log format from "text" and "json". Defaults to "text".
 - `-v, --log-level` global flag to set log level from "panic", "faltal", "error", "warning", "info", "debug" and "trace". Defaults to "info".

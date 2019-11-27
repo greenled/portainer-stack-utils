@@ -15,56 +15,56 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// configListCmd represents the list command
-var configListCmd = &cobra.Command{
+// settingListCmd represents the setting list command
+var settingListCmd = &cobra.Command{
 	Use:     "list",
-	Short:   "List configs",
+	Short:   "List settings",
 	Aliases: []string{"ls"},
-	Example: `  Print configs in a table format:
-  psu config ls
+	Example: `  Print settings in a table format:
+  psu setting ls
 
-  Print available config keys:
-  psu config ls --format "{{ .Key }}"
+  Print available setting keys:
+  psu setting ls --format "{{ .Key }}"
 
-  Print configs in a yaml|properties format:
-  psu config ls --format "{{ .Key }}:{{ if .CurrentValue }} {{ .CurrentValue }}{{ end }}"
+  Print settings in a yaml|properties format:
+  psu setting ls --format "{{ .Key }}:{{ if .CurrentValue }} {{ .CurrentValue }}{{ end }}"
 
   Print available environment variables:
-  psu config ls --format "{{ .EnvironmentVariable }}"  
+  psu setting ls --format "{{ .EnvironmentVariable }}"  
 
-  Print configs in a dotenv format:
-  psu config ls --format "{{ .EnvironmentVariable }}={{ if .CurrentValue }}{{ .CurrentValue }}{{ end }}"`,
+  Print settings in a dotenv format:
+  psu setting ls --format "{{ .EnvironmentVariable }}={{ if .CurrentValue }}{{ .CurrentValue }}{{ end }}"`,
 	Run: func(cmd *cobra.Command, args []string) {
-		// Get alphabetically ordered list of config keys
+		// Get alphabetically ordered list of setting keys
 		keys := viper.AllKeys()
 		sort.Slice(keys, func(i, j int) bool {
 			return keys[i] < keys[j]
 		})
 
-		// Create config objects
-		var configs []config
+		// Create setting objects
+		var settings []setting
 		for _, key := range keys {
 			envvar := strings.Replace(key, "-", "_", -1)
 			envvar = strings.Replace(envvar, ".", "_", -1)
 			envvar = strings.ToUpper(envvar)
 			envvar = "PSU_" + envvar
-			configs = append(configs, config{
+			settings = append(settings, setting{
 				Key:                 key,
 				EnvironmentVariable: envvar,
 				CurrentValue:        viper.Get(key),
 			})
 		}
 
-		switch viper.GetString("config.list.format") {
+		switch viper.GetString("setting.list.format") {
 		case "table":
-			// Print configs in a table format
+			// Print settings in a table format
 			writer, err := common.NewTabWriter([]string{
 				"KEY",
 				"ENV VAR",
 				"CURRENT VALUE",
 			})
 			common.CheckError(err)
-			for _, c := range configs {
+			for _, c := range settings {
 				_, err := fmt.Fprintln(writer, fmt.Sprintf(
 					"%s\t%s\t%v",
 					c.Key,
@@ -76,15 +76,15 @@ var configListCmd = &cobra.Command{
 			flushErr := writer.Flush()
 			common.CheckError(flushErr)
 		case "json":
-			// Print configs in a json format
-			statusJSONBytes, err := json.Marshal(configs)
+			// Print settings in a json format
+			statusJSONBytes, err := json.Marshal(settings)
 			common.CheckError(err)
 			fmt.Println(string(statusJSONBytes))
 		default:
-			// Print configs in a custom format
-			template, templateParsingErr := template.New("configTpl").Parse(viper.GetString("config.list.format"))
+			// Print settings in a custom format
+			template, templateParsingErr := template.New("settingTpl").Parse(viper.GetString("setting.list.format"))
 			common.CheckError(templateParsingErr)
-			for _, c := range configs {
+			for _, c := range settings {
 				templateExecutionErr := template.Execute(os.Stdout, c)
 				common.CheckError(templateExecutionErr)
 				fmt.Println()
@@ -94,15 +94,15 @@ var configListCmd = &cobra.Command{
 }
 
 func init() {
-	configCmd.AddCommand(configListCmd)
+	settingCmd.AddCommand(settingListCmd)
 
-	configListCmd.Flags().String("format", "table", `Output format. Can be "table", "json" or a Go template.`)
-	viper.BindPFlag("config.list.format", configListCmd.Flags().Lookup("format"))
+	settingListCmd.Flags().String("format", "table", `Output format. Can be "table", "json" or a Go template.`)
+	viper.BindPFlag("setting.list.format", settingListCmd.Flags().Lookup("format"))
 
-	configListCmd.SetUsageTemplate(configListCmd.UsageTemplate() + common.GetFormatHelp(config{}))
+	settingListCmd.SetUsageTemplate(settingListCmd.UsageTemplate() + common.GetFormatHelp(setting{}))
 }
 
-type config struct {
+type setting struct {
 	Key                 string
 	EnvironmentVariable string
 	CurrentValue        interface{}

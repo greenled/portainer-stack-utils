@@ -35,8 +35,8 @@ var loginCmd = &cobra.Command{
 		}
 
 		// Save auth token
-		configSettingErr := setConfig("auth-token", authToken)
-		common.CheckError(configSettingErr)
+		settingErr := setSetting("auth-token", authToken)
+		common.CheckError(settingErr)
 	},
 }
 

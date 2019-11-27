@@ -18,7 +18,7 @@ PSU_KEY=value
 ...
 ```
 
-With configurations (if applicable):
+With settings (if applicable):
 
 ```yaml
 key: value
