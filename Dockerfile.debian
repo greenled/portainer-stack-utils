@@ -1,13 +1,15 @@
-FROM alpine:3.10
+FROM debian:9-slim
 
-RUN apk add --no-cache \
-      bash ca-certificates gettext httpie jq \
-      py3-pip python3-dev libc-dev libffi-dev openssl-dev gcc make; \
+RUN apt-get update -yqq; \
+    apt-get install \
+      ca-certificates gettext-base httpie jq curl -yqq; \
     \
-    pip3 --no-cache-dir install docker-compose; \
+    curl -fL "https://github.com/docker/compose/releases/download/1.24.1/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose; \
+    chmod +x /usr/local/bin/docker-compose; \
     \
-    apk del python3-dev libc-dev libffi-dev openssl-dev gcc make; \
-    rm -rf /tmp/src
+    apt-get purge curl -y; \
+    apt-get clean; \
+    rm -rf /var/lib/apt/lists/*
 
 ENV LANG="en_US.UTF-8" \
     LC_ALL="C.UTF-8" \

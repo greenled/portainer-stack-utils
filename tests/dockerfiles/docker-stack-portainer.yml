@@ -1,0 +1,43 @@
+version: '3.6'
+
+services:
+  portainer:
+    image: portainer/portainer:$PORTAINER_VERSION
+    command: --admin-password-file '/run/secrets/portainer-password'
+    labels:
+      - traefik.enable=true
+      - traefik.frontend.rule=Host:portainer.$BASE_DOMAIN
+      - traefik.frontend.redirect.entryPoint=https
+      - traefik.backend=portainer
+      - traefik.port=9000
+    networks:
+      - traefik-net
+    environment:
+      - HTTP_PROXY
+      - HTTPS_PROXY
+      - http_proxy
+      - https_proxy
+      - NO_PROXY
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - portainer:/data
+    secrets:
+      - portainer-password
+    deploy:
+      placement:
+        constraints:
+          - node.role == manager
+      update_config:
+        parallelism: 1
+        delay: 10s
+
+networks:
+  traefik-net:
+    driver: overlay
+    external: true
+
+secrets:
+  portainer-password:
+    external: true
+volumes:
+  portainer:

@@ -1,13 +1,11 @@
-FROM alpine:3.10
+FROM debian:9-slim
 
-RUN apk add --no-cache \
-      bash ca-certificates gettext httpie jq \
-      py3-pip python3-dev libc-dev libffi-dev openssl-dev gcc make; \
+RUN apt-get update -yqq; \
+    apt-get install \
+      ca-certificates gettext-base httpie jq -yqq; \
     \
-    pip3 --no-cache-dir install docker-compose; \
-    \
-    apk del python3-dev libc-dev libffi-dev openssl-dev gcc make; \
-    rm -rf /tmp/src
+    apt-get clean; \
+    rm -rf /var/lib/apt/lists/*
 
 ENV LANG="en_US.UTF-8" \
     LC_ALL="C.UTF-8" \
@@ -21,7 +19,7 @@ ENV LANG="en_US.UTF-8" \
     PORTAINER_STACK_NAME="" \
     PORTAINER_SERVICE_NAME="" \
     DOCKER_COMPOSE_FILE="" \
-    DOCKER_COMPOSE_LINT="true" \
+    DOCKER_COMPOSE_LINT="false" \
     ENVIRONMENT_VARIABLES_FILE="" \
     PORTAINER_ENDPOINT="1" \
     PORTAINER_PRUNE="false" \
@@ -32,7 +30,8 @@ ENV LANG="en_US.UTF-8" \
     DEBUG_MODE="false" \
     QUIET_MODE="false" \
     STRICT_MODE="false" \
-    MASKED_VARIABLES="false"
+    MASKED_VARIABLES="false" \
+    PSU_CORE_EDITION="true"
 
 COPY psu /usr/local/bin/
 

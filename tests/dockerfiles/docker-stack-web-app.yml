@@ -1,0 +1,65 @@
+version: '3.6'
+
+services:
+  job:
+    image: $CI_REGISTRY/$CI_PROJECT_NAMESPACE/hub/testing/psu-php-app:latest
+    labels:
+      job-name: job-web-app
+    entrypoint: ["php"]
+    command: -r 'echo date("d-m-Y H:i:s").PHP_EOL;'
+    # command: -r 'sleep(20); echo date("d-m-Y H:i:s").PHP_EOL;'
+    environment:
+      - HTTP_PROXY
+      - HTTPS_PROXY
+      - http_proxy
+      - https_proxy
+      - NO_PROXY
+    deploy:
+      restart_policy:
+        condition: none
+
+  app:
+    image: $CI_REGISTRY/$CI_PROJECT_NAMESPACE/hub/testing/psu-php-app:latest
+    environment:
+      - HTTP_PROXY
+      - HTTPS_PROXY
+      - http_proxy
+      - https_proxy
+      - NO_PROXY
+    volumes:
+      - php-runner:/var/run/php
+    deploy:
+      update_config:
+        order: start-first
+        failure_action: continue
+
+  web:
+    image: $CI_REGISTRY/$CI_PROJECT_NAMESPACE/hub/testing/psu-apache2:latest
+    labels:
+      - traefik.enable=true
+      - "traefik.frontend.rule=Host:$PSU_STACK_NAME.$BASE_DOMAIN"
+      - traefik.frontend.redirect.entryPoint=https
+      - traefik.backend=web-php-app
+      - traefik.port=5000
+    environment:
+      - HTTP_PROXY
+      - HTTPS_PROXY
+      - http_proxy
+      - https_proxy
+      - NO_PROXY
+    volumes:
+      - php-runner:/var/run/php
+    stop_signal: SIGWINCH
+    deploy:
+      update_config:
+        failure_action: rollback
+        order: start-first
+    networks:
+      - traefik-net
+
+networks:
+  traefik-net:
+    external: true
+
+volumes:
+  php-runner:

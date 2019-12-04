@@ -1,0 +1,45 @@
+version: '3.6'
+
+services:
+  reverse-proxy:
+    image: traefik:$TRAEFIK_VERSION
+    # Enables the web UI and tells Traefik to listen to docker
+    command:
+      - --api
+      - --docker
+      - --docker.watch
+      - --defaultEntryPoints=http,https
+      # IMPORTANT: The `retry.attempts` param is required to allow zero (1s) downtime deployment
+      - --retry.attempts=10
+      - "--entryPoints=Name:http Address::80"
+      - "--entryPoints=Name:https Address::443 TLS WhiteList.UseXForwardedFor:true"
+      - --docker.exposedbydefault=false
+    environment:
+      - HTTP_PROXY
+      - HTTPS_PROXY
+      - http_proxy
+      - https_proxy
+      - NO_PROXY
+    ports:
+      - "80:80"
+      - 443:443
+      # The Web UI (enabled by --api)
+      - "8080:8080"
+    networks:
+      - traefik-net
+    volumes:
+     # So that Traefik can listen to the Docker events
+      - /var/run/docker.sock:/var/run/docker.sock
+    deploy:
+      mode: global
+      placement:
+        constraints:
+          - node.role == manager
+      update_config:
+        parallelism: 1
+        delay: 10s
+
+networks:
+  traefik-net:
+    driver: overlay
+    name: traefik-net

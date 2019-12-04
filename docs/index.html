@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Portainer Stack Utils Documentation</title>
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+  <meta name="description" content="Description">
+  <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+  <!-- <link rel="stylesheet" href="//unpkg.com/docsify/lib/themes/vue.css"> -->
+  <link rel="stylesheet" href="assets/docsify_themes_vue.css">
+  <style>
+    .docsify-hidden {
+      display: none;
+    }
+    /* source: https://gitlab-corners.bryce.io/ */
+    .gitlab-corner-wrapper{overflow:hidden;width:100px;height:100px;position:fixed;top:0;right:0}.gitlab-corner{position:absolute;top:-16px;right:-50px;transform:rotate(45deg);background:#548;border:44px solid #548;border-bottom:none;border-top:#548 solid 16px}.gitlab-corner svg{width:60px;height:60px;margin-bottom:-4px}.cls-1{fill:#fc6d26}.cls-2{fill:#e24329}.cls-3{fill:#fca326}.gitlab-corner:hover .cls-1{animation:cycle .6s}.gitlab-corner:hover .cls-2{animation:cycleMid .6s}.gitlab-corner:hover .cls-3{animation:cycleEnd .6s}@keyframes cycle{100%,15%,60%{fill:#fc6d26}30%,75%{fill:#e24329}45%,90%{fill:#fca326}}@keyframes cycleMid{100%,15%,60%{fill:#e24329}30%,75%{fill:#fca326}45%,90%{fill:#fc6d26}}@keyframes cycleEnd{100%,15%,60%{fill:#fca326}30%,75%{fill:#fc6d26}45%,90%{fill:#e24329}}@media (max-width:500px){.gitlab-corner:hover .cls-1,.gitlab-corner:hover .cls-2,.gitlab-corner:hover .cls-3{animation:none}.gitlab-corner .cls-1{animation:cycle .6s}.gitlab-corner .cls-2{animation:cycleMid .6s}.gitlab-corner .cls-3{animation:cycleEnd .6s}}
+    /* source: https://www.w3schools.com/howto/howto_js_scroll_to_top.asp */
+    #top-btn{display:none;position:fixed;bottom:15px;right:20px;z-index:99;border:none;outline:none;background-color:#548;color:#fff;cursor:pointer;padding:10px;border-radius:5px;font-size:18px}#top-btn:hover{background-color:#555}
+  </style>
+</head>
+<body>
+  <div id="app"></div>
+  <script>
+    window.$docsify = {
+      name: '<abbr title="Portainer Stack Utils">PSU</abbr> Docs ',
+      // repo: 'https://gitlab.com/psuapp/psu',
+      coverpage: true,
+      onlyCover: true,
+      search: 'auto',
+      maxLevel: 3,
+      loadSidebar: true,
+      subMaxLevel: 3,
+      alias: {
+        '/CHANGELOG': 'repo/CHANGELOG',
+        '/../README': 'repo/README',
+        '/docs/README':  'README',
+        '/.*/_sidebar.md': '/_sidebar.md'
+      },
+      search : {
+        paths: [
+          '/docs/README',     // => /README.md
+          '/../README',       // => /repo/README.md
+          '/CHANGELOG',       // => /repo/CHANGELOG.md
+        ],
+        depth: 3
+      },
+    }
+  </script>
+  <!-- <script src="//unpkg.com/docsify/lib/docsify.min.js"></script> -->
+  <!-- <script src="//unpkg.com/prismjs/components/prism-bash.min.js"></script> -->
+  <!-- <script src="//unpkg.com/prismjs/components/prism-json.min.js"></script> -->
+  <!-- <script src="//unpkg.com/docsify/lib/plugins/search.min.js"></script> -->
+  <script src="assets/docsify.min.js"></script>
+  <script src="assets/prism-bash.min.js"></script>
+  <script src="assets/prism-json.min.js"></script>
+  <script src="assets/docsify_plugins_search.min.js"></script>
+  <!-- source: https://www.w3schools.com/howto/howto_js_scroll_to_top.asp -->
+  <script>
+    (function () {
+      // When the user scrolls down 100px from the top of the document, show the button
+      var scrollFunction = function() {
+        if (document.body.scrollTop > 100 || document.documentElement.scrollTop > 100) {
+          document.getElementById("top-btn").style.display = "block";
+        } else {
+          document.getElementById("top-btn").style.display = "none";
+        }
+      }
+      // When the user clicks on the button, scroll to the top of the document
+      window.topFunction = function () {
+        window.scrollTo(0, 0);
+      }
+      window.addEventListener("scroll", function () {
+        scrollFunction();
+      }, false);
+    })();
+  </script>
+
+  <button onclick="topFunction()" id="top-btn" title="Go top">↑</button>
+
+  <!-- source: https://gitlab-corners.bryce.io/ -->
+  <div class="gitlab-corner-wrapper">
+    <a href="https://gitlab.com/psuapp/psu" class="gitlab-corner" aria-label="View source on GitLab" title="View source on GitLab" target="_blank" rel="noopener">
+      <svg id="logo_art" data-name="logo art" xmlns="http://www.w3.org/2000/svg" viewbox="0 0 586 559">
+        <g id="g44"><path id="path46" class="cls-1" d="M461.17,301.83l-18.91-58.12L404.84,128.43a6.47,6.47,0,0,0-12.27,0L355.15,243.64H230.82L193.4,128.43a6.46,6.46,0,0,0-12.26,0L143.78,243.64l-18.91,58.19a12.88,12.88,0,0,0,4.66,14.39L293,435,456.44,316.22a12.9,12.9,0,0,0,4.73-14.39"/></g><g id="g48"><path id="path50" class="cls-2" d="M293,434.91h0l62.16-191.28H230.87L293,434.91Z"/></g><g id="g56"><path id="path58" class="cls-1" d="M293,434.91,230.82,243.63h-87L293,434.91Z"/></g><g id="g64"><path id="path66" class="cls-3" d="M143.75,243.69h0l-18.91,58.12a12.88,12.88,0,0,0,4.66,14.39L293,435,143.75,243.69Z"/></g><g id="g72"><path id="path74" class="cls-2" d="M143.78,243.69h87.11L193.4,128.49a6.47,6.47,0,0,0-12.27,0l-37.35,115.2Z"/></g><g id="g76"><path id="path78" class="cls-1" d="M293,434.91l62.16-191.28H442.3L293,434.91Z"/></g><g id="g80"><path id="path82" class="cls-3" d="M442.24,243.69h0l18.91,58.12a12.85,12.85,0,0,1-4.66,14.39L293,434.91l149.2-191.22Z"/></g><g id="g84"><path id="path86" class="cls-2" d="M442.28,243.69h-87.1l37.42-115.2a6.46,6.46,0,0,1,12.26,0l37.42,115.2Z"/></g>
+      </svg>
+    </a>
+  </div>
+</body>
+</html>
