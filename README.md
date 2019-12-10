@@ -207,7 +207,7 @@ For detailed instructions, see the [CLI Commands](docs/README.md) documentation.
 
 ## Supported Portainer API
 
-<abbr title="Portainer Stack Utils">PSU</abbr> was created for the latest versions of Portainer API, which at the time of writing are [1.20.2](https://app.swaggerhub.com/apis/deviantony/Portainer/1.20.2), [1.21.0](https://app.swaggerhub.com/apis/deviantony/Portainer/1.21.0) and [1.22.1](https://app.swaggerhub.com/apis/deviantony/Portainer/1.22.1).
+<abbr title="Portainer Stack Utils">PSU</abbr> was created for the latest versions of Portainer API, which at the time of writing are [1.21.0](https://app.swaggerhub.com/apis/deviantony/Portainer/1.21.0), [1.22.2](https://app.swaggerhub.com/apis/deviantony/Portainer/1.22.2) and [1.23.0](https://app.swaggerhub.com/apis/deviantony/Portainer/1.23.0).
 
 ## License
 
