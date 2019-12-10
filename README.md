@@ -67,7 +67,8 @@ Published Docker images are [tagged](https://hub.docker.com/r/psuapp/psu/tags) m
 
 -	`dev` -> [`dev`](https://gitlab.com/psuapp/psu/-/tags/dev)
 -	`1`, `1.0`, `1.0.1`, `latest` -> [`v1.0.1`](https://gitlab.com/psuapp/psu/-/tags/v1.0.1)
--	`0.1.1`, `latest` -> [`v0.1.1`](https://gitlab.com/psuapp/psu/-/tags/v0.1.1)
+-	`0.1.2` -> [`v0.1.2`](https://gitlab.com/psuapp/psu/-/tags/v0.1.2)
+-	`0.1.1` -> [`v0.1.1`](https://gitlab.com/psuapp/psu/-/tags/v0.1.1)
 -	`0.1.0` -> [`v0.1.0`](https://gitlab.com/psuapp/psu/-/tags/v0.1.0)
 
 ##### Variants

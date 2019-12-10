@@ -30,6 +30,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The `--secure=[yes|no]` option and `-s` flag are deprecated. Use the `--insecure` option instead (`psu <action> ... --inscure`)
 - The `--action=[ACTION_NAME]` option and `-a` flag are deprecated. Use `<action>` argument instead (`psu <action> ...`)
 
+## [0.1.2] - 2019-10-29
+### Changed
+- Delegated compose file loading and escaping to jq [#33](https://gitlab.com/psuapp/psu/merge_requests/33)
+
 ## [0.1.1] - 2019-06-05
 ### Fixed
 - Fixed error when environment variables loaded from file contain spaces in their values [#14](https://gitlab.com/psuapp/psu/merge_requests/14)
@@ -50,5 +54,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [Unreleased]: https://gitlab.com/psuapp/psu/compare/v1.0.1...master
 [1.0.1]: https://gitlab.com/psuapp/psu/-/tags/v1.0.1
 [1.0.0]: https://gitlab.com/psuapp/psu/-/tags/v1.0.0
+[0.1.2]: https://gitlab.com/psuapp/psu/-/tags/v0.1.2
 [0.1.1]: https://gitlab.com/psuapp/psu/-/tags/v0.1.1
 [0.1.0]: https://gitlab.com/psuapp/psu/-/tags/v0.1.0
