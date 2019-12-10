@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.2] - 2019-12-10
+### Added
+- Test <abbr title="Portainer Stack Utils">PSU</abbr> with Portainer [1.23.0](https://app.swaggerhub.com/apis/deviantony/Portainer/1.23.0) API
+
 ## [1.0.1] - 2019-10-29
 ### Fixed
 - If the `--insecure` option is set to `false` and the `HTTPIE_VERIFY_SSL` environment variable is set, we keep its value instead of overwrite it to `yes`.
@@ -51,7 +55,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Debug mode
 - Strict mode
 
-[Unreleased]: https://gitlab.com/psuapp/psu/compare/v1.0.1...master
+[Unreleased]: https://gitlab.com/psuapp/psu/compare/v1.0.2...master
+[1.0.2]: https://gitlab.com/psuapp/psu/-/tags/v1.0.2
 [1.0.1]: https://gitlab.com/psuapp/psu/-/tags/v1.0.1
 [1.0.0]: https://gitlab.com/psuapp/psu/-/tags/v1.0.0
 [0.1.2]: https://gitlab.com/psuapp/psu/-/tags/v0.1.2

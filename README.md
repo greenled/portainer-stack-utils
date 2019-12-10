@@ -66,7 +66,9 @@ For detailed instructions, see [How to use](#how-to-use) section.
 Published Docker images are [tagged](https://hub.docker.com/r/psuapp/psu/tags) matching [GitLab tags](https://gitlab.com/psuapp/psu/-/tags):
 
 -	`dev` -> [`dev`](https://gitlab.com/psuapp/psu/-/tags/dev)
--	`1`, `1.0`, `1.0.1`, `latest` -> [`v1.0.1`](https://gitlab.com/psuapp/psu/-/tags/v1.0.1)
+-	`1`, `1.0`, `1.0.2`, `latest` -> [`v1.0.2`](https://gitlab.com/psuapp/psu/-/tags/v1.0.2)
+-	`1`, `1.0`, `1.0.1` -> [`v1.0.1`](https://gitlab.com/psuapp/psu/-/tags/v1.0.1)
+-	`1`, `1.0`, `1.0.0` -> [`v1.0.0`](https://gitlab.com/psuapp/psu/-/tags/v1.0.0)
 -	`0.1.2` -> [`v0.1.2`](https://gitlab.com/psuapp/psu/-/tags/v0.1.2)
 -	`0.1.1` -> [`v0.1.1`](https://gitlab.com/psuapp/psu/-/tags/v0.1.1)
 -	`0.1.0` -> [`v0.1.0`](https://gitlab.com/psuapp/psu/-/tags/v0.1.0)
@@ -76,13 +78,13 @@ Published Docker images are [tagged](https://hub.docker.com/r/psuapp/psu/tags) m
 The `core` variant doesn't include `docker-compose`, so it's a bit smaller.
 But you can't lint Docker compose/stack file before deploying a stack.
 -	`dev-core` -> [`dev`](https://gitlab.com/psuapp/psu/-/tags/dev)
--	`1-core`, `1.0-core`, `1.0.1-core`, `core` -> [`v1.0.1`](https://gitlab.com/psuapp/psu/-/tags/v1.0.1)
+-	`1-core`, `1.0-core`, `1.0.2-core`, `core` -> [`v1.0.2`](https://gitlab.com/psuapp/psu/-/tags/v1.0.2)
 
 The `debian` and `debian-core` variants use [Debian](https://www.debian.org) instead of [Alpine](https://alpinelinux.org/) as base image for `psu`.
 -	`dev-debian` -> [`dev`](https://gitlab.com/psuapp/psu/-/tags/dev)
 -	`dev-debian-core` -> [`dev`](https://gitlab.com/psuapp/psu/-/tags/dev)
--	`1-debian`, `1.0-debian`, `1.0.1-debian`, `debian` -> [`v1.0.1`](https://gitlab.com/psuapp/psu/-/tags/v1.0.1)
--	`1-debian-core`, `1.0-debian-core`, `1.0.1-debian-core`, `debian-core` -> [`v1.0.1`](https://gitlab.com/psuapp/psu/-/tags/v1.0.1)
+-	`1-debian`, `1.0-debian`, `1.0.2-debian`, `debian` -> [`v1.0.2`](https://gitlab.com/psuapp/psu/-/tags/v1.0.2)
+-	`1-debian-core`, `1.0-debian-core`, `1.0.2-debian-core`, `debian-core` -> [`v1.0.2`](https://gitlab.com/psuapp/psu/-/tags/v1.0.2)
 
 
 #### Testing/debugging:
@@ -92,7 +94,7 @@ For testing/debugging, you can use this Docker image in interactive mode, to run
 docker run -v $(pwd)/docker-compose.yml:/docker-compose.yml -it --rm --entrypoint bash psuapp/psu
 # Run any commands here! E.g.
 $ psu --version
-Portainer Stack Utils, version 1.0.1
+Portainer Stack Utils, version 1.0.2
   License GPLv3: GNU GPL version 3
 ```
 
