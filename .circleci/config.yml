@@ -34,19 +34,27 @@ jobs:
         command: go test -v ./...
 
   coverage:
+    environment:
+      CC_TEST_REPORTER_ID: 22c636ecdefebc15bb4f014f29fd593204cb51102d8b46d00a1c0c273d7a99e9
     executor: go
     steps:
     - checkout
     - gomod
     - run:
-        name: Create test coverage report
-        command: go test -race -coverprofile=coverage.txt ./...
+          name: Setup Code Climate test-reporter
+          command: |
+            curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter
+            chmod +x ./cc-test-reporter
     - run:
-        name: Print test coverage report
-        command: go tool cover -func=coverage.txt
+        name: Create test coverage report and send it to Code Climate
+        command: |
+          pwd
+          ./cc-test-reporter before-build
+          go test -race -coverprofile=c.out ./...
+          ./cc-test-reporter after-build --exit-code $?
     - store_artifacts:
-        path: ./coverage.txt
-        destination: coverage.txt
+        path: ./c.out
+        destination: c.out
 
   release-test:
     executor: goreleaser
