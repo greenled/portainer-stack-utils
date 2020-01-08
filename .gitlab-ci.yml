@@ -11,6 +11,7 @@ variables:
   DOCKER_REGISTRY_IMAGE: $DOCKER_REGISTRY/$CI_PROJECT_PATH
 
 stages:
+  - cleanup
   - build
   - test
   - deploy
@@ -152,6 +153,16 @@ pages:
   except:
     variables:
       - $CI_PIPELINE_SOURCE == "schedule"
+
+cleanup_registries:
+  stage: cleanup
+  allow_failure: true
+  variables:
+    GIT_STRATEGY: none
+  script:
+    - cleanup_registries
+  only:
+    - schedules
 
 before_script:
   - set -e

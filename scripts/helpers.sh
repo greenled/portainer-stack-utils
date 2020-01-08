@@ -138,3 +138,46 @@ function git_reset_from_last_stable_tag() {
     fi
   fi
 }
+
+# Remove tag names that are matching the regex (Git SHA1), keep always at least 3 and remove those who are older than 8 days
+# See: https://docs.gitlab.com/12.6/ee/api/container_registry.html#delete-repository-tags-in-bulk
+function cleanup_registry() {
+  local registry_id="$1"
+  if [ -z "$registry_id" ]; then
+    echo "ERROR: No registry id given!"
+    exit 1
+  fi
+  if [ -z "$GITLAB_API_TOKEN" ]; then
+    echo ERROR: \$GITLAB_API_TOKEN variable is missing
+    exit 1
+  fi
+
+  curl --silent --show-error --fail --output /dev/null --request DELETE --data-urlencode 'name_regex=^(.+-)?[0-9a-f]{40}$' --data 'keep_n=3' --data 'older_than=8d' --header "PRIVATE-TOKEN: $GITLAB_API_TOKEN" "$CI_API_V4_URL/projects/$CI_PROJECT_ID/registry/repositories/$registry_id/tags"
+}
+
+# Can be execute only one time per hour
+function cleanup_registries() {
+  # wget from alpine:3.10 or docker:stable is buggy with SSL and proxy.
+  # So we install curl instead, if it isn't already installed
+  local curl_is_installed=$(which curl || true)
+  if [ -z "$curl_is_installed" ]; then
+    apk add --no-cache curl
+  fi
+
+  local jq_is_installed=$(which jq || true)
+  if [ -z "$jq_is_installed" ]; then
+    apk add --no-cache jq
+  fi
+
+  if [ -z "$GITLAB_API_TOKEN" ]; then
+    echo ERROR: \$GITLAB_API_TOKEN variable is missing
+    exit 1
+  fi
+
+  local result=$(curl --silent --show-error --fail --header "PRIVATE-TOKEN: $GITLAB_API_TOKEN" "$CI_API_V4_URL/projects/$CI_PROJECT_ID/registry/repositories?per_page=100")
+  local ci_registry_ids=$(echo "$result" | jq -r '.[] .id')
+  for ci_registry_id in $ci_registry_ids; do
+    echo "INFO: Cleaning registry id '$ci_registry_id' for the project id '$CI_PROJECT_ID'..."
+    cleanup_registry $ci_registry_id
+  done
+}
