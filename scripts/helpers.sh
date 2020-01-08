@@ -127,7 +127,7 @@ function get_git_last_stable_tag() {
 # See: https://gitlab.com/help/user/project/pipelines/schedules
 function git_reset_from_last_stable_tag() {
   if [ "$GIT_RESET_LAST_STABLE_TAG" == "true" ]; then
-    git_last_stable_tag="$(get_git_last_stable_tag)"
+    local git_last_stable_tag="$(get_git_last_stable_tag)"
     if [ -n "$git_last_stable_tag" ]; then
       export CI_COMMIT_REF_PROTECTED="true"
       export CI_COMMIT_TAG="$git_last_stable_tag"
