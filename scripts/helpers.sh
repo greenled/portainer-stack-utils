@@ -35,12 +35,18 @@ function git_tag_on_success() {
     [ -n "$GITLAB_API_TOKEN" ] &&
     [ -z "$GIT_RESET_TAG" ]
   ); then
+    # wget from alpine:3.10 or docker:stable is buggy with SSL and proxy.
+    # So we install curl instead, if it isn't already installed
+    local curl_is_installed=$(which curl || true)
+    if [ -z "$curl_is_installed" ]; then
+      apk add --no-cache curl
+    fi
+
     # (re)write Protected Tag
-    # TODO: rewrite these 'wget' commands with 'curl' commands
-    wget -Y off -O response.txt --header='Accept-Charset: UTF-8' --header "PRIVATE-TOKEN: $GITLAB_API_TOKEN" --post-data '_method=delete' $CI_API_V4_URL/projects/$CI_PROJECT_ID/protected_tags/$git_tag || true
-    wget -Y off -O response.txt --header='Accept-Charset: UTF-8' --header "PRIVATE-TOKEN: $GITLAB_API_TOKEN" --post-data '_method=delete' $CI_API_V4_URL/projects/$CI_PROJECT_ID/repository/tags/$git_tag || true
-    wget -Y off -O response.txt --header='Accept-Charset: UTF-8' --header "PRIVATE-TOKEN: $GITLAB_API_TOKEN" --post-data "tag_name=$git_tag&ref=$CI_COMMIT_SHA" $CI_API_V4_URL/projects/$CI_PROJECT_ID/repository/tags
-    wget -Y off -O response.txt --header='Accept-Charset: UTF-8' --header "PRIVATE-TOKEN: $GITLAB_API_TOKEN" --post-data "name=$git_tag&create_access_level=0" $CI_API_V4_URL/projects/$CI_PROJECT_ID/protected_tags
+    curl --silent --fail --output /dev/null --request DELETE --header "PRIVATE-TOKEN: $GITLAB_API_TOKEN" "$CI_API_V4_URL/projects/$CI_PROJECT_ID/protected_tags/$git_tag" || true
+    curl --silent --fail --output /dev/null --request DELETE --header "PRIVATE-TOKEN: $GITLAB_API_TOKEN" "$CI_API_V4_URL/projects/$CI_PROJECT_ID/repository/tags/$git_tag" || true
+    curl --silent --show-error --fail --output /dev/null --data "tag_name=$git_tag" --data "ref=$CI_COMMIT_SHA" --fail --header "PRIVATE-TOKEN: $GITLAB_API_TOKEN" "$CI_API_V4_URL/projects/$CI_PROJECT_ID/repository/tags"
+    curl --silent --show-error --fail --output /dev/null --data "name=$git_tag" --data "create_access_level=0" --fail --header "PRIVATE-TOKEN: $GITLAB_API_TOKEN" "$CI_API_V4_URL/projects/$CI_PROJECT_ID/protected_tags"
   else
     echo WARNING: \$GITLAB_API_TOKEN variable is missing
   fi
