@@ -157,8 +157,6 @@ pages:
 cleanup_registries:
   stage: cleanup
   allow_failure: true
-  variables:
-    GIT_STRATEGY: none
   script:
     - cleanup_registries
   only:
