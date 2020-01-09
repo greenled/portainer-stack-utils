@@ -5,26 +5,32 @@ services:
     image: traefik:$TRAEFIK_VERSION
     # Enables the web UI and tells Traefik to listen to docker
     command:
-      - --api
-      - --docker
-      - --docker.watch
-      - --defaultEntryPoints=http,https
-      # IMPORTANT: The `retry.attempts` param is required to allow zero (1s) downtime deployment
-      - --retry.attempts=10
-      - "--entryPoints=Name:http Address::80"
-      - "--entryPoints=Name:https Address::443 TLS WhiteList.UseXForwardedFor:true"
-      - --docker.exposedbydefault=false
+      - --providers.docker=true
+      - --providers.docker.watch=true
+      - --providers.docker.exposedbydefault=false
+      - --entryPoints.http.address=:80
+      - --entryPoints.https.address=:443
+      - --api.dashboard=true
     environment:
       - HTTP_PROXY
       - HTTPS_PROXY
       - http_proxy
       - https_proxy
       - NO_PROXY
+    labels:
+      - "traefik.enable=true"
+      - traefik.docker.network=traefik-net
+      - traefik.http.middlewares.retry-if-fails.retry.attempts=10
+      - traefik.http.middlewares.https-only.redirectscheme.scheme=https
+      - traefik.http.middlewares.secured.chain.middlewares=retry-if-fails,https-only
+      - "traefik.http.routers.traefik.entrypoints=https"
+      - "traefik.http.routers.traefik.rule=Host(`traefik.$BASE_DOMAIN`)"
+      - "traefik.http.routers.traefik.middlewares=secured"
+      - "traefik.http.routers.traefik.tls=true"
+      - "traefik.http.routers.traefik.service=api@internal"
     ports:
       - "80:80"
       - 443:443
-      # The Web UI (enabled by --api)
-      - "8080:8080"
     networks:
       - traefik-net
     volumes:

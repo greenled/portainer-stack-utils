@@ -3,7 +3,7 @@ image: $CI_REGISTRY/$CI_PROJECT_NAMESPACE/hub/auto-deploy-image:latest
 variables:
   DOCKER_DRIVER: overlay2
   DOCKER_TLS_CERTDIR: "/certs"
-  TRAEFIK_VERSION: 1.7-alpine
+  TRAEFIK_VERSION: "2.1"
   PORTAINER_VERSION: latest
   PSU_IMAGE: ${CI_REGISTRY_IMAGE}/builds
   PSU_TAG: $CI_COMMIT_SHA

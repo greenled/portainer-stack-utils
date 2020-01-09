@@ -44,9 +44,9 @@ docker swarm init
 
 # Deploy Traefik test
 # Parse the Docker traefik stack file to deploy
-envsubst '$TRAEFIK_VERSION' < dockerfiles/docker-stack-traefik.yml > dockerfiles/docker-stack-traefik-final.yml
+envsubst '$TRAEFIK_VERSION,$BASE_DOMAIN' < dockerfiles/docker-stack-traefik.yml > dockerfiles/docker-stack-traefik-final.yml
 docker stack deploy -c dockerfiles/docker-stack-traefik-final.yml traefik --with-registry-auth
-bash -c "timeout 20 bash -c 'while ! (echo > /dev/tcp/cluster/443 && curl -fs --max-time 2 http://cluster:8080/dashboard/) >/dev/null 2>&1; do sleep 1; done;'"
+bash -c "timeout 20 bash -c 'while ! (echo > /dev/tcp/cluster/443 && curl -fks --max-time 2 https://traefik.$BASE_DOMAIN/dashboard/) >/dev/null 2>&1; do sleep 1; done;'"
 
 # Deploy Portainer test
 echo -n $PSU_PASSWORD | docker secret create portainer-password -

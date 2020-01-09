@@ -3,13 +3,20 @@ version: '3.6'
 services:
   portainer:
     image: portainer/portainer:$PORTAINER_VERSION
-    command: --admin-password-file '/run/secrets/portainer-password'
+    command: --admin-password-file '/run/secrets/portainer-password' --no-analytics
     labels:
       - traefik.enable=true
-      - traefik.frontend.rule=Host:portainer.$BASE_DOMAIN
-      - traefik.frontend.redirect.entryPoint=https
-      - traefik.backend=portainer
-      - traefik.port=9000
+      - traefik.docker.network=traefik-net
+      # HTTPS route
+      - "traefik.http.routers.portainer.entrypoints=https"
+      - "traefik.http.routers.portainer.rule=Host(`portainer.$BASE_DOMAIN`)"
+      - "traefik.http.routers.portainer.tls=true"
+      - traefik.http.middlewares.retry-if-fails.retry.attempts=10
+      - traefik.http.middlewares.https-only.redirectscheme.scheme=https
+      - traefik.http.middlewares.secured.chain.middlewares=retry-if-fails,https-only
+      - traefik.http.routers.portainer.middlewares=secured
+      # Service
+      - traefik.http.services.portainer.loadbalancer.server.port=9000
     networks:
       - traefik-net
     environment:
