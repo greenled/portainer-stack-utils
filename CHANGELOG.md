@@ -6,6 +6,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.3] - 2020-01-09
+### Added
+- Cleaning old Docker repository builds tags via [GitLab API](https://docs.gitlab.com/12.6/ee/api/container_registry.html#delete-repository-tags-in-bulk)
+
+### Changed
+- Use [Traefik 2.1](https://docs.traefik.io/v2.1/) instead of [Traefik 1.7](https://docs.traefik.io/v1.7/) for testing
+
+### Fixed
+- Build script for the latest stable git tag of a given git branch
+
 ## [1.0.2] - 2019-12-10
 ### Added
 - Test <abbr title="Portainer Stack Utils">PSU</abbr> with Portainer [1.23.0](https://app.swaggerhub.com/apis/deviantony/Portainer/1.23.0) API
@@ -55,7 +65,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Debug mode
 - Strict mode
 
-[Unreleased]: https://gitlab.com/psuapp/psu/compare/v1.0.2...master
+[Unreleased]: https://gitlab.com/psuapp/psu/compare/v1.0.3...1-0-stable
+[1.0.3]: https://gitlab.com/psuapp/psu/-/tags/v1.0.3
 [1.0.2]: https://gitlab.com/psuapp/psu/-/tags/v1.0.2
 [1.0.1]: https://gitlab.com/psuapp/psu/-/tags/v1.0.1
 [1.0.0]: https://gitlab.com/psuapp/psu/-/tags/v1.0.0

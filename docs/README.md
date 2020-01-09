@@ -729,5 +729,5 @@ The `psu` definition of a job is a Swarm [service](https://docs.docker.com/engin
 Using a job is useful when you want to have a service who run a script (e.g. database migration).
 And shutdown this service when its script is successfully executed.
 
-See the service named `job` in the [`docker-stack-web-app.yml`](https://gitlab.com/psuapp/psu/tree/v1.0.2/tests/dockerfiles/docker-stack-web-app.yml) file, for a real use case.
+See the service named `job` in the [`docker-stack-web-app.yml`](https://gitlab.com/psuapp/psu/tree/v1.0.3/tests/dockerfiles/docker-stack-web-app.yml) file, for a real use case.
 It has both a container's label `job-name` and a restart policy set to `none`.
