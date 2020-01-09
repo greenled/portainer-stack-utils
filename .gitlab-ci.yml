@@ -1,0 +1,173 @@
+image: $CI_REGISTRY/$CI_PROJECT_NAMESPACE/hub/auto-deploy-image:latest
+
+variables:
+  DOCKER_DRIVER: overlay2
+  DOCKER_TLS_CERTDIR: "/certs"
+  TRAEFIK_VERSION: "2.1"
+  PORTAINER_VERSION: latest
+  PSU_IMAGE: ${CI_REGISTRY_IMAGE}/builds
+  PSU_TAG: $CI_COMMIT_SHA
+  PSU_TAG_CORE: core-${CI_COMMIT_SHA}
+  DOCKER_REGISTRY_IMAGE: $DOCKER_REGISTRY/$CI_PROJECT_PATH
+
+stages:
+  - cleanup
+  - build
+  - test
+  - deploy
+
+.build_template: &build_definition
+  stage: build
+  services:
+    - docker:dind
+  except:
+    refs:
+      - gitlab-pages
+    variables:
+      - $CI_COMMIT_TAG == "dev"
+  script:
+    - setup_docker
+    - registry_login
+    - cd ${CONTAINER_FOLDER:-.}
+    - docker pull $CONTAINER_IMAGE:${CONTAINER_VERSION:-latest} || true
+    - docker build --pull $(if [[ -n "$DOCKER_CACHE_DISABLED" ]]; then echo "--no-cache "; else echo "--cache-from $CONTAINER_IMAGE:${CONTAINER_VERSION:-latest}"; fi) --file ${DOCKER_FILE:-Dockerfile} --tag $CONTAINER_IMAGE:${CONTAINER_COMMIT_SHA:-$CI_COMMIT_SHA} --tag $CONTAINER_IMAGE:${CONTAINER_VERSION:-latest} --build-arg HTTP_PROXY="$HTTP_PROXY" --build-arg http_proxy="$http_proxy" --build-arg HTTPS_PROXY="$HTTPS_PROXY" --build-arg https_proxy="$https_proxy" --build-arg FTP_PROXY="$FTP_PROXY" --build-arg ftp_proxy="$ftp_proxy" --build-arg NO_PROXY="$NO_PROXY" --build-arg no_proxy="$no_proxy" .
+    - docker push $CONTAINER_IMAGE:${CONTAINER_COMMIT_SHA:-$CI_COMMIT_SHA}
+    - docker push $CONTAINER_IMAGE:${CONTAINER_VERSION:-latest}
+
+build:main:
+  <<: *build_definition
+  variables:
+    CONTAINER_NAME: $CI_PROJECT_NAME
+    CONTAINER_VERSION: $CI_COMMIT_REF_SLUG-build
+    CONTAINER_IMAGE: ${CI_REGISTRY_IMAGE}/builds
+
+build:debian:
+  <<: *build_definition
+  variables:
+    CONTAINER_NAME: $CI_PROJECT_NAME
+    CONTAINER_VERSION: $CI_COMMIT_REF_SLUG-build-debian
+    CONTAINER_COMMIT_SHA: debian-$CI_COMMIT_SHA
+    DOCKER_FILE: Dockerfile.debian
+    CONTAINER_IMAGE: ${CI_REGISTRY_IMAGE}/builds
+
+build:core:
+  <<: *build_definition
+  variables:
+    CONTAINER_NAME: $CI_PROJECT_NAME
+    CONTAINER_VERSION: $CI_COMMIT_REF_SLUG-build-core
+    CONTAINER_COMMIT_SHA: core-$CI_COMMIT_SHA
+    DOCKER_FILE: Dockerfile.core
+    CONTAINER_IMAGE: ${CI_REGISTRY_IMAGE}/builds
+build:debian-core:
+  <<: *build_definition
+  variables:
+    CONTAINER_NAME: $CI_PROJECT_NAME
+    CONTAINER_VERSION: $CI_COMMIT_REF_SLUG-build-debian-core
+    CONTAINER_COMMIT_SHA: debian-core-$CI_COMMIT_SHA
+    DOCKER_FILE: Dockerfile.debian-core
+    CONTAINER_IMAGE: ${CI_REGISTRY_IMAGE}/builds
+
+.test_template: &test_definition
+  stage: test
+  services:
+    - name: docker:dind
+      alias: cluster
+  except:
+    refs:
+      - gitlab-pages
+    variables:
+      - $TEST_DISABLED
+      - $CI_COMMIT_TAG == "dev"
+  script:
+    - setup_docker
+    - registry_login
+    - bash scripts/test.sh
+
+test:portainer-1.21.0:
+  <<: *test_definition
+  variables:
+    PORTAINER_VERSION: 1.21.0
+
+test:portainer-1.22.2:
+  <<: *test_definition
+  variables:
+    PORTAINER_VERSION: 1.22.2
+
+test:portainer-latest:
+  <<: *test_definition
+
+test:portainer-latest:debian:
+  <<: *test_definition
+  variables:
+    PSU_TAG: debian-${CI_COMMIT_SHA}
+    PSU_TAG_CORE: debian-core-${CI_COMMIT_SHA}
+
+release:
+  stage: deploy
+  services:
+    - docker:dind
+  except:
+    refs:
+      - gitlab-pages
+    variables:
+      - $CI_COMMIT_TAG == "dev"
+  script:
+    - setup_docker
+    - registry_login
+    - external_registry_login
+    # Tagging git repository and Docker images on successful builds and tests
+    # First argument is the variant(s) of the Docker image
+    # e.g. "core"
+    # or for multiple variants: "core debian debian-core"
+    - bash scripts/release.sh "core debian debian-core"
+
+generate-docs:
+  stage: deploy
+  script:
+    - mkdir -p public/$CI_COMMIT_REF_SLUG
+    - cp -r docs/. public/$CI_COMMIT_REF_SLUG
+    - mkdir public/$CI_COMMIT_REF_SLUG/repo
+    - cp *.md public/$CI_COMMIT_REF_SLUG/repo
+    - cp LICENSE public/$CI_COMMIT_REF_SLUG/repo/LICENSE.md
+    - bash scripts/push-to-gitlab-pages.sh
+  only:
+    variables:
+      - $CI_COMMIT_REF_NAME == "master" || $CI_COMMIT_REF_NAME =~ /^.+-stable$/ && $CI_COMMIT_REF_PROTECTED == "true"
+  except:
+    variables:
+      - $CI_PIPELINE_SOURCE == "schedule"
+
+pages:
+  stage: deploy
+  before_script:
+    - echo ""
+  script:
+    # Gzip all static files before publishing GitLab Pages
+    # Source: https://www.queryxchange.com/q/5_119670/how-do-you-serve-jekyll-pages-with-gzip-compression-on-gitlab-pages/
+    - find public \( -name '*.html' -o -name '*.css' -o -name '*.js' -o -name '*.md' \) -print0 | xargs -0 gzip -9 -kv
+  artifacts:
+    paths:
+      - public
+  only:
+    - gitlab-pages
+  except:
+    variables:
+      - $CI_PIPELINE_SOURCE == "schedule"
+
+cleanup_registries:
+  stage: cleanup
+  allow_failure: true
+  script:
+    - cleanup_registries
+  only:
+    - schedules
+
+before_script:
+  - set -e
+  - source scripts/helpers.sh
+  # Used for updating the Docker images, but not the psu code
+  # Via Scheduling Pipelines
+  # See: https://gitlab.com/help/user/project/pipelines/schedules
+  - git_reset_from_tag
+  # Used for updating Docker images, on release/stable branches, but not the psu code
+  - git_reset_from_last_stable_tag

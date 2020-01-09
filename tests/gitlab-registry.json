@@ -1,0 +1,8 @@
+{
+  "Name": "gitlab-registry",
+  "Type": 1,
+  "URL": "registry.gitlab.com",
+  "Authentication": true,
+  "Username": "$CI_REGISTRY_USER",
+  "Password": "$CI_REGISTRY_PASSWORD"
+}

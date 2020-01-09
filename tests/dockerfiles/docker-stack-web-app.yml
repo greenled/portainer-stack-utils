@@ -1,0 +1,72 @@
+version: '3.6'
+
+services:
+  job:
+    image: $CI_REGISTRY/$CI_PROJECT_NAMESPACE/hub/testing/psu-php-app:latest
+    labels:
+      job-name: job-web-app
+    entrypoint: ["php"]
+    command: -r 'echo date("d-m-Y H:i:s").PHP_EOL;'
+    # command: -r 'sleep(20); echo date("d-m-Y H:i:s").PHP_EOL;'
+    environment:
+      - HTTP_PROXY
+      - HTTPS_PROXY
+      - http_proxy
+      - https_proxy
+      - NO_PROXY
+    deploy:
+      restart_policy:
+        condition: none
+
+  app:
+    image: $CI_REGISTRY/$CI_PROJECT_NAMESPACE/hub/testing/psu-php-app:latest
+    environment:
+      - HTTP_PROXY
+      - HTTPS_PROXY
+      - http_proxy
+      - https_proxy
+      - NO_PROXY
+    volumes:
+      - php-runner:/var/run/php
+    deploy:
+      update_config:
+        order: start-first
+        failure_action: continue
+
+  web:
+    image: $CI_REGISTRY/$CI_PROJECT_NAMESPACE/hub/testing/psu-apache2:latest
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=traefik-net
+      # HTTPS route
+      - "traefik.http.routers.web-php-app.entrypoints=https"
+      - "traefik.http.routers.web-php-app.rule=Host(`$PSU_STACK_NAME.$BASE_DOMAIN`)"
+      - "traefik.http.routers.web-php-app.tls=true"
+      # IMPORTANT: The `retry.attempts` middleware is required to allow zero (1s) downtime deployment
+      - traefik.http.middlewares.retry-if-fails.retry.attempts=10
+      - traefik.http.middlewares.https-only.redirectscheme.scheme=https
+      - traefik.http.middlewares.secured.chain.middlewares=retry-if-fails,https-only
+      - traefik.http.routers.web-php-app.middlewares=secured
+      # Service
+      - traefik.http.services.web-php-app.loadbalancer.server.port=5000
+    environment:
+      - HTTP_PROXY
+      - HTTPS_PROXY
+      - http_proxy
+      - https_proxy
+      - NO_PROXY
+    volumes:
+      - php-runner:/var/run/php
+    deploy:
+      update_config:
+        failure_action: rollback
+        order: start-first
+    networks:
+      - traefik-net
+
+networks:
+  traefik-net:
+    external: true
+
+volumes:
+  php-runner:

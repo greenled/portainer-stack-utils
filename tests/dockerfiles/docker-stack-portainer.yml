@@ -1,0 +1,50 @@
+version: '3.6'
+
+services:
+  portainer:
+    image: portainer/portainer:$PORTAINER_VERSION
+    command: --admin-password-file '/run/secrets/portainer-password' --no-analytics
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=traefik-net
+      # HTTPS route
+      - "traefik.http.routers.portainer.entrypoints=https"
+      - "traefik.http.routers.portainer.rule=Host(`portainer.$BASE_DOMAIN`)"
+      - "traefik.http.routers.portainer.tls=true"
+      - traefik.http.middlewares.retry-if-fails.retry.attempts=10
+      - traefik.http.middlewares.https-only.redirectscheme.scheme=https
+      - traefik.http.middlewares.secured.chain.middlewares=retry-if-fails,https-only
+      - traefik.http.routers.portainer.middlewares=secured
+      # Service
+      - traefik.http.services.portainer.loadbalancer.server.port=9000
+    networks:
+      - traefik-net
+    environment:
+      - HTTP_PROXY
+      - HTTPS_PROXY
+      - http_proxy
+      - https_proxy
+      - NO_PROXY
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - portainer:/data
+    secrets:
+      - portainer-password
+    deploy:
+      placement:
+        constraints:
+          - node.role == manager
+      update_config:
+        parallelism: 1
+        delay: 10s
+
+networks:
+  traefik-net:
+    driver: overlay
+    external: true
+
+secrets:
+  portainer-password:
+    external: true
+volumes:
+  portainer:
