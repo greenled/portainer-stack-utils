@@ -130,9 +130,11 @@ function git_reset_from_last_stable_tag() {
     local git_last_stable_tag="$(get_git_last_stable_tag)"
     if [ -n "$git_last_stable_tag" ]; then
       export CI_COMMIT_REF_PROTECTED="true"
-      export CI_COMMIT_TAG="$git_last_stable_tag"
       export GIT_RESET_TAG="$git_last_stable_tag"
       git_reset_from_tag
+      # NOTE: Setting $CI_COMMIT_TAG before calling 'git_reset_from_tag' will skip the git reset stuff
+      #       So you must keep the line below after the 'git_reset_from_tag' call
+      export CI_COMMIT_TAG="$git_last_stable_tag"
     else
       echo WARNING: Last stable git tag not found
     fi
