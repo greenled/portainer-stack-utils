@@ -58,7 +58,7 @@ main() {
       if [ $STACK_ENVVAR_NAME == "-" ]; then
          STACKS=$(echo "$stacks" | jq '.[] | {stack:.Name}' | jq -s )
       else
-         STACKS=$(echo "$stacks" | jq --arg var $STACK_ENVVAR_NAME '.[] | {stack: (.Name), ($var):(.Env[]| select(.name==$var).value)}')
+         STACKS=$(echo "$stacks" | jq --arg var $STACK_ENVVAR_NAME '.[] | {stack: (.Name), ($var):(.Env[]| select(.name==$var).value)}' | jq -s )
       fi
      fi
      echo $STACKS
