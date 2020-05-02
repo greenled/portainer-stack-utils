@@ -59,7 +59,7 @@ The provided `psu` script allows to deploy/update/undeploy Portainer stacks. Set
 
 This is particularly useful for CI/CD pipelines using Docker containers.
 
-- `ACTION` ("deploy" or "undeploy", required): Whether to deploy or undeploy the stack
+- `ACTION` ("deploy", "undeploy" or "list", required): Whether to deploy , undeploy or list the stack/s
 - `PORTAINER_USER` (string, required): Username
 - `PORTAINER_PASSWORD` (string, required): Password
 - `PORTAINER_URL` (string, required): URL to Portainer
@@ -72,6 +72,9 @@ This is particularly useful for CI/CD pipelines using Docker containers.
 - `VERBOSE_MODE` ("true" or "false", optional): Whether to activate verbose output mode or not. Defaults to `"false"`. See [verbose mode](#verbose-mode) below.
 - `DEBUG_MODE` ("true" or "false", optional): Whether to activate debug output mode or not. Defaults to `"false"`. See [debug mode](#debug-mode) below.
 - `STRICT_MODE` ("true" or "false", optional): Whether to activate strict mode or not. Defaults to `"false"`. See [strict mode](#strict-mode) below.
+- `LIST_RAW_FORMAT` ("true" or "false", optional): Whether list stacks in raw format or json forma. Defaults to `"false"`. See [list raw mode](#list-in-raw-format) below.
+- `STACK_ENVVAR_NAME` (string, optional): using in action "list" is the name of an evironment variable defined on a stack.
+
 
 #### Examples
 
@@ -97,6 +100,16 @@ export PORTAINER_STACK_NAME="mystack"
 ./psu
 ```
 
+```bash
+export ACTION="list"
+export STACK_ENVVAR_NAME="TAG"
+export PORTAINER_USER="admin"
+export PORTAINER_PASSWORD="password"
+export PORTAINER_URL="http://portainer.local"
+
+./psu
+```
+
 ### With flags
 
 This is more suitable for standalone script usage.
@@ -114,6 +127,8 @@ This is more suitable for standalone script usage.
 - `-v` ("true" or "false", optional): Whether to activate verbose output mode or not. Defaults to `"false"`. See [verbose mode](#verbose-mode) below.
 - `-d` ("true" or "false", optional): Whether to activate debug output mode or not. Defaults to `"false"`. See [debug mode](#debug-mode) below.
 - `-t` ("true" or "false", optional): Whether to activate strict mode or not. Defaults to `"false"`. See [strict mode](#strict-mode) below.
+- `-f` ("true" or "false", optional): Whether list stacks in raw format or json format. Defaults to `"false"` which means json format. See [list raw mode](#list-in-raw-format) below.
+- `-k` (string, optional): using in action "list" is the name of an evironment variable defined on a stack.
 
 #### Examples
 
@@ -123,6 +138,10 @@ This is more suitable for standalone script usage.
 
 ```bash
 ./psu -a undeploy -u admin -p password -l http://portainer.local -n mystack
+```
+
+```bash
+./psu -a list -u admin -p password -l http://portainer.local -k TAG -f
 ```
 
 ### Stack environment variables
@@ -168,6 +187,10 @@ Debug mode can be enabled through [DEBUG_MODE envvar](#with-envvars) or [-d flag
 In strict mode the script never updates an existent stack nor removes an unexistent one, and instead exits with an error.
 
 Strict mode can be enabled through [STRICT_MODE envvar](#with-envvars) or [-t flag](#with-flags).
+
+### List in raw format
+
+when action is "list", using this switch can turn the default json output format in a raw format.
 
 ## License
 

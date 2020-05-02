@@ -45,7 +45,27 @@ main() {
     "$PORTAINER_URL/api/stacks" \
     "Authorization: Bearer $AUTH_TOKEN")
   check_for_errors $? "$stacks"
-  echo_debug "Get stacks response -> $(echo $stacks | jq -C .)"
+  
+
+  if [ $ACTION == "list" ]; then
+     if [ $LIST_RAW_FORMAT == "true" ]; then
+      if [ $STACK_ENVVAR_NAME == "-" ]; then
+        STACKS=$(echo "$stacks" | jq -r '.[] | .Name')
+       else
+        STACKS=$(echo "$stacks" | jq --arg var $STACK_ENVVAR_NAME -r '.[] | .Name +":"+ (.Env[]| select(.name==$var).value)')
+      fi
+     else
+      if [ $STACK_ENVVAR_NAME == "-" ]; then
+         STACKS=$(echo "$stacks" | jq '.[] | {stack:.Name}' | jq -s )
+      else
+         STACKS=$(echo "$stacks" | jq --arg var $STACK_ENVVAR_NAME '.[] | {stack: (.Name), ($var):(.Env[]| select(.name==$var).value)}')
+      fi
+     fi
+     echo $STACKS
+     exit 0
+    else
+      echo_debug "Get stacks response -> $(echo $stacks | jq -C .)"
+  fi
 
   # Get desired stack from stacks list by it's name
   STACK=$(echo "$stacks" \
@@ -102,9 +122,11 @@ set_globals() {
   VERBOSE_MODE=${VERBOSE_MODE:-"false"}
   DEBUG_MODE=${DEBUG_MODE:-"false"}
   STRICT_MODE=${STRICT_MODE:-"false"}
+  STACK_ENVVAR_NAME=${STACK_ENVVAR_NAME:-"-"}
+  LIST_RAW_FORMAT=${LIST_RAW_FORMAT:-"false"}
 
   # Set arguments through flags (overwrite envvars)
-  while getopts a:u:p:l:n:c:e:g:rsvdt option; do
+  while getopts a:u:p:l:n:c:e:g:k:frsvdt option; do
     case "${option}" in
       a) ACTION=${OPTARG} ;;
       u) PORTAINER_USER=${OPTARG} ;;
@@ -114,12 +136,15 @@ set_globals() {
       c) DOCKER_COMPOSE_FILE=${OPTARG} ;;
       e) PORTAINER_ENDPOINT=${OPTARG} ;;
       g) ENVIRONMENT_VARIABLES_FILE=${OPTARG} ;;
+      k) STACK_ENVVAR_NAME=${OPTARG} ;;
+      f) LIST_RAW_FORMAT="true" ;;
       r) PORTAINER_PRUNE="true" ;;
       s) HTTPIE_VERIFY_SSL="no" ;;
       v) VERBOSE_MODE="true" ;;
       d) DEBUG_MODE="true" ;;
       t) STRICT_MODE="true" ;;
       *)
+
         echo_error "Unexpected option ${option}"
         exit 1
         ;;
@@ -140,13 +165,20 @@ set_globals() {
   echo_debug "VERBOSE_MODE -> $VERBOSE_MODE"
   echo_debug "DEBUG_MODE -> $DEBUG_MODE"
   echo_debug "STRICT_MODE -> $STRICT_MODE"
+  echo_debug "STACK_ENVVAR_NAME -> $STACK_ENVVAR_NAME"
+  echo_debug "LIST_RAW_FORMAT -> $LIST_RAW_FORMAT"
 
   # Check required arguments have been provided
   check_argument "$ACTION" "action" "ACTION" "a"
   check_argument "$PORTAINER_USER" "portainer user" "PORTAINER_USER" "u"
   check_argument "$PORTAINER_PASSWORD" "portainer password" "PORTAINER_PASSWORD" "p"
   check_argument "$PORTAINER_URL" "portainer url" "PORTAINER_URL" "l"
-  check_argument "$PORTAINER_STACK_NAME" "portainer stack name" "PORTAINER_STACK_NAME" "n"
+  if [ $ACTION != "list" ]; then
+     check_argument "$PORTAINER_STACK_NAME" "portainer stack name" "PORTAINER_STACK_NAME" "n"
+  fi
+  if [ $ACTION == "list" ]; then
+      check_argument "$STACK_ENVVAR_NAME" "env variable name to print in stack list" "STACK_ENVVAR_NAME" "k"
+  fi
   if [ $ACTION == "deploy" ]; then
     check_argument "$DOCKER_COMPOSE_FILE" "docker compose file" "DOCKER_COMPOSE_FILE" "c"
     if [ -n "$ENVIRONMENT_VARIABLES_FILE" ] && [[ ! -f "$ENVIRONMENT_VARIABLES_FILE" ]]; then
